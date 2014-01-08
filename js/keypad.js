@@ -10,14 +10,12 @@ function GameBoyAdvanceKeypad() {
 	this.KEYCODE_L = 65;
 	this.KEYCODE_R = 83;
 
-	this.GAMEPAD_LEFT = 14;
-	this.GAMEPAD_UP = 12;
-	this.GAMEPAD_RIGHT = 15;
-	this.GAMEPAD_DOWN = 13;
-	this.GAMEPAD_START = 9;
-	this.GAMEPAD_SELECT = 8;
-	this.GAMEPAD_A = 1;
-	this.GAMEPAD_B = 0;
+	this.GAMEPAD_X_AXIS = 0;
+	this.GAMEPAD_Y_AXIS = 1;
+	this.GAMEPAD_START = 7;
+	this.GAMEPAD_SELECT = 6;
+	this.GAMEPAD_A = 0;
+	this.GAMEPAD_B = 2;
 	this.GAMEPAD_L = 4;
 	this.GAMEPAD_R = 5;
 	this.GAMEPAD_THRESHOLD = 0.2;
@@ -88,35 +86,35 @@ GameBoyAdvanceKeypad.prototype.keyboardHandler = function(e) {
 
 GameBoyAdvanceKeypad.prototype.gamepadHandler = function(gamepad) {
 	var value = 0;
-	if (gamepad.buttons[this.GAMEPAD_LEFT] > this.GAMEPAD_THRESHOLD) {
-		value |= 1 << this.GAMEPAD_LEFT;
+	if (gamepad.axes[this.GAMEPAD_X_AXIS] < -1 * this.GAMEPAD_THRESHOLD) {
+		value |= 1 << this.LEFT;
 	}
-	if (gamepad.buttons[this.GAMEPAD_UP] > this.GAMEPAD_THRESHOLD) {
-		value |= 1 << this.GAMEPAD_UP;
+	if (gamepad.axes[this.GAMEPAD_X_AXIS] > this.GAMEPAD_THRESHOLD) {
+		value |= 1 << this.RIGHT;
 	}
-	if (gamepad.buttons[this.GAMEPAD_RIGHT] > this.GAMEPAD_THRESHOLD) {
-		value |= 1 << this.GAMEPAD_RIGHT;
+	if (gamepad.axes[this.GAMEPAD_Y_AXIS] < -1 * this.GAMEPAD_THRESHOLD) {
+		value |= 1 << this.UP;
 	}
-	if (gamepad.buttons[this.GAMEPAD_DOWN] > this.GAMEPAD_THRESHOLD) {
-		value |= 1 << this.GAMEPAD_DOWN;
+	if (gamepad.axes[this.GAMEPAD_Y_AXIS] > this.GAMEPAD_THRESHOLD) {
+		value |= 1 << this.DOWN;
 	}
 	if (gamepad.buttons[this.GAMEPAD_START] > this.GAMEPAD_THRESHOLD) {
-		value |= 1 << this.GAMEPAD_START;
+		value |= 1 << this.START;
 	}
 	if (gamepad.buttons[this.GAMEPAD_SELECT] > this.GAMEPAD_THRESHOLD) {
-		value |= 1 << this.GAMEPAD_SELECT;
+		value |= 1 << this.SELECT;
 	}
 	if (gamepad.buttons[this.GAMEPAD_A] > this.GAMEPAD_THRESHOLD) {
-		value |= 1 << this.GAMEPAD_A;
+		value |= 1 << this.A;
 	}
 	if (gamepad.buttons[this.GAMEPAD_B] > this.GAMEPAD_THRESHOLD) {
-		value |= 1 << this.GAMEPAD_B;
+		value |= 1 << this.B;
 	}
 	if (gamepad.buttons[this.GAMEPAD_L] > this.GAMEPAD_THRESHOLD) {
-		value |= 1 << this.GAMEPAD_L;
+		value |= 1 << this.L;
 	}
 	if (gamepad.buttons[this.GAMEPAD_R] > this.GAMEPAD_THRESHOLD) {
-		value |= 1 << this.GAMEPAD_R;
+		value |= 1 << this.R;
 	}
 
 	this.currentDown = ~value & 0x3FF;
@@ -134,4 +132,15 @@ GameBoyAdvanceKeypad.prototype.pollGamepads = function() {
 GameBoyAdvanceKeypad.prototype.registerHandlers = function() {
 	window.addEventListener("keydown", this.keyboardHandler.bind(this), true);
 	window.addEventListener("keyup", this.keyboardHandler.bind(this), true);
+	that = this;
+	window.addEventListener("gamepadconnected", function(e) {
+		that.gamepad = e.gamepad;
+		window.requestAnimationFrame(function(){that.updateStatus()});
+	});
+};
+
+GameBoyAdvanceKeypad.prototype.updateStatus = function() {
+	that = this;
+	this.gamepadHandler(this.gamepad)
+	window.requestAnimationFrame(function(){that.updateStatus()});
 };
