@@ -1,3 +1,7 @@
+/**
+ *
+ * @constructor
+ */
 function Console(gba) {
 	this.cpu = gba.cpu;
 	this.gba = gba;
@@ -21,7 +25,7 @@ Console.prototype.updateGPRs = function() {
 	for (var i = 0; i < 16; ++i) {
 		this.gprs.children[i].textContent = hex(this.cpu.gprs[i]);
 	}
-}
+};
 
 Console.prototype.updateCPSR = function() {
 	var cpu = this.cpu;
@@ -32,7 +36,7 @@ Console.prototype.updateCPSR = function() {
 		} else {
 			element.setAttribute('class', 'disabled');
 		}
-	}
+	};
 	bit('cpsrN', 'cpsrN');
 	bit('cpsrZ', 'cpsrZ');
 	bit('cpsrC', 'cpsrC');
@@ -67,7 +71,7 @@ Console.prototype.updateCPSR = function() {
 		mode.textContent = '???';
 		break;
 	}
-}
+};
 
 Console.prototype.log = function(level, message) {
 	switch (level) {
@@ -94,7 +98,7 @@ Console.prototype.log = function(level, message) {
 	if (!this.stillRunning) {
 		this.flushLog();
 	}
-}
+};
 
 Console.prototype.flushLog = function() {
 	var doScroll = this.ul.scrollTop == this.ul.scrollHeight - this.ul.offsetHeight;
@@ -114,11 +118,11 @@ Console.prototype.flushLog = function() {
 					setTimeout(scrollUp, 25);
 				}
 			}
-		}
+		};
 		setTimeout(scrollUp, 25);
 	}
 
-}
+};
 
 Console.prototype.update = function() {
 	this.updateGPRs();
@@ -127,7 +131,7 @@ Console.prototype.update = function() {
 	if (this.activeView) {
 		this.activeView.redraw();
 	}
-}
+};
 
 Console.prototype.setView = function(view) {
 	var container = document.getElementById('debugViewer');
@@ -139,7 +143,7 @@ Console.prototype.setView = function(view) {
 		view.redraw();
 	}
 	this.activeView = view;
-}
+};
 
 Console.prototype.step = function() {
 	try {
@@ -149,7 +153,7 @@ Console.prototype.step = function() {
 		this.log(this.gba.LOG_DEBUG, exception);
 		throw exception;
 	}
-}
+};
 
 Console.prototype.runVisible = function() {
 	if (this.stillRunning) {
@@ -174,9 +178,9 @@ Console.prototype.runVisible = function() {
 				throw exception;
 			}
 		}
-	}
+	};
 	setTimeout(run, 0);
-}
+};
 
 Console.prototype.run = function() {
 	if (this.stillRunning) {
@@ -191,7 +195,7 @@ Console.prototype.run = function() {
 	mem.setAttribute('class', 'disabled');
 	var self = this;
 	this.gba.runStable();
-}
+};
 
 Console.prototype.runFrame = function() {
 	if (this.stillRunning) {
@@ -208,9 +212,9 @@ Console.prototype.runFrame = function() {
 	run = function() {
 		self.gba.step();
 		self.pause();
-	}
+	};
 	setTimeout(run, 0);
-}
+};
 
 Console.prototype.pause = function() {
 	this.stillRunning = false;
@@ -221,12 +225,12 @@ Console.prototype.pause = function() {
 	regs.removeAttribute('class');
 	this.update();
 	this.flushLog();
-}
+};
 
 Console.prototype.breakpointHit = function() {
 	this.pause();
 	this.log(this.gba.LOG_DEBUG, 'Hit breakpoint at ' + hex(this.cpu.gprs[this.cpu.PC]));
-}
+};
 
 Console.prototype.addBreakpoint = function(addr) {
 	this.breakpoints[addr] = true;
@@ -245,7 +249,7 @@ Console.prototype.addBreakpoint = function(addr) {
 		bpLi.appendChild(document.createTextNode(hex(addr)));
 		document.getElementById('breakpointView').appendChild(bpLi);
 	}
-}
+};
 
 Console.prototype.testBreakpoints = function() {
 	if (this.breakpoints.length && this.breakpoints[this.cpu.gprs[this.cpu.PC]]) {
@@ -273,7 +277,7 @@ Memory = function(mmu) {
 	var self = this;
 	this.ul.parentElement.addEventListener('scroll', function(e) { self.scroll(e) }, true);
 	window.addEventListener('resize', function(e) { self.resize() }, true);
-}
+};
 
 Memory.prototype.scroll = function(e) {
 	while (this.ul.parentElement.scrollTop - this.scrollTop < this.rowHeight) {
@@ -299,7 +303,7 @@ Memory.prototype.scroll = function(e) {
 		this.ul.parentElement.scrollTop = this.scrollTop;
 		e.preventDefault();
 	}
-}
+};
 
 Memory.prototype.resize = function() {
 	this.numberRows = this.ul.parentNode.offsetHeight / this.rowHeight + 2;
@@ -316,7 +320,7 @@ Memory.prototype.resize = function() {
 			this.ul.removeChild(this.ul.lastChild);
 		}
 	}
-}
+};
 
 Memory.prototype.refresh = function(row) {
 	var showChanged;
@@ -353,13 +357,13 @@ Memory.prototype.refresh = function(row) {
 			child.textContent = '--';
 		}
 	}
-}
+};
 
 Memory.prototype.refreshAll = function() {
 	for (var i = 0; i < this.ul.children.length; ++i) {
 		this.refresh(this.ul.children[i]);
 	}
-}
+};
 
 Memory.prototype.createRow = function(startOffset) {
 	var li = document.createElement('li');
@@ -377,7 +381,7 @@ Memory.prototype.createRow = function(startOffset) {
 	li.offset = startOffset;
 	li.oldOffset = startOffset;
 	return li;
-}
+};
 
 Memory.prototype.scrollTo = function(offset) {
 	offset &= 0xFFFFFFF0;
@@ -396,8 +400,12 @@ Memory.prototype.scrollTo = function(offset) {
 		}
 		this.ul.parentElement.scrollTop = this.scrollTop;
 	}
-}
+};
 
+/**
+ *
+ * @constructor
+ */
 function PaletteViewer(palette) {
 	this.palette = palette;
 	this.view = document.createElement('canvas');
@@ -408,7 +416,7 @@ function PaletteViewer(palette) {
 
 PaletteViewer.prototype.insertChildren = function(container) {
 	container.appendChild(this.view);
-}
+};
 
 PaletteViewer.prototype.redraw = function() {
 	var context = this.view.getContext('2d');
@@ -425,8 +433,12 @@ PaletteViewer.prototype.redraw = function() {
 			}
 		}
 	}
-}
+};
 
+/**
+ *
+ * @constructor
+ */
 function TileViewer(vram, palette) {
 	this.BG_MAP_WIDTH = 256;
 	this.vram = vram;

@@ -1,3 +1,7 @@
+/**
+ *
+ * @constructor
+ */
 function GameBoyAdvanceVideo() {
 	this.renderPath = new GameBoyAdvanceSoftwareRenderer();
 
@@ -17,8 +21,7 @@ function GameBoyAdvanceVideo() {
 
 	this.drawCallback = function() {};
 	this.vblankCallback = function() {};
-};
-
+}
 GameBoyAdvanceVideo.prototype.clear = function() {
 	this.renderPath.clear(this.cpu.mmu);
 
@@ -87,15 +90,15 @@ GameBoyAdvanceVideo.prototype.setBacking = function(backing) {
 	this.context = backing;
 
 	// Clear backing first
-	for (var offset = 0; offset < this.HORIZONTAL_PIXELS * this.VERTICAL_PIXELS * 4;) {
-		pixelData.data[offset++] = 0xFF;
-		pixelData.data[offset++] = 0xFF;
-		pixelData.data[offset++] = 0xFF;
-		pixelData.data[offset++] = 0xFF;
+	for (var offset = 0; offset < this.HORIZONTAL_PIXELS * this.VERTICAL_PIXELS * 4; offset++) {
+		pixelData.data[offset+0] = 0xFF;
+		pixelData.data[offset+1] = 0xFF;
+		pixelData.data[offset+2] = 0xFF;
+		pixelData.data[offset+3] = 0xFF;
 	}
 
 	this.renderPath.setBacking(pixelData);
-}
+};
 
 GameBoyAdvanceVideo.prototype.updateTimers = function(cpu) {
 	var cycles = cpu.cycles;

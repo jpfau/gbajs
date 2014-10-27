@@ -1,3 +1,7 @@
+/**
+ *
+ * @constructor
+ */
 function GameBoyAdvanceAudio() {
 	window.AudioContext = window.AudioContext || window.webkitAudioContext;
 	if (window.AudioContext) {
@@ -24,8 +28,7 @@ function GameBoyAdvanceAudio() {
 	this.SOUND_MAX = 0x400;
 	this.FIFO_MAX = 0x200;
 	this.PSG_MAX = 0x080;
-};
-
+}
 GameBoyAdvanceAudio.prototype.clear = function() {
 	this.fifoA = [];
 	this.fifoB = [];
@@ -64,7 +67,7 @@ GameBoyAdvanceAudio.prototype.clear = function() {
 	this.soundRatio = 1;
 	this.soundBias = 0x200;
 
-	this.squareChannels = new Array();
+	this.squareChannels = [];
 	for (var i = 0; i < 2; ++i) {
 		this.squareChannels[i] = {
 			enabled: false,
@@ -485,7 +488,7 @@ GameBoyAdvanceAudio.prototype.setChannel4Enabled = function(enable) {
 	} else {
 		this.enableChannel4 = enable;
 	}
-}
+};
 
 GameBoyAdvanceAudio.prototype.writeChannel4LE = function(value) {
 	this.writeChannelLE(this.channel4, value);

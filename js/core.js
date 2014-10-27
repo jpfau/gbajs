@@ -1,3 +1,7 @@
+/**
+ *
+ * @constructor
+ */
 function ARMCore() {
 	this.inherit();
 	this.SP = 13;
@@ -15,7 +19,7 @@ function ARMCore() {
 	this.MODE_UNDEFINED = 0x1B;
 	this.MODE_SYSTEM = 0x1F;
 
-	this.BANK_NONE = 0
+	this.BANK_NONE = 0;
 	this.BANK_FIQ = 1;
 	this.BANK_IRQ = 2;
 	this.BANK_SUPERVISOR = 3;
@@ -43,8 +47,7 @@ function ARMCore() {
 	this.generateConds();
 
 	this.gprs = new Int32Array(16);
-};
-
+}
 ARMCore.prototype.resetCPU = function(startOffset) {
 	for (var i = 0; i < this.PC; ++i) {
 		this.gprs[i] = 0;
@@ -149,8 +152,8 @@ ARMCore.prototype.freeze = function() {
 			this.gprs[12],
 			this.gprs[13],
 			this.gprs[14],
-			this.gprs[15],
-		],
+			this.gprs[15]
+        ],
 		'mode': this.mode,
 		'cpsrI': this.cpsrI,
 		'cpsrF': this.cpsrF,
@@ -524,7 +527,7 @@ ARMCore.prototype.generateConds = function() {
 		null,
 		null
 	]
-}
+};
 
 ARMCore.prototype.barrelShiftImmediate = function(shiftType, immediate, rm) {
 	var cpu = this;
@@ -595,7 +598,7 @@ ARMCore.prototype.barrelShiftImmediate = function(shiftType, immediate, rm) {
 		break;
 	}
 	return shiftOp;
-}
+};
 
 ARMCore.prototype.compileArm = function(instruction) {
 	var op = this.badOp(instruction);
@@ -823,7 +826,7 @@ ARMCore.prototype.compileArm = function(instruction) {
 				case 0x00200000:
 					// MLA
 					op = this.armCompiler.constructMLA(rd, rn, rs, rm, condOp);
-					break
+					break;
 				case 0x00300000:
 					// MLAS
 					op = this.armCompiler.constructMLAS(rd, rn, rs, rm, condOp);
@@ -1147,7 +1150,7 @@ ARMCore.prototype.compileThumb = function(instruction) {
 		switch (instruction & 0x0300) {
 		case 0x0000:
 			// ADD(4)
-			op = this.thumbCompiler.constructADD4(rd, rm)
+			op = this.thumbCompiler.constructADD4(rd, rm);
 			op.writesPC = rd == this.PC;
 			break;
 		case 0x0100:
@@ -1385,7 +1388,7 @@ ARMCore.prototype.compileThumb = function(instruction) {
 				if (b) {
 					immediate = -immediate;
 				}
-				op = this.thumbCompiler.constructADD7(immediate)
+				op = this.thumbCompiler.constructADD7(immediate);
 				op.writesPC = false;
 			}
 			break;

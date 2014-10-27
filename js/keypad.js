@@ -1,3 +1,7 @@
+/**
+ *
+ * @constructor
+ */
 function GameBoyAdvanceKeypad() {
 	this.KEYCODE_LEFT = 37;
 	this.KEYCODE_UP = 38;
@@ -37,8 +41,7 @@ function GameBoyAdvanceKeypad() {
 	this.eatInput = false;
 
 	this.gamepads = [];
-};
-
+}
 GameBoyAdvanceKeypad.prototype.keyboardHandler = function(e) {
 	var toggle = 0;
 	switch (e.keyCode) {

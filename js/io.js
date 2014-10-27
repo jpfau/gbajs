@@ -1,3 +1,7 @@
+/**
+ *
+ * @constructor
+ */
 function GameBoyAdvanceIO() {
 	// Video
 	this.DISPCNT = 0x000;
@@ -141,8 +145,7 @@ function GameBoyAdvanceIO() {
 	this.DEFAULT_BGPA = 1;
 	this.DEFAULT_BGPD = 1;
 	this.DEFAULT_RCNT = 0x8000;
-};
-
+}
 GameBoyAdvanceIO.prototype.clear = function() {
 	this.registers = new Uint16Array(this.cpu.mmu.SIZE_IO);
 
@@ -171,11 +174,11 @@ GameBoyAdvanceIO.prototype.defrost = function(frost) {
 
 GameBoyAdvanceIO.prototype.load8 = function(offset) {
 	throw 'Unimplmeneted unaligned I/O access';
-}
+};
 
 GameBoyAdvanceIO.prototype.load16 = function(offset) {
 	return (this.loadU16(offset) << 16) >> 16;
-}
+};
 
 GameBoyAdvanceIO.prototype.load32 = function(offset) {
 	offset &= 0xFFFFFFFC;
@@ -200,7 +203,7 @@ GameBoyAdvanceIO.prototype.loadU8 = function(offset) {
 	var odd = offset & 0x0001;
 	var value = this.loadU16(offset & 0xFFFE);
 	return (value >>> (odd << 3)) & 0xFF;
-}
+};
 
 GameBoyAdvanceIO.prototype.loadU16 = function(offset) {
 	switch (offset) {
@@ -693,19 +696,19 @@ GameBoyAdvanceIO.prototype.store16 = function(offset, value) {
 		return;
 
 	case this.TM0CNT_HI:
-		value &= 0x00C7
+		value &= 0x00C7;
 		this.cpu.irq.timerWriteControl(0, value);
 		break;
 	case this.TM1CNT_HI:
-		value &= 0x00C7
+		value &= 0x00C7;
 		this.cpu.irq.timerWriteControl(1, value);
 		break;
 	case this.TM2CNT_HI:
-		value &= 0x00C7
+		value &= 0x00C7;
 		this.cpu.irq.timerWriteControl(2, value);
 		break;
 	case this.TM3CNT_HI:
-		value &= 0x00C7
+		value &= 0x00C7;
 		this.cpu.irq.timerWriteControl(3, value);
 		break;
 

@@ -73,7 +73,7 @@ window.onload = function() {
 		var dead = document.getElementById('controls');
 		dead.parentElement.removeChild(dead);
 	}
-}
+};
 
 function fadeOut(id, nextId, kill) {
 	var e = document.getElementById(id);
@@ -96,7 +96,7 @@ function fadeOut(id, nextId, kill) {
 				e2.removeAttribute('class');
 			}, 0);
 		}
-	}
+	};
 
 	e.addEventListener('webkitTransitionEnd', removeSelf, false);
 	e.addEventListener('oTransitionEnd', removeSelf, false);
@@ -151,7 +151,7 @@ function reset() {
 	}
 	load.onclick = function() {
 		document.getElementById('loader').click();
-	}
+	};
 	fadeOut('ingame', 'preload');
 }
 
@@ -257,12 +257,12 @@ function enableDebug() {
 				debug = null;
 			}
 		}
-	}
+	};
 	window.onunload = function() {
 		if (debug && debug.postMessage) {
 			debug.postMessage('disconnect', document.domain || '*');
 		}
-	}
+	};
 	if (!debug || !debug.postMessage) {
 		debug = window.open('debugger.html', 'debug');
 	} else {

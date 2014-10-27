@@ -30,8 +30,7 @@ window.onmessage = function(message) {
 function setLogLevel(level, enabled) {
 	gba.logLevel &= ~level;
 	gba.logLevel |= enabled && level;
-};
-
+}
 var gbaCon;
 function initialize(gba) {
 	window.gba = gba;
@@ -47,8 +46,7 @@ function savestate() {
 		var img = document.getElementById('saveState');
 		img.setAttribute('src', url);
 	});
-};
-
+}
 function loadSavestate(state) {
 	try {
 		Serializer.deserializePNG(state, function (result) {
@@ -64,7 +62,7 @@ window.onload = function() {
 	if (window.opener) {
 		window.opener.postMessage('connect', document.domain || '*');
 	}
-}
+};
 
 window.onunload = function() {
 	gba.doStep = gba.waitFrame;
@@ -105,11 +103,11 @@ window.onunload = function() {
 		</section>
 		<section id="saving">
 			<button onclick="document.getElementById('uploadSave').click()">Load savedata</button>
-			<input type="file" id="uploadSave" onchange="gba.loadSavedataFromFile(this.files[0])" style="display: none">
+			<input type="file" id="uploadSave" onchange="gba.loadSavedataFromFile(this.files[0])" style="display: none;">
 			<button onclick="gba.downloadSavedata()">Download savedata</button>
 			<button onclick="gba.storeSavedata()">Store savedata</button>
 			<button onclick="savestate()">Freeze</button>
-			<input type="file" id="uploadSavestate" onchange="loadSavestate(this.files[0])" style="display: none">
+			<input type="file" id="uploadSavestate" onchange="loadSavestate(this.files[0])" style="display: none;">
 			<button onclick="document.getElementById('uploadSavestate').click()">Defrost</button>
 		</section>
 		<section id="registers">

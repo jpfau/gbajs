@@ -94,8 +94,8 @@ ARMCoreArm = function (cpu) {
 		},
 
 		null,
-		null,
-	];
+		null
+    ];
 
 	this.addressingMode23Register = [
 		// I00x0
@@ -169,8 +169,7 @@ ARMCoreArm = function (cpu) {
 		function(rn, rm, condOp) {
 			var gprs = cpu.gprs;
 			var address = function() {
-				var addr = gprs[rn] + gprs[rm];
-				return addr;
+				return gprs[rn] + gprs[rm];
 			};
 			address.writesPC = false;
 			return address;
@@ -292,9 +291,9 @@ ARMCoreArm = function (cpu) {
 		},
 
 		null,
-		null,
-	];
-}
+		null
+    ];
+};
 
 ARMCoreArm.prototype.constructAddressingMode1ASR = function(rs, rm) {
 	var cpu = this.cpu;
@@ -449,8 +448,7 @@ ARMCoreArm.prototype.constructAddressingMode4 = function(immediate, rn) {
 	var cpu = this.cpu;
 	var gprs = cpu.gprs;
 	return function() {
-		var addr = gprs[rn] + immediate;
-		return addr;
+		return gprs[rn] + immediate;
 	}
 };
 

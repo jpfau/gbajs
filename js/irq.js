@@ -1,3 +1,7 @@
+/**
+ *
+ * @constructor
+ */
 function GameBoyAdvanceInterruptHandler() {
 	this.inherit();
 	this.FREQUENCY = 0x1000000;
@@ -34,14 +38,13 @@ function GameBoyAdvanceInterruptHandler() {
 	this.MASK_DMA3 = 0x0800;
 	this.MASK_KEYPAD = 0x1000;
 	this.MASK_GAMEPAK = 0x2000;
-};
-
+}
 GameBoyAdvanceInterruptHandler.prototype.clear = function() {
 	this.enable = false;
 	this.enabledIRQs = 0;
 	this.interruptFlags = 0;
 
-	this.dma = new Array();
+	this.dma = [];
 	for (var i = 0; i < 4; ++i) {
 		this.dma.push({
 			source: 0,
@@ -63,7 +66,7 @@ GameBoyAdvanceInterruptHandler.prototype.clear = function() {
 	}
 
 	this.timersEnabled = 0;
-	this.timers = new Array();
+	this.timers = [];
 	for (var i = 0; i < 4; ++i) {
 		this.timers.push({
 			reload: 0,
@@ -272,7 +275,7 @@ GameBoyAdvanceInterruptHandler.prototype.updateTimers = function() {
 	}
 
 	this.pollNextEvent();
-}
+};
 
 GameBoyAdvanceInterruptHandler.prototype.resetSP = function() {
 	this.cpu.switchMode(this.cpu.MODE_SUPERVISOR);
@@ -487,7 +490,7 @@ GameBoyAdvanceInterruptHandler.prototype.swi = function(opcode) {
 		var sx, sy;
 		var theta;
 		var offset = this.cpu.gprs[0];
-		var destination = this.cpu.gprs[1]
+		var destination = this.cpu.gprs[1];
 		var diff = this.cpu.gprs[3];
 		var a, b, c, d;
 		while (i--) {
@@ -787,7 +790,7 @@ GameBoyAdvanceInterruptHandler.prototype.halt = function() {
 	if (!this.waitForIRQ()) {
 		throw "Waiting on interrupt forever.";
 	}
-}
+};
 
 GameBoyAdvanceInterruptHandler.prototype.lz77 = function(source, dest, unitsize) {
 	// TODO: move to a different file
@@ -849,7 +852,7 @@ GameBoyAdvanceInterruptHandler.prototype.lz77 = function(source, dest, unitsize)
 };
 
 GameBoyAdvanceInterruptHandler.prototype.huffman = function(source, dest) {
-	source = source & 0xFFFFFFFC;
+	source &= 0xFFFFFFFC;
 	var header = this.cpu.mmu.load32(source);
 	var remaining = header >> 8;
 	var bits = header & 0xF;
@@ -930,7 +933,7 @@ GameBoyAdvanceInterruptHandler.prototype.huffman = function(source, dest) {
 };
 
 GameBoyAdvanceInterruptHandler.prototype.rl = function(source, dest, unitsize) {
-	source = source & 0xFFFFFFFC;
+	source &= 0xFFFFFFFC;
 	var remaining = (this.cpu.mmu.load32(source) & 0xFFFFFF00) >> 8;
 	var padding = (4 - remaining) & 0x3;
 	// We assume the signature byte (0x30) is correct

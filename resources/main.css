@@ -19,7 +19,7 @@ button {
 }
 
 #screen[width="240"] {
-	margin-top: 42.5px;
+	margin-top: 43px;
 	margin-bottom: -363px; /* Take up no height */
 	image-rendering: -webkit-optimize-contrast;
 	image-rendering: -moz-crisp-edges;
@@ -79,7 +79,7 @@ button {
 	padding: 2px 10px 5px;
 	border-radius: 0 0 10px 10px;
 	border: 0 solid rgba(0, 0, 0, 0.4);
-	border-width: 3px 1px 0px;
+	border-width: 3px 1px 0;
 	display: inline;
 	box-shadow: 0 2px 6px -1px rgba(0, 0, 0, 0.2) inset;
 	margin: 0 0 20px;

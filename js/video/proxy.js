@@ -1,3 +1,7 @@
+/**
+ *
+ * @constructor
+ */
 function MemoryProxy(owner, size, blockSize) {
 	this.owner = owner;
 	this.blocks = [];
@@ -13,8 +17,7 @@ function MemoryProxy(owner, size, blockSize) {
 		this.mask = -1;
 		this.blocks[0] = new MemoryView(new ArrayBuffer(size));
 	}
-};
-
+}
 MemoryProxy.prototype.combine = function() {
 	if (this.blocks.length > 1) {
 		var combined = new Uint8Array(this.size);
@@ -80,6 +83,10 @@ MemoryProxy.prototype.store32 = function(offset, value) {
 
 MemoryProxy.prototype.invalidatePage = function(address) {};
 
+/**
+ *
+ * @constructor
+ */
 function GameBoyAdvanceRenderProxy() {
 	this.worker = new Worker('js/video/worker.js');
 
@@ -99,8 +106,7 @@ function GameBoyAdvanceRenderProxy() {
 	this.worker.onmessage = function(message) {
 		handlers[message.data['type']](message.data);
 	}
-};
-
+}
 GameBoyAdvanceRenderProxy.prototype.memoryDirtied = function(mem, block) {
 	this.dirty = this.dirty || {};
 	this.dirty.memory = this.dirty.memory || {};

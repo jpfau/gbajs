@@ -1,11 +1,14 @@
+/**
+ *
+ * @constructor
+ */
 function MemoryView(memory, offset) {
 	this.inherit();
 	this.buffer = memory;
 	this.view = new DataView(this.buffer, typeof(offset) === "number" ? offset : 0);
 	this.mask = memory.byteLength - 1;
 	this.resetMask();
-};
-
+}
 MemoryView.prototype.resetMask = function() {
 	this.mask8 = this.mask & 0xFFFFFFFF;
 	this.mask16 = this.mask & 0xFFFFFFFE;
@@ -59,13 +62,16 @@ MemoryView.prototype.replaceData = function(memory, offset) {
 	}
 };
 
+/**
+ *
+ * @constructor
+ */
 function MemoryBlock(size, cacheBits) {
 	MemoryView.call(this, new ArrayBuffer(size));
 	this.ICACHE_PAGE_BITS = cacheBits;
 	this.PAGE_MASK = (2 << this.ICACHE_PAGE_BITS) - 1;
 	this.icache = new Array(size >> (this.ICACHE_PAGE_BITS + 1));
-};
-
+}
 MemoryBlock.prototype = Object.create(MemoryView.prototype);
 
 MemoryBlock.prototype.invalidatePage = function(address) {
@@ -75,6 +81,10 @@ MemoryBlock.prototype.invalidatePage = function(address) {
 	}
 };
 
+/**
+ *
+ * @constructor
+ */
 function ROMView(rom, offset) {
 	MemoryView.call(this, rom, offset);
 	this.ICACHE_PAGE_BITS = 10;
@@ -82,8 +92,7 @@ function ROMView(rom, offset) {
 	this.icache = new Array(rom.byteLength >> (this.ICACHE_PAGE_BITS + 1));
 	this.mask = 0x01FFFFFF;
 	this.resetMask();
-};
-
+}
 ROMView.prototype = Object.create(MemoryView.prototype);
 
 ROMView.prototype.store8 = function(offset, value) {};
@@ -106,13 +115,16 @@ ROMView.prototype.store32 = function(offset, value) {
 	}
 };
 
+/**
+ *
+ * @constructor
+ */
 function BIOSView(rom, offset) {
 	MemoryView.call(this, rom, offset);
 	this.ICACHE_PAGE_BITS = 16;
 	this.PAGE_MASK = (2 << this.ICACHE_PAGE_BITS) - 1;
 	this.icache = new Array(1);
-};
-
+}
 BIOSView.prototype = Object.create(MemoryView.prototype);
 
 BIOSView.prototype.load8 = function(offset) {
@@ -156,12 +168,15 @@ BIOSView.prototype.store16 = function(offset, value) {};
 
 BIOSView.prototype.store32 = function(offset, value) {};
 
+/**
+ *
+ * @constructor
+ */
 function BadMemory(mmu, cpu) {
 	this.inherit();
 	this.cpu = cpu;
 	this.mmu = mmu
-};
-
+}
 BadMemory.prototype.load8 = function(offset) {
 	return this.mmu.load8(this.cpu.gprs[this.cpu.PC] - this.cpu.instructionWidth + (offset & 0x3));
 };
@@ -195,6 +210,10 @@ BadMemory.prototype.store32 = function(offset, value) {};
 
 BadMemory.prototype.invalidatePage = function(address) {};
 
+/**
+ *
+ * @constructor
+ */
 function GameBoyAdvanceMMU() {
 	this.inherit();
 	this.REGION_BIOS = 0x0;
@@ -277,11 +296,10 @@ function GameBoyAdvanceMMU() {
 	this.PAGE_MASK = (2 << this.ICACHE_PAGE_BITS) - 1;
 
 	this.bios = null;
-};
-
+}
 GameBoyAdvanceMMU.prototype.mmap = function(region, object) {
 	this.memory[region] = object;
-}
+};
 
 GameBoyAdvanceMMU.prototype.clear = function() {
 	this.badMemory = new BadMemory(this, this.cpu);
@@ -328,8 +346,8 @@ GameBoyAdvanceMMU.prototype.clear = function() {
 GameBoyAdvanceMMU.prototype.freeze = function() {
 	return {
 		'ram': Serializer.prefix(this.memory[this.REGION_WORKING_RAM].buffer),
-		'iram': Serializer.prefix(this.memory[this.REGION_WORKING_IRAM].buffer),
-	};
+		'iram': Serializer.prefix(this.memory[this.REGION_WORKING_IRAM].buffer)
+    };
 };
 
 GameBoyAdvanceMMU.prototype.defrost = function(frost) {
@@ -348,8 +366,8 @@ GameBoyAdvanceMMU.prototype.loadRom = function(rom, process) {
 		code: null,
 		maker: null,
 		memory: rom,
-		saveType: null,
-	};
+		saveType: null
+    };
 
 	var lo = new ROMView(rom);
 	if (lo.view.getUint8(0xB2) != 0x96) {
@@ -553,7 +571,7 @@ GameBoyAdvanceMMU.prototype.waitMul = function(rs) {
 	} else {
 		this.cpu.cycles += 4;
 	}
-}
+};
 
 GameBoyAdvanceMMU.prototype.waitMulti32 = function(memory, seq) {
 	this.cpu.cycles += 1 + this.waitstates32[memory >>> this.BASE_OFFSET];
@@ -572,7 +590,7 @@ GameBoyAdvanceMMU.prototype.accessPage = function(region, pageId) {
 			thumb: new Array(1 << (memory.ICACHE_PAGE_BITS)),
 			arm: new Array(1 << memory.ICACHE_PAGE_BITS - 1),
 			invalid: false
-		}
+		};
 		memory.icache[pageId] = page;
 	}
 	return page;

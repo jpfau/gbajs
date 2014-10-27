@@ -1,9 +1,12 @@
+/**
+ *
+ * @constructor
+ */
 function SRAMSavedata(size) {
 	MemoryView.call(this, new ArrayBuffer(size), 0);
 
 	this.writePending = false;
-};
-
+}
 SRAMSavedata.prototype = Object.create(MemoryView.prototype);
 
 SRAMSavedata.prototype.store8 = function(offset, value) {
@@ -21,6 +24,10 @@ SRAMSavedata.prototype.store32 = function(offset, value) {
 	this.writePending = true;
 };
 
+/**
+ *
+ * @constructor
+ */
 function FlashSavedata(size) {
 	MemoryView.call(this, new ArrayBuffer(size), 0);
 
@@ -52,8 +59,7 @@ function FlashSavedata(size) {
 	this.second = 0;
 	this.command = 0;
 	this.pendingCommand = 0;
-};
-
+}
 FlashSavedata.prototype = Object.create(MemoryView.prototype);
 
 FlashSavedata.prototype.load8 = function(offset) {
@@ -177,6 +183,10 @@ FlashSavedata.prototype.replaceData = function(memory) {
 	this.bank = bank ? this.bank1 : this.bank0;
 };
 
+/**
+ *
+ * @constructor
+ */
 function EEPROMSavedata(size, mmu) {
 	MemoryView.call(this, new ArrayBuffer(size), 0);
 
@@ -198,8 +208,7 @@ function EEPROMSavedata(size, mmu) {
 	this.COMMAND_WRITE = 2;
 	this.COMMAND_READ_PENDING = 3;
 	this.COMMAND_READ = 4;
-};
-
+}
 EEPROMSavedata.prototype = Object.create(MemoryView.prototype);
 
 EEPROMSavedata.prototype.load8 = function(offset) {

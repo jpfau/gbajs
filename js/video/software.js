@@ -1,7 +1,10 @@
+/**
+ *
+ * @constructor
+ */
 function MemoryAligned16(size) {
 	this.buffer = new Uint16Array(size >> 1);
-};
-
+}
 MemoryAligned16.prototype.load8 = function(offset) {
 	return (this.loadU8(offset) << 24) >> 24;
 };
@@ -48,13 +51,20 @@ MemoryAligned16.prototype.insert = function(start, data) {
 
 MemoryAligned16.prototype.invalidatePage = function(address) {};
 
+/**
+ *
+ * @constructor
+ */
 function GameBoyAdvanceVRAM(size) {
 	MemoryAligned16.call(this, size);
 	this.vram = this.buffer;
-};
-
+}
 GameBoyAdvanceVRAM.prototype = Object.create(MemoryAligned16.prototype);
 
+/**
+ *
+ * @constructor
+ */
 function GameBoyAdvanceOAM(size) {
 	MemoryAligned16.call(this, size);
 	this.oam = this.buffer;
@@ -71,8 +81,7 @@ function GameBoyAdvanceOAM(size) {
 			d: 1
 		};
 	}
-};
-
+}
 GameBoyAdvanceOAM.prototype = Object.create(MemoryAligned16.prototype);
 
 GameBoyAdvanceOAM.prototype.overwrite = function(memory) {
@@ -161,6 +170,10 @@ GameBoyAdvanceOAM.prototype.store16 = function(offset, value) {
 	MemoryAligned16.prototype.store16.call(this, offset, value);
 };
 
+/**
+ *
+ * @constructor
+ */
 function GameBoyAdvancePalette() {
 	this.colors = [ new Array(0x100), new Array(0x100) ];
 	this.adjustedColors = [ new Array(0x100), new Array(0x100) ];
@@ -173,8 +186,7 @@ function GameBoyAdvancePalette() {
 		this.colors[0] // Backdrop
 	];
 	this.blendY = 1;
-};
-
+}
 GameBoyAdvancePalette.prototype.overwrite = function(memory) {
 	for (var i = 0; i < 512; ++i) {
 		this.store16(i << 1, memory[i]);
@@ -316,7 +328,7 @@ GameBoyAdvancePalette.prototype.resetPalettes = function() {
 	for (i = 0; i < 256; ++i) {
 		outPalette[i] = this.adjustColor(inPalette[i]);
 	}
-}
+};
 
 GameBoyAdvancePalette.prototype.accessColor = function(layer, index) {
 	return this.passthroughColors[layer][index];
@@ -327,9 +339,9 @@ GameBoyAdvancePalette.prototype.adjustColorDark = function(color) {
 	var g = (color & 0x03E0) >> 5;
 	var b = (color & 0x7C00) >> 10;
 
-	r = r - (r * this.blendY);
-	g = g - (g * this.blendY);
-	b = b - (b * this.blendY);
+	r -= (r * this.blendY);
+	g -= (g * this.blendY);
+	b -= (b * this.blendY);
 
 	return r | (g << 5) | (b << 10);
 };
@@ -339,9 +351,9 @@ GameBoyAdvancePalette.prototype.adjustColorBright = function(color) {
 	var g = (color & 0x03E0) >> 5;
 	var b = (color & 0x7C00) >> 10;
 
-	r = r + ((31 - r) * this.blendY);
-	g = g + ((31 - g) * this.blendY);
-	b = b + ((31 - b) * this.blendY);
+	r += ((31 - r) * this.blendY);
+	g += ((31 - g) * this.blendY);
+	b += ((31 - b) * this.blendY);
 
 	return r | (g << 5) | (b << 10);
 };
@@ -355,6 +367,10 @@ GameBoyAdvancePalette.prototype.setBlendY = function(y) {
 	}
 };
 
+/**
+ *
+ * @constructor
+ */
 function GameBoyAdvanceOBJ(oam, index) {
 	this.TILE_OFFSET = 0x10000;
 	this.oam = oam;
@@ -379,8 +395,7 @@ function GameBoyAdvanceOBJ(oam, index) {
 	this.pushPixel = GameBoyAdvanceSoftwareRenderer.pushPixel;
 	this.cachedWidth = 8;
 	this.cachedHeight = 8;
-};
-
+}
 GameBoyAdvanceOBJ.prototype.drawScanlineNormal = function(backing, y, yOff, start, end) {
 	var video = this.oam.video;
 	var x;
@@ -588,6 +603,10 @@ GameBoyAdvanceOBJ.prototype.recalcSize = function() {
 	}
 };
 
+/**
+ *
+ * @constructor
+ */
 function GameBoyAdvanceOBJLayer(video, index) {
 	this.video = video;
 	this.bg = false;
@@ -595,8 +614,7 @@ function GameBoyAdvanceOBJLayer(video, index) {
 	this.priority = index;
 	this.enabled = false;
 	this.objwin = 0;
-};
-
+}
 GameBoyAdvanceOBJLayer.prototype.drawScanline = function(backing, layer, start, end) {
 	var y = this.video.vcount;
 	var wrappedY;
@@ -643,6 +661,10 @@ GameBoyAdvanceOBJLayer.prototype.objComparator = function(a, b) {
 	return a.index - b.index;
 };
 
+/**
+ *
+ * @constructor
+ */
 function GameBoyAdvanceSoftwareRenderer() {
 	this.LAYER_BG0 = 0;
 	this.LAYER_BG1 = 1;
@@ -682,8 +704,7 @@ function GameBoyAdvanceSoftwareRenderer() {
 			}
 		}
 	})(this);
-};
-
+}
 GameBoyAdvanceSoftwareRenderer.prototype.clear = function(mmu) {
 	this.palette = new GameBoyAdvancePalette();
 	this.vram = new GameBoyAdvanceVRAM(mmu.SIZE_VRAM);
@@ -728,15 +749,14 @@ GameBoyAdvanceSoftwareRenderer.prototype.clear = function(mmu) {
 	this.win1Bottom = 160;
 
 	// WININ/WINOUT
-	this.windows = new Array();
+	this.windows = [];
 	for (var i = 0; i < 4; ++i) {
 		this.windows.push({
 			enabled: [ false, false, false, false, false, true ],
 			special: 0
 		});
-	};
-
-	// BLDCNT
+    }
+    // BLDCNT
 	this.target1 = new Array(5);
 	this.target2 = new Array(5);
 	this.blendMode = 0;
@@ -762,7 +782,7 @@ GameBoyAdvanceSoftwareRenderer.prototype.clear = function(mmu) {
 	this.nextVblankIRQ = 0;
 	this.nextVcounterIRQ = 0;
 
-	this.bg = new Array();
+	this.bg = [];
 	for (var i = 0; i < 4; ++i) {
 		this.bg.push({
 			bg: true,
@@ -814,7 +834,7 @@ GameBoyAdvanceSoftwareRenderer.prototype.clear = function(mmu) {
 		this.drawBackdrop
 	];
 
-	this,objwinActive = false;
+	this.objwinActive = false;
 	this.alphaEnabled = false;
 
 	this.scanline = {
@@ -863,11 +883,11 @@ GameBoyAdvanceSoftwareRenderer.prototype.setBacking = function(backing) {
 	this.pixelData = backing;
 
 	// Clear backing first
-	for (var offset = 0; offset < this.HORIZONTAL_PIXELS * this.VERTICAL_PIXELS * 4;) {
-		this.pixelData.data[offset++] = 0xFF;
-		this.pixelData.data[offset++] = 0xFF;
-		this.pixelData.data[offset++] = 0xFF;
-		this.pixelData.data[offset++] = 0xFF;
+	for (var offset = 0; offset < this.HORIZONTAL_PIXELS * this.VERTICAL_PIXELS * 4;offset++) {
+		this.pixelData.data[offset+0] = 0xFF;
+		this.pixelData.data[offset+1] = 0xFF;
+		this.pixelData.data[offset+2] = 0xFF;
+		this.pixelData.data[offset+3] = 0xFF;
 	}
 };
 
@@ -1128,7 +1148,7 @@ GameBoyAdvanceSoftwareRenderer.prototype.accessMapMode0 = function(base, size, x
 	out.tile = mem & 0x03FF;
 	out.hflip = mem & 0x0400;
 	out.vflip = mem & 0x0800;
-	out.palette = (mem & 0xF000) >> 8 // This is shifted up 4 to make pushPixel faster
+	out.palette = (mem & 0xF000) >> 8; // This is shifted up 4 to make pushPixel faster
 };
 
 GameBoyAdvanceSoftwareRenderer.prototype.accessMapMode1 = function(base, size, x, yBase, out) {
@@ -1142,7 +1162,7 @@ GameBoyAdvanceSoftwareRenderer.prototype.accessTile = function(base, tile, y) {
 	offset |= y << 2;
 
 	return this.vram.load32(offset);
-}
+};
 
 GameBoyAdvanceSoftwareRenderer.pushPixel = function(layer, map, video, row, x, offset, backing, mask, raw) {
 	var index;

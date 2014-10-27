@@ -26,7 +26,7 @@ Serializer = {
 	TAG_BOOLEAN: 5,
 	TYPE: 'application/octet-stream',
 
-	pointer: function() {
+	Pointer: function() {
 		this.index = 0;
 		this.top = 0;
 		this.stack = [];
@@ -95,8 +95,8 @@ Serializer = {
 	deserialize: function(blob, callback) {
 		var reader = new FileReader();
 		reader.onload = function(data) {
-			callback(Serializer.deserealizeStream(new DataView(data.target.result), new Serializer.pointer));
-		}
+			callback(Serializer.deserealizeStream(new DataView(data.target.result), new Serializer.Pointer));
+		};
 		reader.readAsArrayBuffer(blob);
 	},
 
@@ -180,7 +180,7 @@ Serializer = {
 			}
 			context.putImageData(newPixels, 0, 0);
 			callback(canvas.toDataURL('image/png'));
-		}
+		};
 		reader.readAsArrayBuffer(blob);
 		return canvas;
 	},
@@ -218,31 +218,31 @@ Serializer = {
 				return array;
 			}), { type: Serializer.TYPE});
 			Serializer.deserialize(newBlob, callback);
-		}
+		};
 		reader.readAsDataURL(blob);
 	}
 };
 
-Serializer.pointer.prototype.advance = function(amount) {
+Serializer.Pointer.prototype.advance = function(amount) {
 	var index = this.index;
 	this.index += amount;
 	return index;
 };
 
-Serializer.pointer.prototype.mark = function() {
+Serializer.Pointer.prototype.mark = function() {
 	return this.index - this.top;
 };
 
-Serializer.pointer.prototype.push = function() {
+Serializer.Pointer.prototype.push = function() {
 	this.stack.push(this.top);
 	this.top = this.index;
 };
 
-Serializer.pointer.prototype.pop = function() {
+Serializer.Pointer.prototype.pop = function() {
 	this.top = this.stack.pop();
 };
 
-Serializer.pointer.prototype.readString = function(view) {
+Serializer.Pointer.prototype.readString = function(view) {
 	var length = view.getUint32(this.advance(4), true);
 	var bytes = [];
 	for (var i = 0; i < length; ++i) {

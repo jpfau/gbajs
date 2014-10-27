@@ -104,7 +104,7 @@ ARMCoreThumb.prototype.constructAND = function(rd, rm) {
 	var gprs = cpu.gprs;
 	return function() {
 		cpu.mmu.waitPrefetch(gprs[cpu.PC]);
-		gprs[rd] = gprs[rd] & gprs[rm];
+		gprs[rd] &= gprs[rm];
 		cpu.cpsrN = gprs[rd] >> 31;
 		cpu.cpsrZ = !(gprs[rd] & 0xFFFFFFFF);
 	};
@@ -180,7 +180,7 @@ ARMCoreThumb.prototype.constructBIC = function(rd, rm) {
 	var gprs = cpu.gprs;
 	return function() {
 		cpu.mmu.waitPrefetch(gprs[cpu.PC]);
-		gprs[rd] = gprs[rd] & ~gprs[rm];
+		gprs[rd] &= ~gprs[rm];
 		cpu.cpsrN = gprs[rd] >> 31;
 		cpu.cpsrZ = !(gprs[rd] & 0xFFFFFFFF);
 	};
@@ -246,7 +246,7 @@ ARMCoreThumb.prototype.constructCMP1 = function(rn, immediate) {
 		cpu.cpsrC = (gprs[rn] >>> 0) >= immediate;
 		cpu.cpsrV = (gprs[rn] >> 31) && ((gprs[rn] ^ aluOut) >> 31);
 	};
-}
+};
 
 ARMCoreThumb.prototype.constructCMP2 = function(rd, rm) {
 	var cpu = this.cpu;
@@ -283,7 +283,7 @@ ARMCoreThumb.prototype.constructEOR = function(rd, rm) {
 	var gprs = cpu.gprs;
 	return function() {
 		cpu.mmu.waitPrefetch(gprs[cpu.PC]);
-		gprs[rd] = gprs[rd] ^ gprs[rm];
+		gprs[rd] ^= gprs[rm];
 		cpu.cpsrN = gprs[rd] >> 31;
 		cpu.cpsrZ = !(gprs[rd] & 0xFFFFFFFF);
 	};
@@ -479,7 +479,7 @@ ARMCoreThumb.prototype.constructLSR1 = function(rd, rm, immediate) {
 		cpu.cpsrN = 0;
 		cpu.cpsrZ = !(gprs[rd] & 0xFFFFFFFF);
 	};
-}
+};
 
 ARMCoreThumb.prototype.constructLSR2 = function(rd, rm) {
 	var cpu = this.cpu;
@@ -588,7 +588,7 @@ ARMCoreThumb.prototype.constructORR = function(rd, rm) {
 	var gprs = cpu.gprs;
 	return function() {
 		cpu.mmu.waitPrefetch(gprs[cpu.PC]);
-		gprs[rd] = gprs[rd] | gprs[rm];
+		gprs[rd] |= gprs[rm];
 		cpu.cpsrN = gprs[rd] >> 31;
 		cpu.cpsrZ = !(gprs[rd] & 0xFFFFFFFF);
 	};
@@ -802,7 +802,7 @@ ARMCoreThumb.prototype.constructSUB1 = function(rd, rn, immediate) {
 		cpu.cpsrV = (gprs[rn] >> 31) && ((gprs[rn] ^ d) >> 31);
 		gprs[rd] = d;
 	};
-}
+};
 
 ARMCoreThumb.prototype.constructSUB2 = function(rn, immediate) {
 	var cpu = this.cpu;

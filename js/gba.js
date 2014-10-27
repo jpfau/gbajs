@@ -1,3 +1,7 @@
+/**
+ *
+ * @constructor
+ */
 function GameBoyAdvance() {
 	this.LOG_ERROR = 1;
 	this.LOG_WARN = 2;
@@ -12,7 +16,7 @@ function GameBoyAdvance() {
 	this.rom = null;
 
 	this.cpu = new ARMCore();
-	this.mmu = new GameBoyAdvanceMMU()
+	this.mmu = new GameBoyAdvanceMMU();
 	this.irq = new GameBoyAdvanceInterruptHandler();
 	this.io = new GameBoyAdvanceIO();
 	this.audio = new GameBoyAdvanceAudio();
@@ -72,8 +76,7 @@ function GameBoyAdvance() {
 	this.video.vblankCallback = function() {
 		self.seenFrame = true;
 	};
-};
-
+}
 GameBoyAdvance.prototype.setCanvas = function(canvas) {
 	var self = this;
 	if (canvas.offsetWidth != 240 || canvas.offsetHeight != 160) {
@@ -124,7 +127,7 @@ GameBoyAdvance.prototype.loadRomFromFile = function(romFile, callback) {
 		if (callback) {
 			callback(result);
 		}
-	}
+	};
 	reader.readAsArrayBuffer(romFile);
 };
 
@@ -246,7 +249,7 @@ GameBoyAdvance.prototype.setSavedata = function(data) {
 GameBoyAdvance.prototype.loadSavedataFromFile = function(saveFile) {
 	var reader = new FileReader();
 	var self = this;
-	reader.onload = function(e) { self.setSavedata(e.target.result); }
+	reader.onload = function(e) { self.setSavedata(e.target.result); };
 	reader.readAsArrayBuffer(saveFile);
 };
 
@@ -293,8 +296,8 @@ GameBoyAdvance.prototype.encodeBase64 = function(view) {
 			triplet = wordstring.splice(0, 3);
 			data.push(btoa(triplet.join('')));
 		}
-	};
-	if (wordstring.length) {
+    }
+    if (wordstring.length) {
 		data.push(btoa(wordstring.join('')));
 	}
 	return data.join('');

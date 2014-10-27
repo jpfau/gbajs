@@ -1,3 +1,7 @@
+/**
+ *
+ * @constructor
+ */
 function GameBoyAdvanceGPIO(core, rom) {
 	this.core = core;
 	this.rom = rom;
@@ -6,8 +10,7 @@ function GameBoyAdvanceGPIO(core, rom) {
 	this.direction = 0;
 
 	this.device = new GameBoyAdvanceRTC(this); // TODO: Support more devices
-};
-
+}
 GameBoyAdvanceGPIO.prototype.store16 = function(offset, value) {
 	switch (offset) {
 	case 0xC4:
@@ -38,6 +41,10 @@ GameBoyAdvanceGPIO.prototype.outputPins = function(nybble) {
 	}
 };
 
+/**
+ *
+ * @constructor
+ */
 function GameBoyAdvanceRTC(gpio) {
 	this.gpio = gpio;
 
@@ -84,8 +91,7 @@ function GameBoyAdvanceRTC(gpio) {
 		0, // Minute
 		0 // Second
 	];
-};
-
+}
 GameBoyAdvanceRTC.prototype.setPins = function(nybble) {
 	switch (this.transferStep) {
 	case 0:
@@ -183,8 +189,7 @@ GameBoyAdvanceRTC.prototype.sioOutputPin = function() {
 		outputByte = this.time[7 - this.bytesRemaining];
 		break;
 	}
-	var output = (outputByte >> this.bitsRead) & 1;
-	return output;
+	return (outputByte >> this.bitsRead) & 1;
 };
 
 GameBoyAdvanceRTC.prototype.updateClock = function() {

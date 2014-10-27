@@ -6,7 +6,7 @@ var currentFrame = 0;
 
 self.finishDraw = function(pixelData) {
 	self.postMessage({ type: 'finish', backing: pixelData, frame: currentFrame });
-}
+};
 
 function receiveDirty(dirty) {
 	for (var type in dirty) {
@@ -160,7 +160,7 @@ var handlers = {
 			video.drawScanline(y, proxyBacking);
 		}
 		video.finishDraw(self);
-	},
+	}
 };
 
 self.onmessage = function(message) {
