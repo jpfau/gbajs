@@ -1,22 +1,38 @@
 /// <reference path="arm.ts"/>
 /// <reference path="thumb.ts"/>
 
+enum Register {
+    /**
+     * Stack pointer
+     * @type {number}
+     */
+    SP = 13,
+    /**
+     * Link register
+     * @type {number}
+     */
+    LR = 14,
+    /**
+     * Program counter
+     * @type {number}
+     */
+    PC = 15
+}
+
+enum Mode {
+    ARM = 0,
+    THUMB = 1,
+
+    USER = 0x10,
+    FIQ = 0x11,
+    IRQ = 0x12,
+    SUPERVISOR = 0x13,
+    ABORT = 0x17,
+    UNDEFINED = 0x1B,
+    SYSTEM = 0x1F
+}
+
 class ARMCore {
-
-    SP = 13;
-    LR = 14;
-    PC = 15;
-
-    MODE_ARM = 0;
-    MODE_THUMB = 1;
-
-    MODE_USER = 0x10;
-    MODE_FIQ = 0x11;
-    MODE_IRQ = 0x12;
-    MODE_SUPERVISOR = 0x13;
-    MODE_ABORT = 0x17;
-    MODE_UNDEFINED = 0x1B;
-    MODE_SYSTEM = 0x1F;
 
     BANK_NONE = 0;
     BANK_FIQ = 1;
@@ -43,6 +59,10 @@ class ARMCore {
 
     armCompiler:ARMCoreArm;
     thumbCompiler:ARMCoreThumb;
+    /**
+     * Registers
+     * @type {Int32Array}
+     */
     gprs = new Int32Array(16);
 
     mmu;
@@ -65,30 +85,32 @@ class ARMCore {
     mode;
 
     bankedRegisters:Int32Array[];
-    spsr:number;
     bankedSPSRs:Int32Array;
     page;
 
     WARN;
 
-    cpsrI = false;
-    cpsrF = false;
-    cpsrV = false;
-    cpsrC = false;
-    cpsrZ = false;
-    cpsrN = false;
+    spsr:number;
+    cpsr = {
+        I: false,
+        F: false,
+        V: false,
+        C: false,
+        Z: false,
+        N: false
+    };
 
     resetCPU(startOffset:number) {
-        for (var i = 0; i < this.PC; ++i) {
+        for (var i = 0; i < Register.PC; ++i) {
             this.gprs[i] = 0;
         }
-        this.gprs[this.PC] = startOffset + this.WORD_SIZE_ARM;
+        this.gprs[Register.PC] = startOffset + this.WORD_SIZE_ARM;
 
         this.loadInstruction = this.loadInstructionArm;
-        this.execMode = this.MODE_ARM;
+        this.execMode = Mode.ARM;
         this.instructionWidth = this.WORD_SIZE_ARM;
 
-        this.mode = this.MODE_SYSTEM;
+        this.mode = Mode.SYSTEM;
 
         this.bankedRegisters = [
             new Int32Array(7),
@@ -117,34 +139,34 @@ class ARMCore {
         var gprs = this.gprs;
         var mmu = this.mmu;
         this.step = function () {
-            var instruction = this.instruction || (this.instruction = this.loadInstruction(gprs[this.PC] - this.instructionWidth));
-            gprs[this.PC] += this.instructionWidth;
+            var instruction = this.instruction || (this.instruction = this.loadInstruction(gprs[Register.PC] - this.instructionWidth));
+            gprs[Register.PC] += this.instructionWidth;
             this.conditionPassed = true;
             instruction();
 
             if (!instruction.writesPC) {
                 if (this.instruction != null) { // We might have gotten an interrupt from the instruction
                     if (instruction.next == null || instruction.next.page.invalid) {
-                        instruction.next = this.loadInstruction(gprs[this.PC] - this.instructionWidth);
+                        instruction.next = this.loadInstruction(gprs[Register.PC] - this.instructionWidth);
                     }
                     this.instruction = instruction.next;
                 }
             } else {
                 if (this.conditionPassed) {
-                    var pc = gprs[this.PC] &= 0xFFFFFFFE;
-                    if (this.execMode == this.MODE_ARM) {
+                    var pc = gprs[Register.PC] &= 0xFFFFFFFE;
+                    if (this.execMode == Mode.ARM) {
                         mmu.wait32(pc);
                         mmu.waitPrefetch32(pc);
                     } else {
                         mmu.wait(pc);
                         mmu.waitPrefetch(pc);
                     }
-                    gprs[this.PC] += this.instructionWidth;
+                    gprs[Register.PC] += this.instructionWidth;
                     if (!instruction.fixedJump) {
                         this.instruction = null;
                     } else if (this.instruction != null) {
                         if (instruction.next == null || instruction.next.page.invalid) {
-                            instruction.next = this.loadInstruction(gprs[this.PC] - this.instructionWidth);
+                            instruction.next = this.loadInstruction(gprs[Register.PC] - this.instructionWidth);
                         }
                         this.instruction = instruction.next;
                     }
@@ -177,12 +199,12 @@ class ARMCore {
                 this.gprs[15]
             ],
             'mode': this.mode,
-            'cpsrI': this.cpsrI,
-            'cpsrF': this.cpsrF,
-            'cpsrV': this.cpsrV,
-            'cpsrC': this.cpsrC,
-            'cpsrZ': this.cpsrZ,
-            'cpsrN': this.cpsrN,
+            'cpsr.I': this.cpsr.I,
+            'cpsr.F': this.cpsr.F,
+            'cpsr.V': this.cpsr.V,
+            'cpsr.C': this.cpsr.C,
+            'cpsr.Z': this.cpsr.Z,
+            'cpsr.N': this.cpsr.N,
             'bankedRegisters': [
                 [
                     this.bankedRegisters[0][0],
@@ -257,12 +279,12 @@ class ARMCore {
         this.gprs[15] = frost.gprs[15];
 
         this.mode = frost.mode;
-        this.cpsrI = frost.cpsrI;
-        this.cpsrF = frost.cpsrF;
-        this.cpsrV = frost.cpsrV;
-        this.cpsrC = frost.cpsrC;
-        this.cpsrZ = frost.cpsrZ;
-        this.cpsrN = frost.cpsrN;
+        this.cpsr.I = frost.cpsr.I;
+        this.cpsr.F = frost.cpsr.F;
+        this.cpsr.V = frost.cpsr.V;
+        this.cpsr.C = frost.cpsr.C;
+        this.cpsr.Z = frost.cpsr.Z;
+        this.cpsr.N = frost.cpsr.N;
 
         this.bankedRegisters[0][0] = frost.bankedRegisters[0][0];
         this.bankedRegisters[0][1] = frost.bankedRegisters[0][1];
@@ -363,19 +385,19 @@ class ARMCore {
 
     selectBank(mode) {
         switch (mode) {
-            case this.MODE_USER:
-            case this.MODE_SYSTEM:
+            case Mode.USER:
+            case Mode.SYSTEM:
                 // No banked registers
                 return this.BANK_NONE;
-            case this.MODE_FIQ:
+            case Mode.FIQ:
                 return this.BANK_FIQ;
-            case this.MODE_IRQ:
+            case Mode.IRQ:
                 return this.BANK_IRQ;
-            case this.MODE_SUPERVISOR:
+            case Mode.SUPERVISOR:
                 return this.BANK_SUPERVISOR;
-            case this.MODE_ABORT:
+            case Mode.ABORT:
                 return this.BANK_ABORT;
-            case this.MODE_UNDEFINED:
+            case Mode.UNDEFINED:
                 return this.BANK_UNDEFINED;
             default:
                 throw "Invalid user mode passed to selectBank";
@@ -385,7 +407,7 @@ class ARMCore {
     switchExecMode(newMode) {
         if (this.execMode != newMode) {
             this.execMode = newMode;
-            if (newMode == this.MODE_ARM) {
+            if (newMode == Mode.ARM) {
                 this.instructionWidth = this.WORD_SIZE_ARM;
                 this.loadInstruction = this.loadInstructionArm;
             } else {
@@ -401,13 +423,13 @@ class ARMCore {
             // Not switching modes after all
             return;
         }
-        if (newMode != this.MODE_USER || newMode != this.MODE_SYSTEM) {
+        if (newMode != Mode.USER || newMode != Mode.SYSTEM) {
             // Switch banked registers
             var newBank = this.selectBank(newMode);
             var oldBank = this.selectBank(this.mode);
             if (newBank != oldBank) {
                 // TODO: support FIQ
-                if (newMode == this.MODE_FIQ || this.mode == this.MODE_FIQ) {
+                if (newMode == Mode.FIQ || this.mode == Mode.FIQ) {
                     var oldFiqBank = <number><any>(oldBank == this.BANK_FIQ);
                     var newFiqBank = <number><any>(newBank == this.BANK_FIQ);
                     this.bankedRegisters[oldFiqBank][2] = this.gprs[8];
@@ -421,10 +443,10 @@ class ARMCore {
                     this.gprs[11] = this.bankedRegisters[newFiqBank][5];
                     this.gprs[12] = this.bankedRegisters[newFiqBank][6];
                 }
-                this.bankedRegisters[oldBank][0] = this.gprs[this.SP];
-                this.bankedRegisters[oldBank][1] = this.gprs[this.LR];
-                this.gprs[this.SP] = this.bankedRegisters[newBank][0];
-                this.gprs[this.LR] = this.bankedRegisters[newBank][1];
+                this.bankedRegisters[oldBank][0] = this.gprs[Register.SP];
+                this.bankedRegisters[oldBank][1] = this.gprs[Register.LR];
+                this.gprs[Register.SP] = this.bankedRegisters[newBank][0];
+                this.gprs[Register.LR] = this.bankedRegisters[newBank][1];
 
                 this.bankedSPSRs[oldBank] = this.spsr;
                 this.spsr = this.bankedSPSRs[newBank];
@@ -434,52 +456,52 @@ class ARMCore {
     }
 
     packCPSR():number {
-        return this.mode | (this.execMode << 5) | (<any>this.cpsrF << 6) | (<any>this.cpsrI << 7) |
-            (<any>this.cpsrN << 31) | (<any>this.cpsrZ << 30) | (<any>this.cpsrC << 29) | (<any>this.cpsrV << 28);
+        return this.mode | (this.execMode << 5) | (<any>this.cpsr.F << 6) | (<any>this.cpsr.I << 7) |
+            (<any>this.cpsr.N << 31) | (<any>this.cpsr.Z << 30) | (<any>this.cpsr.C << 29) | (<any>this.cpsr.V << 28);
     }
 
     unpackCPSR(spsr:number) {
         this.switchMode(spsr & 0x0000001F);
         this.switchExecMode(!!(spsr & 0x00000020));
-        this.cpsrF = !!(spsr & 0x00000040);
-        this.cpsrI = !!(spsr & 0x00000080);
-        this.cpsrN = !!(spsr & 0x80000000);
-        this.cpsrZ = !!(spsr & 0x40000000);
-        this.cpsrC = !!(spsr & 0x20000000);
-        this.cpsrV = !!(spsr & 0x10000000);
+        this.cpsr.F = !!(spsr & 0x00000040);
+        this.cpsr.I = !!(spsr & 0x00000080);
+        this.cpsr.N = !!(spsr & 0x80000000);
+        this.cpsr.Z = !!(spsr & 0x40000000);
+        this.cpsr.C = !!(spsr & 0x20000000);
+        this.cpsr.V = !!(spsr & 0x10000000);
 
         this.irq.testIRQ();
     }
 
     hasSPSR() {
-        return this.mode != this.MODE_SYSTEM && this.mode != this.MODE_USER;
+        return this.mode != Mode.SYSTEM && this.mode != Mode.USER;
     }
 
     raiseIRQ() {
-        if (this.cpsrI) {
+        if (this.cpsr.I) {
             return;
         }
         var cpsr = this.packCPSR();
         var instructionWidth = this.instructionWidth;
-        this.switchMode(this.MODE_IRQ);
+        this.switchMode(Mode.IRQ);
         this.spsr = cpsr;
-        this.gprs[this.LR] = this.gprs[this.PC] - instructionWidth + 4;
-        this.gprs[this.PC] = this.BASE_IRQ + this.WORD_SIZE_ARM;
+        this.gprs[Register.LR] = this.gprs[Register.PC] - instructionWidth + 4;
+        this.gprs[Register.PC] = this.BASE_IRQ + this.WORD_SIZE_ARM;
         this.instruction = null;
-        this.switchExecMode(this.MODE_ARM);
-        this.cpsrI = true;
+        this.switchExecMode(Mode.ARM);
+        this.cpsr.I = true;
     }
 
     raiseTrap() {
         var cpsr = this.packCPSR();
         var instructionWidth = this.instructionWidth;
-        this.switchMode(this.MODE_SUPERVISOR);
+        this.switchMode(Mode.SUPERVISOR);
         this.spsr = cpsr;
-        this.gprs[this.LR] = this.gprs[this.PC] - instructionWidth;
-        this.gprs[this.PC] = this.BASE_SWI + this.WORD_SIZE_ARM;
+        this.gprs[Register.LR] = this.gprs[Register.PC] - instructionWidth;
+        this.gprs[Register.PC] = this.BASE_SWI + this.WORD_SIZE_ARM;
         this.instruction = null;
-        this.switchExecMode(this.MODE_ARM);
-        this.cpsrI = true;
+        this.switchExecMode(Mode.ARM);
+        this.cpsr.I = true;
     }
 
     badOp(instruction):any {
@@ -498,59 +520,59 @@ class ARMCore {
         this.conds = [
             // EQ
             function () {
-                return cpu.conditionPassed = cpu.cpsrZ;
+                return cpu.conditionPassed = cpu.cpsr.Z;
             },
             // NE
             function () {
-                return cpu.conditionPassed = !cpu.cpsrZ;
+                return cpu.conditionPassed = !cpu.cpsr.Z;
             },
             // CS
             function () {
-                return cpu.conditionPassed = cpu.cpsrC;
+                return cpu.conditionPassed = cpu.cpsr.C;
             },
             // CC
             function () {
-                return cpu.conditionPassed = !cpu.cpsrC;
+                return cpu.conditionPassed = !cpu.cpsr.C;
             },
             // MI
             function () {
-                return cpu.conditionPassed = cpu.cpsrN;
+                return cpu.conditionPassed = cpu.cpsr.N;
             },
             // PL
             function () {
-                return cpu.conditionPassed = !cpu.cpsrN;
+                return cpu.conditionPassed = !cpu.cpsr.N;
             },
             // VS
             function () {
-                return cpu.conditionPassed = cpu.cpsrV;
+                return cpu.conditionPassed = cpu.cpsr.V;
             },
             // VC
             function () {
-                return cpu.conditionPassed = !cpu.cpsrV;
+                return cpu.conditionPassed = !cpu.cpsr.V;
             },
             // HI
             function () {
-                return cpu.conditionPassed = cpu.cpsrC && !cpu.cpsrZ;
+                return cpu.conditionPassed = cpu.cpsr.C && !cpu.cpsr.Z;
             },
             // LS
             function () {
-                return cpu.conditionPassed = !cpu.cpsrC || cpu.cpsrZ;
+                return cpu.conditionPassed = !cpu.cpsr.C || cpu.cpsr.Z;
             },
             // GE
             function () {
-                return cpu.conditionPassed = !cpu.cpsrN == !cpu.cpsrV;
+                return cpu.conditionPassed = !cpu.cpsr.N == !cpu.cpsr.V;
             },
             // LT
             function () {
-                return cpu.conditionPassed = !cpu.cpsrN != !cpu.cpsrV;
+                return cpu.conditionPassed = !cpu.cpsr.N != !cpu.cpsr.V;
             },
             // GT
             function () {
-                return cpu.conditionPassed = !cpu.cpsrZ && !cpu.cpsrN == !cpu.cpsrV;
+                return cpu.conditionPassed = !cpu.cpsr.Z && !cpu.cpsr.N == !cpu.cpsr.V;
             },
             // LE
             function () {
-                return cpu.conditionPassed = cpu.cpsrZ || !cpu.cpsrN != !cpu.cpsrV;
+                return cpu.conditionPassed = cpu.cpsr.Z || !cpu.cpsr.N != !cpu.cpsr.V;
             },
             // AL
             null,
@@ -577,7 +599,7 @@ class ARMCore {
                     // This boils down to no shift
                     shiftOp = function () {
                         cpu.shifterOperand = gprs[rm];
-                        cpu.shifterCarryOut = <any>cpu.cpsrC;
+                        cpu.shifterCarryOut = <any>cpu.cpsr.C;
                     };
                 }
                 break;
@@ -623,7 +645,7 @@ class ARMCore {
                 } else {
                     // RRX
                     shiftOp = function () {
-                        cpu.shifterOperand = (<number>(<any>cpu.cpsrC) << 31) | (gprs[rm] >>> 1);
+                        cpu.shifterOperand = (<number>(<any>cpu.cpsr.C) << 31) | (gprs[rm] >>> 1);
                         cpu.shifterCarryOut = gprs[rm] & 0x00000001;
                     };
                 }
@@ -665,7 +687,7 @@ class ARMCore {
                     // MRS
                     var rd = (instruction & 0x0000F000) >> 12;
                     op = this.armCompiler.constructMRS(rd, r, condOp);
-                    op.writesPC = rd == this.PC;
+                    op.writesPC = rd == Register.PC;
                 }
             } else {
                 // Data processing/FSR transfer
@@ -826,7 +848,7 @@ class ARMCore {
                         }
                         break;
                 }
-                op.writesPC = rd == this.PC;
+                op.writesPC = rd == Register.PC;
             }
         } else if ((instruction & 0x0FB00FF0) == 0x01000090) {
             // Single data swap
@@ -838,7 +860,7 @@ class ARMCore {
             } else {
                 op = this.armCompiler.constructSWP(rd, rn, rm, condOp);
             }
-            op.writesPC = rd == this.PC;
+            op.writesPC = rd == Register.PC;
         } else {
             switch (i) {
                 case 0x00000000:
@@ -898,7 +920,7 @@ class ARMCore {
                                 op = this.armCompiler.constructSMLALS(rd, rn, rs, rm, condOp);
                                 break;
                         }
-                        op.writesPC = rd == this.PC;
+                        op.writesPC = rd == Register.PC;
                     } else {
                         // Halfword and signed byte data transfer
                         var load = instruction & 0x00100000;
@@ -917,7 +939,7 @@ class ARMCore {
                         } else {
                             address = this.armCompiler.constructAddressingMode23Register(instruction, rm, condOp);
                         }
-                        address.writesPC = !!w && rn == this.PC;
+                        address.writesPC = !!w && rn == Register.PC;
 
                         if ((instruction & 0x00000090) == 0x00000090) {
                             if (load) {
@@ -941,7 +963,7 @@ class ARMCore {
                                 op = this.armCompiler.constructSTRH(rd, address, condOp);
                             }
                         }
-                        op.writesPC = rd == this.PC || address.writesPC;
+                        op.writesPC = rd == Register.PC || address.writesPC;
                     }
                     break;
                 case 0x04000000:
@@ -993,7 +1015,7 @@ class ARMCore {
                             op = this.armCompiler.constructSTR(rd, address, condOp);
                         }
                     }
-                    op.writesPC = rd == this.PC || address.writesPC;
+                    op.writesPC = rd == Register.PC || address.writesPC;
                     break;
                 case 0x08000000:
                     // Block data transfer
@@ -1095,7 +1117,7 @@ class ARMCore {
             }
         }
 
-        op.execMode = this.MODE_ARM;
+        op.execMode = Mode.ARM;
         op.fixedJump = op.fixedJump || false;
         return op;
     }
@@ -1185,7 +1207,7 @@ class ARMCore {
                 case 0x0000:
                     // ADD(4)
                     op = this.thumbCompiler.constructADD4(rd, rm);
-                    op.writesPC = rd == this.PC;
+                    op.writesPC = rd == Register.PC;
                     break;
                 case 0x0100:
                     // CMP(3)
@@ -1195,7 +1217,7 @@ class ARMCore {
                 case 0x0200:
                     // MOV(3)
                     op = this.thumbCompiler.constructMOV3(rd, rm);
-                    op.writesPC = rd == this.PC;
+                    op.writesPC = rd == Register.PC;
                     break;
                 case 0x0300:
                     // BX
@@ -1508,7 +1530,7 @@ class ARMCore {
             throw 'Bad opcode: 0x' + instruction.toString(16);
         }
 
-        op.execMode = this.MODE_THUMB;
+        op.execMode = Mode.THUMB;
         op.fixedJump = op.fixedJump || false;
         return op;
     }

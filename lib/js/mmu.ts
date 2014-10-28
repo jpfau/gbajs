@@ -2,6 +2,12 @@
 /// <reference path="savedata.ts"/>
 /// <reference path="gpio.ts"/>
 
+interface Page {
+    thumb:any[]
+    arm:any[]
+    invalid:boolean
+}
+
 class MemoryView {
     buffer;
     view:DataView;
@@ -220,7 +226,7 @@ class BadMemory {
     }
 
     load32(offset) {
-        if (this.cpu.execMode == this.cpu.MODE_ARM) {
+        if (this.cpu.execMode == Mode.ARM) {
             return this.mmu.load32(this.cpu.gprs[this.cpu.gprs.PC] - this.cpu.instructionWidth);
         } else {
             var halfword = this.mmu.loadU16(this.cpu.gprs[this.cpu.PC] - this.cpu.instructionWidth);
@@ -633,13 +639,13 @@ class GameBoyAdvanceMMU {
         return address >> this.memory[region].ICACHE_PAGE_BITS;
     }
 
-    accessPage(region, pageId) {
+    accessPage(region, pageId):Page {
         var memory = this.memory[region];
         var page = memory.icache[pageId];
         if (!page || page.invalid) {
             page = {
-                thumb: new Array(1 << (memory.ICACHE_PAGE_BITS)),
-                arm: new Array(1 << memory.ICACHE_PAGE_BITS - 1),
+                thumb: new Array<any>(1 << (memory.ICACHE_PAGE_BITS)),
+                arm: new Array<any>(1 << memory.ICACHE_PAGE_BITS - 1),
                 invalid: false
             };
             memory.icache[pageId] = page;

@@ -27,12 +27,11 @@ class GameBoyAdvanceConsole {
         this.tileView = new TileViewer(gba.video.renderPath.vram, gba.video.renderPath.palette);
         this.update();
 
-        var self = this;
-        gba.setLogger(function (level, message) {
-            self.log(level, message)
+        gba.setLogger((level, message) => {
+            this.log(level, message)
         });
-        this.gba.doStep = function () {
-            return self.testBreakpoints()
+        this.gba.doStep = () => {
+            return this.testBreakpoints()
         };
     }
 
@@ -44,7 +43,7 @@ class GameBoyAdvanceConsole {
 
     updateCPSR() {
         var cpu = this.cpu;
-        var bit = function (psr, member) {
+        var bit = (psr, member) => {
             var element = document.getElementById(psr);
             if (cpu[member]) {
                 element.removeAttribute('class');
@@ -52,12 +51,12 @@ class GameBoyAdvanceConsole {
                 element.setAttribute('class', 'disabled');
             }
         };
-        bit('cpsrN', 'cpsrN');
-        bit('cpsrZ', 'cpsrZ');
-        bit('cpsrC', 'cpsrC');
-        bit('cpsrV', 'cpsrV');
-        bit('cpsrI', 'cpsrI');
-        bit('cpsrT', 'execMode');
+        bit('cpsr.N', 'cpsr.N');
+        bit('cpsr.Z', 'cpsr.Z');
+        bit('cpsr.C', 'cpsr.C');
+        bit('cpsr.V', 'cpsr.V');
+        bit('cpsr.I', 'cpsr.I');
+        bit('cpsr.T', 'execMode');
 
         var mode = document.getElementById('mode');
         switch (cpu.mode) {
@@ -127,7 +126,7 @@ class GameBoyAdvanceConsole {
         if (doScroll) {
             var ul = this.ul;
             var last = ul.scrollTop;
-            var scrollUp = function () {
+            var scrollUp = () => {
                 if (ul.scrollTop == last) {
                     ul.scrollTop = (ul.scrollHeight - ul.offsetHeight) * 0.2 + last * 0.8;
                     last = ul.scrollTop;
@@ -178,7 +177,7 @@ class GameBoyAdvanceConsole {
 
         this.stillRunning = true;
         var self = this;
-        var run = function () {
+        var run = () => {
             if (self.stillRunning) {
                 try {
                     self.step();
@@ -225,7 +224,7 @@ class GameBoyAdvanceConsole {
         regs.setAttribute('class', 'disabled');
         mem.setAttribute('class', 'disabled');
         var self = this;
-        var run = function () {
+        var run = () => {
             self.gba.step();
             self.pause();
         };
@@ -258,7 +257,7 @@ class GameBoyAdvanceConsole {
             cb.setAttribute('type', 'checkbox');
             cb.setAttribute('checked', 'checked');
             var self = this;
-            cb.addEventListener('click', function () {
+            cb.addEventListener('click', () => {
                 self.breakpoints[addr] = cb.checked;
             }, false);
             bpLi.appendChild(cb);
@@ -301,12 +300,11 @@ class Memory {
         }
         this.ul.parentElement.scrollTop = this.scrollTop;
 
-        var self = this;
-        this.ul.parentElement.addEventListener('scroll', function (e) {
-            self.scroll(e)
+        this.ul.parentElement.addEventListener('scroll', (e) => {
+            this.scroll(e)
         }, true);
-        window.addEventListener('resize', function (e) {
-            self.resize()
+        window.addEventListener('resize', (e) => {
+            this.resize()
         }, true);
     }
 

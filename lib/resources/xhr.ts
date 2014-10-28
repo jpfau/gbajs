@@ -3,7 +3,7 @@ function loadRom(url, callback) {
     xhr.open('GET', url);
     xhr.responseType = 'arraybuffer';
 
-    xhr.onload = function () {
+    xhr.onload = () => {
         callback(xhr.response)
     };
     xhr.send();

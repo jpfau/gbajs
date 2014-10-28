@@ -287,12 +287,12 @@ class GameBoyAdvanceInterruptHandler {
     }
 
     resetSP() {
-        this.cpu.switchMode(this.cpu.MODE_SUPERVISOR);
-        this.cpu.gprs[this.cpu.SP] = 0x3007FE0;
-        this.cpu.switchMode(this.cpu.MODE_IRQ);
-        this.cpu.gprs[this.cpu.SP] = 0x3007FA0;
-        this.cpu.switchMode(this.cpu.MODE_SYSTEM);
-        this.cpu.gprs[this.cpu.SP] = 0x3007F00;
+        this.cpu.switchMode(Mode.SUPERVISOR);
+        this.cpu.gprs[Register.SP] = 0x3007FE0;
+        this.cpu.switchMode(Mode.IRQ);
+        this.cpu.gprs[Register.SP] = 0x3007FA0;
+        this.cpu.switchMode(Mode.SYSTEM);
+        this.cpu.gprs[Register.SP] = 0x3007F00;
     }
 
     swi32(opcode) {
@@ -317,13 +317,13 @@ class GameBoyAdvanceInterruptHandler {
                 }
                 this.resetSP();
                 if (!flag) {
-                    this.cpu.gprs[this.cpu.LR] = 0x08000000;
+                    this.cpu.gprs[Register.LR] = 0x08000000;
                 } else {
-                    this.cpu.gprs[this.cpu.LR] = 0x02000000;
+                    this.cpu.gprs[Register.LR] = 0x02000000;
                 }
-                this.cpu.switchExecMode(this.cpu.MODE_ARM);
+                this.cpu.switchExecMode(Mode.ARM);
                 this.cpu.instruction.writesPC = true;
-                this.cpu.gprs[this.cpu.PC] = this.cpu.gprs[this.cpu.LR];
+                this.cpu.gprs[Register.PC] = this.cpu.gprs[Register.LR];
                 break;
             case 0x01:
                 // RegisterRamReset

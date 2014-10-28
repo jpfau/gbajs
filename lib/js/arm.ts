@@ -13,16 +13,16 @@ class ARMCoreArm {
 
         this.addressingMode23Immediate = [
             // 000x0
-            function (rn, offset, condOp) {
+            (rn, offset, condOp) => {
                 var gprs = cpu.gprs;
-                var address:any = function () {
+                var address:any = () => {
                     var addr = gprs[rn];
                     if (!condOp || condOp()) {
                         gprs[rn] -= offset
                     }
                     return addr
                 };
-                address.writesPC = rn == cpu.PC;
+                address.writesPC = rn == Register.PC;
                 return address
             },
 
@@ -33,16 +33,16 @@ class ARMCoreArm {
             null,
 
             // 00Ux0
-            function (rn, offset, condOp) {
+            (rn, offset, condOp) => {
                 var gprs = cpu.gprs;
-                var address:any = function () {
+                var address:any = () => {
                     var addr = gprs[rn];
                     if (!condOp || condOp()) {
                         gprs[rn] += offset
                     }
                     return addr
                 };
-                address.writesPC = rn == cpu.PC;
+                address.writesPC = rn == Register.PC;
                 return address
             },
 
@@ -53,9 +53,9 @@ class ARMCoreArm {
             null,
 
             // 0P0x0
-            function (rn, offset, condOp) {
+            (rn, offset, condOp) => {
                 var gprs = cpu.gprs;
-                var address:any = function () {
+                var address:any = () => {
                     return gprs[rn] - offset
                 };
                 address.writesPC = false;
@@ -63,16 +63,16 @@ class ARMCoreArm {
             },
 
             // 0P0xW
-            function (rn, offset, condOp) {
+            (rn, offset, condOp) => {
                 var gprs = cpu.gprs;
-                var address:any = function () {
+                var address:any = () => {
                     var addr = gprs[rn] - offset;
                     if (!condOp || condOp()) {
                         gprs[rn] = addr
                     }
                     return addr
                 };
-                address.writesPC = rn == cpu.PC;
+                address.writesPC = rn == Register.PC;
                 return address
             },
 
@@ -80,9 +80,9 @@ class ARMCoreArm {
             null,
 
             // 0PUx0
-            function (rn, offset, condOp) {
+            (rn, offset, condOp) => {
                 var gprs = cpu.gprs;
-                var address:any = function () {
+                var address:any = () => {
                     return gprs[rn] + offset
                 };
                 address.writesPC = false;
@@ -90,16 +90,16 @@ class ARMCoreArm {
             },
 
             // 0PUxW
-            function (rn, offset, condOp) {
+            (rn, offset, condOp) => {
                 var gprs = cpu.gprs;
-                var address:any = function () {
+                var address:any = () => {
                     var addr = gprs[rn] + offset;
                     if (!condOp || condOp()) {
                         gprs[rn] = addr
                     }
                     return addr
                 };
-                address.writesPC = rn == cpu.PC;
+                address.writesPC = rn == Register.PC;
                 return address
             },
 
@@ -109,16 +109,16 @@ class ARMCoreArm {
 
         this.addressingMode23Register = [
             // I00x0
-            function (rn, rm, condOp) {
+            (rn, rm, condOp) => {
                 var gprs = cpu.gprs;
-                var address:any = function () {
+                var address:any = () => {
                     var addr = gprs[rn];
                     if (!condOp || condOp()) {
                         gprs[rn] -= gprs[rm]
                     }
                     return addr
                 };
-                address.writesPC = rn == cpu.PC;
+                address.writesPC = rn == Register.PC;
                 return address
             },
 
@@ -129,16 +129,16 @@ class ARMCoreArm {
             null,
 
             // I0Ux0
-            function (rn, rm, condOp) {
+            (rn, rm, condOp) => {
                 var gprs = cpu.gprs;
-                var address:any = function () {
+                var address:any = () => {
                     var addr = gprs[rn];
                     if (!condOp || condOp()) {
                         gprs[rn] += gprs[rm]
                     }
                     return addr
                 };
-                address.writesPC = rn == cpu.PC;
+                address.writesPC = rn == Register.PC;
                 return address
             },
 
@@ -149,9 +149,9 @@ class ARMCoreArm {
             null,
 
             // IP0x0
-            function (rn, rm, condOp) {
+            (rn, rm, condOp) => {
                 var gprs = cpu.gprs;
-                var address:any = function () {
+                var address:any = () => {
                     return gprs[rn] - gprs[rm]
                 };
                 address.writesPC = false;
@@ -159,16 +159,16 @@ class ARMCoreArm {
             },
 
             // IP0xW
-            function (rn, rm, condOp) {
+            (rn, rm, condOp) => {
                 var gprs = cpu.gprs;
-                var address:any = function () {
+                var address:any = () => {
                     var addr = gprs[rn] - gprs[rm];
                     if (!condOp || condOp()) {
                         gprs[rn] = addr
                     }
                     return addr
                 };
-                address.writesPC = rn == cpu.PC;
+                address.writesPC = rn == Register.PC;
                 return address
             },
 
@@ -176,9 +176,9 @@ class ARMCoreArm {
             null,
 
             // IPUx0
-            function (rn, rm, condOp) {
+            (rn, rm, condOp) => {
                 var gprs = cpu.gprs;
-                var address:any = function () {
+                var address:any = () => {
                     return gprs[rn] + gprs[rm]
                 };
                 address.writesPC = false;
@@ -186,16 +186,16 @@ class ARMCoreArm {
             },
 
             // IPUxW
-            function (rn, rm, condOp) {
+            (rn, rm, condOp) => {
                 var gprs = cpu.gprs;
-                var address:any = function () {
+                var address:any = () => {
                     var addr = gprs[rn] + gprs[rm];
                     if (!condOp || condOp()) {
                         gprs[rn] = addr
                     }
                     return addr
                 };
-                address.writesPC = rn == cpu.PC;
+                address.writesPC = rn == Register.PC;
                 return address
             },
 
@@ -205,9 +205,9 @@ class ARMCoreArm {
 
         this.addressingMode2RegisterShifted = [
             // I00x0
-            function (rn, shiftOp, condOp) {
+            (rn, shiftOp, condOp) => {
                 var gprs = cpu.gprs;
-                var address:any = function () {
+                var address:any = () => {
                     var addr = gprs[rn];
                     if (!condOp || condOp()) {
                         shiftOp();
@@ -215,7 +215,7 @@ class ARMCoreArm {
                     }
                     return addr
                 };
-                address.writesPC = rn == cpu.PC;
+                address.writesPC = rn == Register.PC;
                 return address
             },
 
@@ -226,9 +226,9 @@ class ARMCoreArm {
             null,
 
             // I0Ux0
-            function (rn, shiftOp, condOp) {
+            (rn, shiftOp, condOp) => {
                 var gprs = cpu.gprs;
-                var address:any = function () {
+                var address:any = () => {
                     var addr = gprs[rn];
                     if (!condOp || condOp()) {
                         shiftOp();
@@ -236,7 +236,7 @@ class ARMCoreArm {
                     }
                     return addr
                 };
-                address.writesPC = rn == cpu.PC;
+                address.writesPC = rn == Register.PC;
                 return address
             },
             // I0UxW
@@ -246,9 +246,9 @@ class ARMCoreArm {
             null,
 
             // IP0x0
-            function (rn, shiftOp, condOp) {
+            (rn, shiftOp, condOp) => {
                 var gprs = cpu.gprs;
-                var address:any = function () {
+                var address:any = () => {
                     shiftOp();
                     return gprs[rn] - cpu.shifterOperand
                 };
@@ -257,9 +257,9 @@ class ARMCoreArm {
             },
 
             // IP0xW
-            function (rn, shiftOp, condOp) {
+            (rn, shiftOp, condOp) => {
                 var gprs = cpu.gprs;
-                var address:any = function () {
+                var address:any = () => {
                     shiftOp();
                     var addr = gprs[rn] - cpu.shifterOperand;
                     if (!condOp || condOp()) {
@@ -267,7 +267,7 @@ class ARMCoreArm {
                     }
                     return addr
                 };
-                address.writesPC = rn == cpu.PC;
+                address.writesPC = rn == Register.PC;
                 return address
             },
 
@@ -275,9 +275,9 @@ class ARMCoreArm {
             null,
 
             // IPUx0
-            function (rn, shiftOp, condOp) {
+            (rn, shiftOp, condOp) => {
                 var gprs = cpu.gprs;
-                var address:any = function () {
+                var address:any = () => {
                     shiftOp();
                     return gprs[rn] + cpu.shifterOperand
                 };
@@ -286,9 +286,9 @@ class ARMCoreArm {
             },
 
             // IPUxW
-            function (rn, shiftOp, condOp) {
+            (rn, shiftOp, condOp) => {
                 var gprs = cpu.gprs;
-                var address:any = function () {
+                var address:any = () => {
                     shiftOp();
                     var addr = gprs[rn] + cpu.shifterOperand;
                     if (!condOp || condOp()) {
@@ -296,7 +296,7 @@ class ARMCoreArm {
                     }
                     return addr
                 };
-                address.writePC = rn == cpu.PC;
+                address.writePC = rn == Register.PC;
                 return address
             },
 
@@ -308,20 +308,20 @@ class ARMCoreArm {
     constructAddressingMode1ASR(rs, rm) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
-        return function () {
+        return () => {
             ++cpu.cycles;
             var shift = gprs[rs];
-            if (rs == cpu.PC) {
+            if (rs == Register.PC) {
                 shift += 4
             }
             shift &= 0xFF;
             var shiftVal = gprs[rm];
-            if (rm == cpu.PC) {
+            if (rm == Register.PC) {
                 shiftVal += 4
             }
             if (shift == 0) {
                 cpu.shifterOperand = shiftVal;
-                cpu.shifterCarryOut = <any>cpu.cpsrC
+                cpu.shifterCarryOut = <any>cpu.cpsr.C
             } else if (shift < 32) {
                 cpu.shifterOperand = shiftVal >> shift;
                 cpu.shifterCarryOut = shiftVal & (1 << (shift - 1))
@@ -337,15 +337,15 @@ class ARMCoreArm {
 
     constructAddressingMode1Immediate(immediate) {
         var cpu = this.cpu;
-        return function () {
+        return () => {
             cpu.shifterOperand = immediate;
-            cpu.shifterCarryOut = <any>cpu.cpsrC
+            cpu.shifterCarryOut = <any>cpu.cpsr.C
         }
     }
 
     constructAddressingMode1ImmediateRotate(immediate, rotate) {
         var cpu = this.cpu;
-        return function () {
+        return () => {
             cpu.shifterOperand = (immediate >>> rotate) | (immediate << (32 - rotate));
             cpu.shifterCarryOut = cpu.shifterOperand >> 31
         }
@@ -354,20 +354,20 @@ class ARMCoreArm {
     constructAddressingMode1LSL(rs, rm) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
-        return function () {
+        return () => {
             ++cpu.cycles;
             var shift = gprs[rs];
-            if (rs == cpu.PC) {
+            if (rs == Register.PC) {
                 shift += 4
             }
             shift &= 0xFF;
             var shiftVal = gprs[rm];
-            if (rm == cpu.PC) {
+            if (rm == Register.PC) {
                 shiftVal += 4
             }
             if (shift == 0) {
                 cpu.shifterOperand = shiftVal;
-                cpu.shifterCarryOut = <any>cpu.cpsrC
+                cpu.shifterCarryOut = <any>cpu.cpsr.C
             } else if (shift < 32) {
                 cpu.shifterOperand = shiftVal << shift;
                 cpu.shifterCarryOut = shiftVal & (1 << (32 - shift))
@@ -384,20 +384,20 @@ class ARMCoreArm {
     constructAddressingMode1LSR(rs, rm) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
-        return function () {
+        return () => {
             ++cpu.cycles;
             var shift = gprs[rs];
-            if (rs == cpu.PC) {
+            if (rs == Register.PC) {
                 shift += 4
             }
             shift &= 0xFF;
             var shiftVal = gprs[rm];
-            if (rm == cpu.PC) {
+            if (rm == Register.PC) {
                 shiftVal += 4
             }
             if (shift == 0) {
                 cpu.shifterOperand = shiftVal;
-                cpu.shifterCarryOut = <any>cpu.cpsrC
+                cpu.shifterCarryOut = <any>cpu.cpsr.C
             } else if (shift < 32) {
                 cpu.shifterOperand = shiftVal >>> shift;
                 cpu.shifterCarryOut = shiftVal & (1 << (shift - 1))
@@ -414,21 +414,21 @@ class ARMCoreArm {
     constructAddressingMode1ROR(rs, rm) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
-        return function () {
+        return () => {
             ++cpu.cycles;
             var shift = gprs[rs];
-            if (rs == cpu.PC) {
+            if (rs == Register.PC) {
                 shift += 4
             }
             shift &= 0xFF;
             var shiftVal = gprs[rm];
-            if (rm == cpu.PC) {
+            if (rm == Register.PC) {
                 shiftVal += 4
             }
             var rotate = shift & 0x1F;
             if (shift == 0) {
                 cpu.shifterOperand = shiftVal;
-                cpu.shifterCarryOut = <any>cpu.cpsrC
+                cpu.shifterCarryOut = <any>cpu.cpsr.C
             } else if (rotate) {
                 cpu.shifterOperand = (gprs[rm] >>> rotate) | (gprs[rm] << (32 - rotate));
                 cpu.shifterCarryOut = shiftVal & (1 << (rotate - 1))
@@ -457,7 +457,7 @@ class ARMCoreArm {
     constructAddressingMode4(immediate, rn) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
-        return function () {
+        return () => {
             return gprs[rn] + immediate
         }
     }
@@ -465,7 +465,7 @@ class ARMCoreArm {
     constructAddressingMode4Writeback(immediate, offset, rn, overlap) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
-        return function (writeInitial) {
+        return (writeInitial) => {
             var addr = gprs[rn] + immediate;
             if (writeInitial && overlap) {
                 cpu.mmu.store32(gprs[rn] + immediate - 4, gprs[rn])
@@ -478,13 +478,13 @@ class ARMCoreArm {
     constructADC(rd, rn, shiftOp, condOp) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
-        return function () {
-            cpu.mmu.waitPrefetch32(gprs[cpu.PC]);
+        return () => {
+            cpu.mmu.waitPrefetch32(gprs[Register.PC]);
             if (condOp && !condOp()) {
                 return
             }
             shiftOp();
-            var shifterOperand = (cpu.shifterOperand >>> 0) + (<number><any>cpu.cpsrC);
+            var shifterOperand = (cpu.shifterOperand >>> 0) + (<number><any>cpu.cpsr.C);
             gprs[rd] = (gprs[rn] >>> 0) + shifterOperand
         }
     }
@@ -492,21 +492,21 @@ class ARMCoreArm {
     constructADCS(rd, rn, shiftOp, condOp) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
-        return function () {
-            cpu.mmu.waitPrefetch32(gprs[cpu.PC]);
+        return () => {
+            cpu.mmu.waitPrefetch32(gprs[Register.PC]);
             if (condOp && !condOp()) {
                 return
             }
             shiftOp();
-            var shifterOperand = (cpu.shifterOperand >>> 0) + <number><any>cpu.cpsrC;
+            var shifterOperand = (cpu.shifterOperand >>> 0) + <number><any>cpu.cpsr.C;
             var d = (gprs[rn] >>> 0) + shifterOperand;
-            if (rd == cpu.PC && cpu.hasSPSR()) {
+            if (rd == Register.PC && cpu.hasSPSR()) {
                 cpu.unpackCPSR(cpu.spsr)
             } else {
-                cpu.cpsrN = <any>(d >> 31);
-                cpu.cpsrZ = !(d & 0xFFFFFFFF);
-                cpu.cpsrC = d > 0xFFFFFFFF;
-                cpu.cpsrV = (gprs[rn] >> 31) == (shifterOperand >> 31) &&
+                cpu.cpsr.N = <any>(d >> 31);
+                cpu.cpsr.Z = !(d & 0xFFFFFFFF);
+                cpu.cpsr.C = d > 0xFFFFFFFF;
+                cpu.cpsr.V = (gprs[rn] >> 31) == (shifterOperand >> 31) &&
                     (gprs[rn] >> 31) != (d >> 31) &&
                     (shifterOperand >> 31) != (d >> 31)
             }
@@ -517,8 +517,8 @@ class ARMCoreArm {
     constructADD(rd, rn, shiftOp, condOp) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
-        return function () {
-            cpu.mmu.waitPrefetch32(gprs[cpu.PC]);
+        return () => {
+            cpu.mmu.waitPrefetch32(gprs[Register.PC]);
             if (condOp && !condOp()) {
                 return
             }
@@ -530,20 +530,20 @@ class ARMCoreArm {
     constructADDS(rd, rn, shiftOp, condOp) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
-        return function () {
-            cpu.mmu.waitPrefetch32(gprs[cpu.PC]);
+        return () => {
+            cpu.mmu.waitPrefetch32(gprs[Register.PC]);
             if (condOp && !condOp()) {
                 return
             }
             shiftOp();
             var d = (gprs[rn] >>> 0) + (cpu.shifterOperand >>> 0);
-            if (rd == cpu.PC && cpu.hasSPSR()) {
+            if (rd == Register.PC && cpu.hasSPSR()) {
                 cpu.unpackCPSR(cpu.spsr)
             } else {
-                cpu.cpsrN = <any>(d >> 31);
-                cpu.cpsrZ = !(d & 0xFFFFFFFF);
-                cpu.cpsrC = d > 0xFFFFFFFF;
-                cpu.cpsrV = (gprs[rn] >> 31) == (cpu.shifterOperand >> 31) &&
+                cpu.cpsr.N = <any>(d >> 31);
+                cpu.cpsr.Z = !(d & 0xFFFFFFFF);
+                cpu.cpsr.C = d > 0xFFFFFFFF;
+                cpu.cpsr.V = (gprs[rn] >> 31) == (cpu.shifterOperand >> 31) &&
                     (gprs[rn] >> 31) != (d >> 31) &&
                     (cpu.shifterOperand >> 31) != (d >> 31)
             }
@@ -554,8 +554,8 @@ class ARMCoreArm {
     constructAND(rd, rn, shiftOp, condOp) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
-        return function () {
-            cpu.mmu.waitPrefetch32(gprs[cpu.PC]);
+        return () => {
+            cpu.mmu.waitPrefetch32(gprs[Register.PC]);
             if (condOp && !condOp()) {
                 return
             }
@@ -567,19 +567,19 @@ class ARMCoreArm {
     constructANDS(rd, rn, shiftOp, condOp) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
-        return function () {
-            cpu.mmu.waitPrefetch32(gprs[cpu.PC]);
+        return () => {
+            cpu.mmu.waitPrefetch32(gprs[Register.PC]);
             if (condOp && !condOp()) {
                 return
             }
             shiftOp();
             gprs[rd] = gprs[rn] & cpu.shifterOperand;
-            if (rd == cpu.PC && cpu.hasSPSR()) {
+            if (rd == Register.PC && cpu.hasSPSR()) {
                 cpu.unpackCPSR(cpu.spsr)
             } else {
-                cpu.cpsrN = <any>(gprs[rd] >> 31);
-                cpu.cpsrZ = !(gprs[rd] & 0xFFFFFFFF);
-                cpu.cpsrC = <any>cpu.shifterCarryOut
+                cpu.cpsr.N = <any>(gprs[rd] >> 31);
+                cpu.cpsr.Z = !(gprs[rd] & 0xFFFFFFFF);
+                cpu.cpsr.C = <any>cpu.shifterCarryOut
             }
         }
     }
@@ -587,21 +587,21 @@ class ARMCoreArm {
     constructB(immediate, condOp) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
-        return function () {
+        return () => {
             if (condOp && !condOp()) {
-                cpu.mmu.waitPrefetch32(gprs[cpu.PC]);
+                cpu.mmu.waitPrefetch32(gprs[Register.PC]);
                 return
             }
-            cpu.mmu.waitPrefetch32(gprs[cpu.PC]);
-            gprs[cpu.PC] += immediate
+            cpu.mmu.waitPrefetch32(gprs[Register.PC]);
+            gprs[Register.PC] += immediate
         }
     }
 
     constructBIC(rd, rn, shiftOp, condOp) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
-        return function () {
-            cpu.mmu.waitPrefetch32(gprs[cpu.PC]);
+        return () => {
+            cpu.mmu.waitPrefetch32(gprs[Register.PC]);
             if (condOp && !condOp()) {
                 return
             }
@@ -613,19 +613,19 @@ class ARMCoreArm {
     constructBICS(rd, rn, shiftOp, condOp) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
-        return function () {
-            cpu.mmu.waitPrefetch32(gprs[cpu.PC]);
+        return () => {
+            cpu.mmu.waitPrefetch32(gprs[Register.PC]);
             if (condOp && !condOp()) {
                 return
             }
             shiftOp();
             gprs[rd] = gprs[rn] & ~cpu.shifterOperand;
-            if (rd == cpu.PC && cpu.hasSPSR()) {
+            if (rd == Register.PC && cpu.hasSPSR()) {
                 cpu.unpackCPSR(cpu.spsr)
             } else {
-                cpu.cpsrN = <any>(gprs[rd] >> 31);
-                cpu.cpsrZ = !(gprs[rd] & 0xFFFFFFFF);
-                cpu.cpsrC = <any>cpu.shifterCarryOut
+                cpu.cpsr.N = <any>(gprs[rd] >> 31);
+                cpu.cpsr.Z = !(gprs[rd] & 0xFFFFFFFF);
+                cpu.cpsr.C = <any>cpu.shifterCarryOut
             }
         }
     }
@@ -633,45 +633,45 @@ class ARMCoreArm {
     constructBL(immediate, condOp) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
-        return function () {
+        return () => {
             if (condOp && !condOp()) {
-                cpu.mmu.waitPrefetch32(gprs[cpu.PC]);
+                cpu.mmu.waitPrefetch32(gprs[Register.PC]);
                 return
             }
-            cpu.mmu.waitPrefetch32(gprs[cpu.PC]);
-            gprs[cpu.LR] = gprs[cpu.PC] - 4;
-            gprs[cpu.PC] += immediate
+            cpu.mmu.waitPrefetch32(gprs[Register.PC]);
+            gprs[Register.LR] = gprs[Register.PC] - 4;
+            gprs[Register.PC] += immediate
         }
     }
 
-    constructBX(rm, condOp) {
+    constructBX(rm, condOp):any {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
-        return function () {
+        return () => {
             if (condOp && !condOp()) {
-                cpu.mmu.waitPrefetch32(gprs[cpu.PC]);
+                cpu.mmu.waitPrefetch32(gprs[Register.PC]);
                 return
             }
-            cpu.mmu.waitPrefetch32(gprs[cpu.PC]);
+            cpu.mmu.waitPrefetch32(gprs[Register.PC]);
             cpu.switchExecMode(gprs[rm] & 0x00000001);
-            gprs[cpu.PC] = gprs[rm] & 0xFFFFFFFE
+            gprs[Register.PC] = gprs[rm] & 0xFFFFFFFE
         }
     }
 
     constructCMN(rd, rn, shiftOp, condOp) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
-        return function () {
-            cpu.mmu.waitPrefetch32(gprs[cpu.PC]);
+        return () => {
+            cpu.mmu.waitPrefetch32(gprs[Register.PC]);
             if (condOp && !condOp()) {
                 return
             }
             shiftOp();
             var aluOut = (gprs[rn] >>> 0) + (cpu.shifterOperand >>> 0);
-            cpu.cpsrN = <any>(aluOut >> 31);
-            cpu.cpsrZ = !(aluOut & 0xFFFFFFFF);
-            cpu.cpsrC = aluOut > 0xFFFFFFFF;
-            cpu.cpsrV = (gprs[rn] >> 31) == (cpu.shifterOperand >> 31) &&
+            cpu.cpsr.N = <any>(aluOut >> 31);
+            cpu.cpsr.Z = !(aluOut & 0xFFFFFFFF);
+            cpu.cpsr.C = aluOut > 0xFFFFFFFF;
+            cpu.cpsr.V = (gprs[rn] >> 31) == (cpu.shifterOperand >> 31) &&
                 (gprs[rn] >> 31) != (aluOut >> 31) &&
                 (cpu.shifterOperand >> 31) != (aluOut >> 31)
         }
@@ -680,17 +680,17 @@ class ARMCoreArm {
     constructCMP(rd, rn, shiftOp, condOp) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
-        return function () {
-            cpu.mmu.waitPrefetch32(gprs[cpu.PC]);
+        return () => {
+            cpu.mmu.waitPrefetch32(gprs[Register.PC]);
             if (condOp && !condOp()) {
                 return
             }
             shiftOp();
             var aluOut = gprs[rn] - cpu.shifterOperand;
-            cpu.cpsrN = <any>(aluOut >> 31);
-            cpu.cpsrZ = !(aluOut & 0xFFFFFFFF);
-            cpu.cpsrC = (gprs[rn] >>> 0) >= (cpu.shifterOperand >>> 0);
-            cpu.cpsrV = (gprs[rn] >> 31) != (cpu.shifterOperand >> 31) &&
+            cpu.cpsr.N = <any>(aluOut >> 31);
+            cpu.cpsr.Z = !(aluOut & 0xFFFFFFFF);
+            cpu.cpsr.C = (gprs[rn] >>> 0) >= (cpu.shifterOperand >>> 0);
+            cpu.cpsr.V = (gprs[rn] >> 31) != (cpu.shifterOperand >> 31) &&
                 (gprs[rn] >> 31) != (aluOut >> 31)
         }
     }
@@ -698,8 +698,8 @@ class ARMCoreArm {
     constructEOR(rd, rn, shiftOp, condOp) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
-        return function () {
-            cpu.mmu.waitPrefetch32(gprs[cpu.PC]);
+        return () => {
+            cpu.mmu.waitPrefetch32(gprs[Register.PC]);
             if (condOp && !condOp()) {
                 return
             }
@@ -711,19 +711,19 @@ class ARMCoreArm {
     constructEORS(rd, rn, shiftOp, condOp) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
-        return function () {
-            cpu.mmu.waitPrefetch32(gprs[cpu.PC]);
+        return () => {
+            cpu.mmu.waitPrefetch32(gprs[Register.PC]);
             if (condOp && !condOp()) {
                 return
             }
             shiftOp();
             gprs[rd] = gprs[rn] ^ cpu.shifterOperand;
-            if (rd == cpu.PC && cpu.hasSPSR()) {
+            if (rd == Register.PC && cpu.hasSPSR()) {
                 cpu.unpackCPSR(cpu.spsr)
             } else {
-                cpu.cpsrN = <any>(gprs[rd] >> 31);
-                cpu.cpsrZ = !(gprs[rd] & 0xFFFFFFFF);
-                cpu.cpsrC = <any>cpu.shifterCarryOut
+                cpu.cpsr.N = <any>(gprs[rd] >> 31);
+                cpu.cpsr.Z = !(gprs[rd] & 0xFFFFFFFF);
+                cpu.cpsr.C = <any>cpu.shifterCarryOut
             }
         }
     }
@@ -732,8 +732,8 @@ class ARMCoreArm {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
         var mmu = cpu.mmu;
-        return function () {
-            mmu.waitPrefetch32(gprs[cpu.PC]);
+        return () => {
+            mmu.waitPrefetch32(gprs[Register.PC]);
             if (condOp && !condOp()) {
                 return
             }
@@ -756,15 +756,15 @@ class ARMCoreArm {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
         var mmu = cpu.mmu;
-        return function () {
-            mmu.waitPrefetch32(gprs[cpu.PC]);
+        return () => {
+            mmu.waitPrefetch32(gprs[Register.PC]);
             if (condOp && !condOp()) {
                 return
             }
             var addr = address(false);
             var total = 0;
             var mode = cpu.mode;
-            cpu.switchMode(cpu.MODE_SYSTEM);
+            cpu.switchMode(Mode.SYSTEM);
             var m, i;
             for (m = rs, i = 0; m; m >>= 1, ++i) {
                 if (m & 1) {
@@ -782,8 +782,8 @@ class ARMCoreArm {
     constructLDR(rd, address, condOp) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
-        return function () {
-            cpu.mmu.waitPrefetch32(gprs[cpu.PC]);
+        return () => {
+            cpu.mmu.waitPrefetch32(gprs[Register.PC]);
             if (condOp && !condOp()) {
                 return
             }
@@ -797,8 +797,8 @@ class ARMCoreArm {
     constructLDRB(rd, address, condOp) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
-        return function () {
-            cpu.mmu.waitPrefetch32(gprs[cpu.PC]);
+        return () => {
+            cpu.mmu.waitPrefetch32(gprs[Register.PC]);
             if (condOp && !condOp()) {
                 return
             }
@@ -812,8 +812,8 @@ class ARMCoreArm {
     constructLDRH(rd, address, condOp) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
-        return function () {
-            cpu.mmu.waitPrefetch32(gprs[cpu.PC]);
+        return () => {
+            cpu.mmu.waitPrefetch32(gprs[Register.PC]);
             if (condOp && !condOp()) {
                 return
             }
@@ -827,8 +827,8 @@ class ARMCoreArm {
     constructLDRSB(rd, address, condOp) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
-        return function () {
-            cpu.mmu.waitPrefetch32(gprs[cpu.PC]);
+        return () => {
+            cpu.mmu.waitPrefetch32(gprs[Register.PC]);
             if (condOp && !condOp()) {
                 return
             }
@@ -842,8 +842,8 @@ class ARMCoreArm {
     constructLDRSH(rd, address, condOp) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
-        return function () {
-            cpu.mmu.waitPrefetch32(gprs[cpu.PC]);
+        return () => {
+            cpu.mmu.waitPrefetch32(gprs[Register.PC]);
             if (condOp && !condOp()) {
                 return
             }
@@ -857,8 +857,8 @@ class ARMCoreArm {
     constructMLA(rd, rn, rs, rm, condOp) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
-        return function () {
-            cpu.mmu.waitPrefetch32(gprs[cpu.PC]);
+        return () => {
+            cpu.mmu.waitPrefetch32(gprs[Register.PC]);
             if (condOp && !condOp()) {
                 return
             }
@@ -878,8 +878,8 @@ class ARMCoreArm {
     constructMLAS(rd, rn, rs, rm, condOp) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
-        return function () {
-            cpu.mmu.waitPrefetch32(gprs[cpu.PC]);
+        return () => {
+            cpu.mmu.waitPrefetch32(gprs[Register.PC]);
             if (condOp && !condOp()) {
                 return
             }
@@ -893,16 +893,16 @@ class ARMCoreArm {
             } else {
                 gprs[rd] = gprs[rm] * gprs[rs] + gprs[rn]
             }
-            cpu.cpsrN = <any>(gprs[rd] >> 31);
-            cpu.cpsrZ = !(gprs[rd] & 0xFFFFFFFF)
+            cpu.cpsr.N = <any>(gprs[rd] >> 31);
+            cpu.cpsr.Z = !(gprs[rd] & 0xFFFFFFFF)
         }
     }
 
     constructMOV(rd, rn, shiftOp, condOp) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
-        return function () {
-            cpu.mmu.waitPrefetch32(gprs[cpu.PC]);
+        return () => {
+            cpu.mmu.waitPrefetch32(gprs[Register.PC]);
             if (condOp && !condOp()) {
                 return
             }
@@ -914,19 +914,19 @@ class ARMCoreArm {
     constructMOVS(rd, rn, shiftOp, condOp) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
-        return function () {
-            cpu.mmu.waitPrefetch32(gprs[cpu.PC]);
+        return () => {
+            cpu.mmu.waitPrefetch32(gprs[Register.PC]);
             if (condOp && !condOp()) {
                 return
             }
             shiftOp();
             gprs[rd] = cpu.shifterOperand;
-            if (rd == cpu.PC && cpu.hasSPSR()) {
+            if (rd == Register.PC && cpu.hasSPSR()) {
                 cpu.unpackCPSR(cpu.spsr)
             } else {
-                cpu.cpsrN = <any>(gprs[rd] >> 31);
-                cpu.cpsrZ = !(gprs[rd] & 0xFFFFFFFF);
-                cpu.cpsrC = <any>cpu.shifterCarryOut
+                cpu.cpsr.N = <any>(gprs[rd] >> 31);
+                cpu.cpsr.Z = !(gprs[rd] & 0xFFFFFFFF);
+                cpu.cpsr.C = <any>cpu.shifterCarryOut
             }
         }
     }
@@ -934,8 +934,8 @@ class ARMCoreArm {
     constructMRS(rd, r, condOp) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
-        return function () {
-            cpu.mmu.waitPrefetch32(gprs[cpu.PC]);
+        return () => {
+            cpu.mmu.waitPrefetch32(gprs[Register.PC]);
             if (condOp && !condOp()) {
                 return
             }
@@ -954,8 +954,8 @@ class ARMCoreArm {
         //var x = instruction & 0x00020000
         //var s = instruction & 0x00040000
         var f = instruction & 0x00080000;
-        return function () {
-            cpu.mmu.waitPrefetch32(gprs[cpu.PC]);
+        return () => {
+            cpu.mmu.waitPrefetch32(gprs[Register.PC]);
             if (condOp && !condOp()) {
                 return
             }
@@ -975,15 +975,15 @@ class ARMCoreArm {
                 cpu.spsr = (cpu.spsr & ~mask) | (operand & mask)
             } else {
                 if (mask & cpu.USER_MASK) {
-                    cpu.cpsrN = <any>(operand >> 31);
-                    cpu.cpsrZ = <any>(operand & 0x40000000);
-                    cpu.cpsrC = <any>(operand & 0x20000000);
-                    cpu.cpsrV = <any>(operand & 0x10000000)
+                    cpu.cpsr.N = <any>(operand >> 31);
+                    cpu.cpsr.Z = <any>(operand & 0x40000000);
+                    cpu.cpsr.C = <any>(operand & 0x20000000);
+                    cpu.cpsr.V = <any>(operand & 0x10000000)
                 }
-                if (cpu.mode != cpu.MODE_USER && (mask & cpu.PRIV_MASK)) {
+                if (cpu.mode != Mode.USER && (mask & cpu.PRIV_MASK)) {
                     cpu.switchMode((operand & 0x0000000F) | 0x00000010);
-                    cpu.cpsrI = <any>(operand & 0x00000080);
-                    cpu.cpsrF = <any>(operand & 0x00000040);
+                    cpu.cpsr.I = <any>(operand & 0x00000080);
+                    cpu.cpsr.F = <any>(operand & 0x00000040);
                 }
             }
         }
@@ -992,8 +992,8 @@ class ARMCoreArm {
     constructMUL(rd, rs, rm, condOp) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
-        return function () {
-            cpu.mmu.waitPrefetch32(gprs[cpu.PC]);
+        return () => {
+            cpu.mmu.waitPrefetch32(gprs[Register.PC]);
             if (condOp && !condOp()) {
                 return
             }
@@ -1012,8 +1012,8 @@ class ARMCoreArm {
     constructMULS(rd, rs, rm, condOp) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
-        return function () {
-            cpu.mmu.waitPrefetch32(gprs[cpu.PC]);
+        return () => {
+            cpu.mmu.waitPrefetch32(gprs[Register.PC]);
             if (condOp && !condOp()) {
                 return
             }
@@ -1026,16 +1026,16 @@ class ARMCoreArm {
             } else {
                 gprs[rd] = gprs[rm] * gprs[rs]
             }
-            cpu.cpsrN = <any>(gprs[rd] >> 31);
-            cpu.cpsrZ = !(gprs[rd] & 0xFFFFFFFF)
+            cpu.cpsr.N = <any>(gprs[rd] >> 31);
+            cpu.cpsr.Z = !(gprs[rd] & 0xFFFFFFFF)
         }
     }
 
     constructMVN(rd, rn, shiftOp, condOp) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
-        return function () {
-            cpu.mmu.waitPrefetch32(gprs[cpu.PC]);
+        return () => {
+            cpu.mmu.waitPrefetch32(gprs[Register.PC]);
             if (condOp && !condOp()) {
                 return
             }
@@ -1047,19 +1047,19 @@ class ARMCoreArm {
     constructMVNS(rd, rn, shiftOp, condOp) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
-        return function () {
-            cpu.mmu.waitPrefetch32(gprs[cpu.PC]);
+        return () => {
+            cpu.mmu.waitPrefetch32(gprs[Register.PC]);
             if (condOp && !condOp()) {
                 return
             }
             shiftOp();
             gprs[rd] = ~cpu.shifterOperand;
-            if (rd == cpu.PC && cpu.hasSPSR()) {
+            if (rd == Register.PC && cpu.hasSPSR()) {
                 cpu.unpackCPSR(cpu.spsr)
             } else {
-                cpu.cpsrN = <any>(gprs[rd] >> 31);
-                cpu.cpsrZ = !(gprs[rd] & 0xFFFFFFFF);
-                cpu.cpsrC = <any>cpu.shifterCarryOut
+                cpu.cpsr.N = <any>(gprs[rd] >> 31);
+                cpu.cpsr.Z = !(gprs[rd] & 0xFFFFFFFF);
+                cpu.cpsr.C = <any>cpu.shifterCarryOut
             }
         }
     }
@@ -1067,8 +1067,8 @@ class ARMCoreArm {
     constructORR(rd, rn, shiftOp, condOp) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
-        return function () {
-            cpu.mmu.waitPrefetch32(gprs[cpu.PC]);
+        return () => {
+            cpu.mmu.waitPrefetch32(gprs[Register.PC]);
             if (condOp && !condOp()) {
                 return
             }
@@ -1080,19 +1080,19 @@ class ARMCoreArm {
     constructORRS(rd, rn, shiftOp, condOp) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
-        return function () {
-            cpu.mmu.waitPrefetch32(gprs[cpu.PC]);
+        return () => {
+            cpu.mmu.waitPrefetch32(gprs[Register.PC]);
             if (condOp && !condOp()) {
                 return
             }
             shiftOp();
             gprs[rd] = gprs[rn] | cpu.shifterOperand;
-            if (rd == cpu.PC && cpu.hasSPSR()) {
+            if (rd == Register.PC && cpu.hasSPSR()) {
                 cpu.unpackCPSR(cpu.spsr)
             } else {
-                cpu.cpsrN = <any>(gprs[rd] >> 31);
-                cpu.cpsrZ = !(gprs[rd] & 0xFFFFFFFF);
-                cpu.cpsrC = <any>cpu.shifterCarryOut
+                cpu.cpsr.N = <any>(gprs[rd] >> 31);
+                cpu.cpsr.Z = !(gprs[rd] & 0xFFFFFFFF);
+                cpu.cpsr.C = <any>cpu.shifterCarryOut
             }
         }
     }
@@ -1100,8 +1100,8 @@ class ARMCoreArm {
     constructRSB(rd, rn, shiftOp, condOp) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
-        return function () {
-            cpu.mmu.waitPrefetch32(gprs[cpu.PC]);
+        return () => {
+            cpu.mmu.waitPrefetch32(gprs[Register.PC]);
             if (condOp && !condOp()) {
                 return
             }
@@ -1113,20 +1113,20 @@ class ARMCoreArm {
     constructRSBS(rd, rn, shiftOp, condOp) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
-        return function () {
-            cpu.mmu.waitPrefetch32(gprs[cpu.PC]);
+        return () => {
+            cpu.mmu.waitPrefetch32(gprs[Register.PC]);
             if (condOp && !condOp()) {
                 return
             }
             shiftOp();
             var d = cpu.shifterOperand - gprs[rn];
-            if (rd == cpu.PC && cpu.hasSPSR()) {
+            if (rd == Register.PC && cpu.hasSPSR()) {
                 cpu.unpackCPSR(cpu.spsr)
             } else {
-                cpu.cpsrN = <any>(d >> 31);
-                cpu.cpsrZ = !(d & 0xFFFFFFFF);
-                cpu.cpsrC = (cpu.shifterOperand >>> 0) >= (gprs[rn] >>> 0);
-                cpu.cpsrV = (cpu.shifterOperand >> 31) != (gprs[rn] >> 31) &&
+                cpu.cpsr.N = <any>(d >> 31);
+                cpu.cpsr.Z = !(d & 0xFFFFFFFF);
+                cpu.cpsr.C = (cpu.shifterOperand >>> 0) >= (gprs[rn] >>> 0);
+                cpu.cpsr.V = (cpu.shifterOperand >> 31) != (gprs[rn] >> 31) &&
                     (cpu.shifterOperand >> 31) != (d >> 31)
             }
             gprs[rd] = d
@@ -1136,13 +1136,13 @@ class ARMCoreArm {
     constructRSC(rd, rn, shiftOp, condOp) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
-        return function () {
-            cpu.mmu.waitPrefetch32(gprs[cpu.PC]);
+        return () => {
+            cpu.mmu.waitPrefetch32(gprs[Register.PC]);
             if (condOp && !condOp()) {
                 return
             }
             shiftOp();
-            var n = (gprs[rn] >>> 0) + <any>!cpu.cpsrC;
+            var n = (gprs[rn] >>> 0) + <any>!cpu.cpsr.C;
             gprs[rd] = (cpu.shifterOperand >>> 0) - n
         }
     }
@@ -1150,21 +1150,21 @@ class ARMCoreArm {
     constructRSCS(rd, rn, shiftOp, condOp) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
-        return function () {
-            cpu.mmu.waitPrefetch32(gprs[cpu.PC]);
+        return () => {
+            cpu.mmu.waitPrefetch32(gprs[Register.PC]);
             if (condOp && !condOp()) {
                 return
             }
             shiftOp();
-            var n = (gprs[rn] >>> 0) + <any>!cpu.cpsrC;
+            var n = (gprs[rn] >>> 0) + <any>!cpu.cpsr.C;
             var d = (cpu.shifterOperand >>> 0) - n;
-            if (rd == cpu.PC && cpu.hasSPSR()) {
+            if (rd == Register.PC && cpu.hasSPSR()) {
                 cpu.unpackCPSR(cpu.spsr)
             } else {
-                cpu.cpsrN = <any>(d >> 31);
-                cpu.cpsrZ = !(d & 0xFFFFFFFF);
-                cpu.cpsrC = (cpu.shifterOperand >>> 0) >= (d >>> 0);
-                cpu.cpsrV = (cpu.shifterOperand >> 31) != (n >> 31) &&
+                cpu.cpsr.N = <any>(d >> 31);
+                cpu.cpsr.Z = !(d & 0xFFFFFFFF);
+                cpu.cpsr.C = (cpu.shifterOperand >>> 0) >= (d >>> 0);
+                cpu.cpsr.V = (cpu.shifterOperand >> 31) != (n >> 31) &&
                     (cpu.shifterOperand >> 31) != (d >> 31)
             }
             gprs[rd] = d
@@ -1174,13 +1174,13 @@ class ARMCoreArm {
     constructSBC(rd, rn, shiftOp, condOp) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
-        return function () {
-            cpu.mmu.waitPrefetch32(gprs[cpu.PC]);
+        return () => {
+            cpu.mmu.waitPrefetch32(gprs[Register.PC]);
             if (condOp && !condOp()) {
                 return
             }
             shiftOp();
-            var shifterOperand = (cpu.shifterOperand >>> 0) + <any>!cpu.cpsrC;
+            var shifterOperand = (cpu.shifterOperand >>> 0) + <any>!cpu.cpsr.C;
             gprs[rd] = (gprs[rn] >>> 0) - shifterOperand
         }
     }
@@ -1188,21 +1188,21 @@ class ARMCoreArm {
     constructSBCS(rd, rn, shiftOp, condOp) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
-        return function () {
-            cpu.mmu.waitPrefetch32(gprs[cpu.PC]);
+        return () => {
+            cpu.mmu.waitPrefetch32(gprs[Register.PC]);
             if (condOp && !condOp()) {
                 return
             }
             shiftOp();
-            var shifterOperand = (cpu.shifterOperand >>> 0) + <any>!cpu.cpsrC;
+            var shifterOperand = (cpu.shifterOperand >>> 0) + <any>!cpu.cpsr.C;
             var d = (gprs[rn] >>> 0) - shifterOperand;
-            if (rd == cpu.PC && cpu.hasSPSR()) {
+            if (rd == Register.PC && cpu.hasSPSR()) {
                 cpu.unpackCPSR(cpu.spsr)
             } else {
-                cpu.cpsrN = <any>(d >> 31);
-                cpu.cpsrZ = !(d & 0xFFFFFFFF);
-                cpu.cpsrC = (gprs[rn] >>> 0) >= (d >>> 0);
-                cpu.cpsrV = (gprs[rn] >> 31) != (shifterOperand >> 31) &&
+                cpu.cpsr.N = <any>(d >> 31);
+                cpu.cpsr.Z = !(d & 0xFFFFFFFF);
+                cpu.cpsr.C = (gprs[rn] >>> 0) >= (d >>> 0);
+                cpu.cpsr.V = (gprs[rn] >> 31) != (shifterOperand >> 31) &&
                     (gprs[rn] >> 31) != (d >> 31)
             }
             gprs[rd] = d
@@ -1213,8 +1213,8 @@ class ARMCoreArm {
         var cpu = this.cpu;
         var SHIFT_32 = 1 / 0x100000000;
         var gprs = this.cpu.gprs;
-        return function () {
-            cpu.mmu.waitPrefetch32(gprs[cpu.PC]);
+        return () => {
+            cpu.mmu.waitPrefetch32(gprs[Register.PC]);
             if (condOp && !condOp()) {
                 return
             }
@@ -1232,8 +1232,8 @@ class ARMCoreArm {
         var cpu = this.cpu;
         var SHIFT_32 = 1 / 0x100000000;
         var gprs = this.cpu.gprs;
-        return function () {
-            cpu.mmu.waitPrefetch32(gprs[cpu.PC]);
+        return () => {
+            cpu.mmu.waitPrefetch32(gprs[Register.PC]);
             if (condOp && !condOp()) {
                 return
             }
@@ -1244,8 +1244,8 @@ class ARMCoreArm {
             var carry = (gprs[rn] >>> 0) + hi + lo;
             gprs[rn] = carry;
             gprs[rd] += Math.floor(carry * SHIFT_32);
-            cpu.cpsrN = <any>(gprs[rd] >> 31);
-            cpu.cpsrZ = !((gprs[rd] & 0xFFFFFFFF) || (gprs[rn] & 0xFFFFFFFF))
+            cpu.cpsr.N = <any>(gprs[rd] >> 31);
+            cpu.cpsr.Z = !((gprs[rd] & 0xFFFFFFFF) || (gprs[rn] & 0xFFFFFFFF))
         }
     }
 
@@ -1253,8 +1253,8 @@ class ARMCoreArm {
         var cpu = this.cpu;
         var SHIFT_32 = 1 / 0x100000000;
         var gprs = this.cpu.gprs;
-        return function () {
-            cpu.mmu.waitPrefetch32(gprs[cpu.PC]);
+        return () => {
+            cpu.mmu.waitPrefetch32(gprs[Register.PC]);
             if (condOp && !condOp()) {
                 return
             }
@@ -1271,8 +1271,8 @@ class ARMCoreArm {
         var cpu = this.cpu;
         var SHIFT_32 = 1 / 0x100000000;
         var gprs = this.cpu.gprs;
-        return function () {
-            cpu.mmu.waitPrefetch32(gprs[cpu.PC]);
+        return () => {
+            cpu.mmu.waitPrefetch32(gprs[Register.PC]);
             if (condOp && !condOp()) {
                 return
             }
@@ -1282,8 +1282,8 @@ class ARMCoreArm {
             var lo = ((gprs[rm] & 0x0000FFFF) >> 0) * (gprs[rs] >> 0);
             gprs[rn] = ((hi & 0xFFFFFFFF) + (lo & 0xFFFFFFFF)) & 0xFFFFFFFF;
             gprs[rd] = Math.floor(hi * SHIFT_32 + lo * SHIFT_32);
-            cpu.cpsrN = <any>(gprs[rd] >> 31);
-            cpu.cpsrZ = !((gprs[rd] & 0xFFFFFFFF) || (gprs[rn] & 0xFFFFFFFF))
+            cpu.cpsr.N = <any>(gprs[rd] >> 31);
+            cpu.cpsr.Z = !((gprs[rd] & 0xFFFFFFFF) || (gprs[rn] & 0xFFFFFFFF))
         }
     }
 
@@ -1291,12 +1291,12 @@ class ARMCoreArm {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
         var mmu = cpu.mmu;
-        return function () {
+        return () => {
             if (condOp && !condOp()) {
-                mmu.waitPrefetch32(gprs[cpu.PC]);
+                mmu.waitPrefetch32(gprs[Register.PC]);
                 return
             }
-            mmu.wait32(gprs[cpu.PC]);
+            mmu.wait32(gprs[Register.PC]);
             var addr = address(true);
             var total = 0;
             var m, i;
@@ -1315,17 +1315,17 @@ class ARMCoreArm {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
         var mmu = cpu.mmu;
-        return function () {
+        return () => {
             if (condOp && !condOp()) {
-                mmu.waitPrefetch32(gprs[cpu.PC]);
+                mmu.waitPrefetch32(gprs[Register.PC]);
                 return
             }
-            mmu.wait32(gprs[cpu.PC]);
+            mmu.wait32(gprs[Register.PC]);
             var mode = cpu.mode;
             var addr = address(true);
             var total = 0;
             var m, i;
-            cpu.switchMode(cpu.MODE_SYSTEM);
+            cpu.switchMode(Mode.SYSTEM);
             for (m = rs, i = 0; m; m >>= 1, ++i) {
                 if (m & 1) {
                     mmu.store32(addr, gprs[i]);
@@ -1341,53 +1341,53 @@ class ARMCoreArm {
     constructSTR(rd, address, condOp) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
-        return function () {
+        return () => {
             if (condOp && !condOp()) {
-                cpu.mmu.waitPrefetch32(gprs[cpu.PC]);
+                cpu.mmu.waitPrefetch32(gprs[Register.PC]);
                 return
             }
             var addr = address();
             cpu.mmu.store32(addr, gprs[rd]);
             cpu.mmu.wait32(addr);
-            cpu.mmu.wait32(gprs[cpu.PC])
+            cpu.mmu.wait32(gprs[Register.PC])
         }
     }
 
     constructSTRB(rd, address, condOp) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
-        return function () {
+        return () => {
             if (condOp && !condOp()) {
-                cpu.mmu.waitPrefetch32(gprs[cpu.PC]);
+                cpu.mmu.waitPrefetch32(gprs[Register.PC]);
                 return
             }
             var addr = address();
             cpu.mmu.store8(addr, gprs[rd]);
             cpu.mmu.wait(addr);
-            cpu.mmu.wait32(gprs[cpu.PC])
+            cpu.mmu.wait32(gprs[Register.PC])
         }
     }
 
     constructSTRH(rd, address, condOp) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
-        return function () {
+        return () => {
             if (condOp && !condOp()) {
-                cpu.mmu.waitPrefetch32(gprs[cpu.PC]);
+                cpu.mmu.waitPrefetch32(gprs[Register.PC]);
                 return
             }
             var addr = address();
             cpu.mmu.store16(addr, gprs[rd]);
             cpu.mmu.wait(addr);
-            cpu.mmu.wait32(gprs[cpu.PC])
+            cpu.mmu.wait32(gprs[Register.PC])
         }
     }
 
     constructSUB(rd, rn, shiftOp, condOp) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
-        return function () {
-            cpu.mmu.waitPrefetch32(gprs[cpu.PC]);
+        return () => {
+            cpu.mmu.waitPrefetch32(gprs[Register.PC]);
             if (condOp && !condOp()) {
                 return
             }
@@ -1399,20 +1399,20 @@ class ARMCoreArm {
     constructSUBS(rd, rn, shiftOp, condOp) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
-        return function () {
-            cpu.mmu.waitPrefetch32(gprs[cpu.PC]);
+        return () => {
+            cpu.mmu.waitPrefetch32(gprs[Register.PC]);
             if (condOp && !condOp()) {
                 return
             }
             shiftOp();
             var d = gprs[rn] - cpu.shifterOperand;
-            if (rd == cpu.PC && cpu.hasSPSR()) {
+            if (rd == Register.PC && cpu.hasSPSR()) {
                 cpu.unpackCPSR(cpu.spsr)
             } else {
-                cpu.cpsrN = <any>(d >> 31);
-                cpu.cpsrZ = !(d & 0xFFFFFFFF);
-                cpu.cpsrC = (gprs[rn] >>> 0) >= (cpu.shifterOperand >>> 0);
-                cpu.cpsrV = (gprs[rn] >> 31) != (cpu.shifterOperand >> 31) &&
+                cpu.cpsr.N = <any>(d >> 31);
+                cpu.cpsr.Z = !(d & 0xFFFFFFFF);
+                cpu.cpsr.C = (gprs[rn] >>> 0) >= (cpu.shifterOperand >>> 0);
+                cpu.cpsr.V = (gprs[rn] >> 31) != (cpu.shifterOperand >> 31) &&
                     (gprs[rn] >> 31) != (d >> 31)
             }
             gprs[rd] = d
@@ -1422,21 +1422,21 @@ class ARMCoreArm {
     constructSWI(immediate, condOp) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
-        return function () {
+        return () => {
             if (condOp && !condOp()) {
-                cpu.mmu.waitPrefetch32(gprs[cpu.PC]);
+                cpu.mmu.waitPrefetch32(gprs[Register.PC]);
                 return
             }
             cpu.irq.swi32(immediate);
-            cpu.mmu.waitPrefetch32(gprs[cpu.PC])
+            cpu.mmu.waitPrefetch32(gprs[Register.PC])
         }
     }
 
     constructSWP(rd, rn, rm, condOp) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
-        return function () {
-            cpu.mmu.waitPrefetch32(gprs[cpu.PC]);
+        return () => {
+            cpu.mmu.waitPrefetch32(gprs[Register.PC]);
             if (condOp && !condOp()) {
                 return
             }
@@ -1452,8 +1452,8 @@ class ARMCoreArm {
     constructSWPB(rd, rn, rm, condOp) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
-        return function () {
-            cpu.mmu.waitPrefetch32(gprs[cpu.PC]);
+        return () => {
+            cpu.mmu.waitPrefetch32(gprs[Register.PC]);
             if (condOp && !condOp()) {
                 return
             }
@@ -1469,32 +1469,32 @@ class ARMCoreArm {
     constructTEQ(rd, rn, shiftOp, condOp) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
-        return function () {
-            cpu.mmu.waitPrefetch32(gprs[cpu.PC]);
+        return () => {
+            cpu.mmu.waitPrefetch32(gprs[Register.PC]);
             if (condOp && !condOp()) {
                 return
             }
             shiftOp();
             var aluOut = gprs[rn] ^ cpu.shifterOperand;
-            cpu.cpsrN = <any>(aluOut >> 31);
-            cpu.cpsrZ = !(aluOut & 0xFFFFFFFF);
-            cpu.cpsrC = <any>cpu.shifterCarryOut
+            cpu.cpsr.N = <any>(aluOut >> 31);
+            cpu.cpsr.Z = !(aluOut & 0xFFFFFFFF);
+            cpu.cpsr.C = <any>cpu.shifterCarryOut
         }
     }
 
     constructTST(rd, rn, shiftOp, condOp) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
-        return function () {
-            cpu.mmu.waitPrefetch32(gprs[cpu.PC]);
+        return () => {
+            cpu.mmu.waitPrefetch32(gprs[Register.PC]);
             if (condOp && !condOp()) {
                 return
             }
             shiftOp();
             var aluOut = gprs[rn] & cpu.shifterOperand;
-            cpu.cpsrN = <any>(aluOut >> 31);
-            cpu.cpsrZ = !(aluOut & 0xFFFFFFFF);
-            cpu.cpsrC = <any>cpu.shifterCarryOut
+            cpu.cpsr.N = <any>(aluOut >> 31);
+            cpu.cpsr.Z = !(aluOut & 0xFFFFFFFF);
+            cpu.cpsr.C = <any>cpu.shifterCarryOut
         }
     }
 
@@ -1502,8 +1502,8 @@ class ARMCoreArm {
         var cpu = this.cpu;
         var SHIFT_32 = 1 / 0x100000000;
         var gprs = this.cpu.gprs;
-        return function () {
-            cpu.mmu.waitPrefetch32(gprs[cpu.PC]);
+        return () => {
+            cpu.mmu.waitPrefetch32(gprs[Register.PC]);
             if (condOp && !condOp()) {
                 return
             }
@@ -1521,8 +1521,8 @@ class ARMCoreArm {
         var cpu = this.cpu;
         var SHIFT_32 = 1 / 0x100000000;
         var gprs = this.cpu.gprs;
-        return function () {
-            cpu.mmu.waitPrefetch32(gprs[cpu.PC]);
+        return () => {
+            cpu.mmu.waitPrefetch32(gprs[Register.PC]);
             if (condOp && !condOp()) {
                 return
             }
@@ -1533,8 +1533,8 @@ class ARMCoreArm {
             var carry = (gprs[rn] >>> 0) + hi + lo;
             gprs[rn] = carry;
             gprs[rd] += carry * SHIFT_32;
-            cpu.cpsrN = <any>(gprs[rd] >> 31);
-            cpu.cpsrZ = !((gprs[rd] & 0xFFFFFFFF) || (gprs[rn] & 0xFFFFFFFF))
+            cpu.cpsr.N = <any>(gprs[rd] >> 31);
+            cpu.cpsr.Z = !((gprs[rd] & 0xFFFFFFFF) || (gprs[rn] & 0xFFFFFFFF))
         }
     }
 
@@ -1542,8 +1542,8 @@ class ARMCoreArm {
         var cpu = this.cpu;
         var SHIFT_32 = 1 / 0x100000000;
         var gprs = this.cpu.gprs;
-        return function () {
-            cpu.mmu.waitPrefetch32(gprs[cpu.PC]);
+        return () => {
+            cpu.mmu.waitPrefetch32(gprs[Register.PC]);
             if (condOp && !condOp()) {
                 return
             }
@@ -1560,8 +1560,8 @@ class ARMCoreArm {
         var cpu = this.cpu;
         var SHIFT_32 = 1 / 0x100000000;
         var gprs = this.cpu.gprs;
-        return function () {
-            cpu.mmu.waitPrefetch32(gprs[cpu.PC]);
+        return () => {
+            cpu.mmu.waitPrefetch32(gprs[Register.PC]);
             if (condOp && !condOp()) {
                 return
             }
@@ -1571,8 +1571,8 @@ class ARMCoreArm {
             var lo = ((gprs[rm] & 0x0000FFFF) >>> 0) * (gprs[rs] >>> 0);
             gprs[rn] = ((hi & 0xFFFFFFFF) + (lo & 0xFFFFFFFF)) & 0xFFFFFFFF;
             gprs[rd] = (hi * SHIFT_32 + lo * SHIFT_32) >>> 0;
-            cpu.cpsrN = <any>(gprs[rd] >> 31);
-            cpu.cpsrZ = !((gprs[rd] & 0xFFFFFFFF) || (gprs[rn] & 0xFFFFFFFF))
+            cpu.cpsr.N = <any>(gprs[rd] >> 31);
+            cpu.cpsr.Z = !((gprs[rd] & 0xFFFFFFFF) || (gprs[rn] & 0xFFFFFFFF))
         }
     }
 

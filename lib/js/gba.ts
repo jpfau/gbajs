@@ -19,7 +19,13 @@ class GameBoyAdvance {
 
     logLevel = this.LOG_ERROR | this.LOG_WARN;
 
-    rom = null;
+    rom:{
+        title: any;
+        code: any;
+        maker: any;
+        memory: any;
+        saveType: any;
+    };
 
     cpu = new ARMCore();
     mmu = new GameBoyAdvanceMMU();
@@ -30,9 +36,11 @@ class GameBoyAdvance {
     keypad = new GameBoyAdvanceKeypad();
     sio = new GameBoyAdvanceSIO();
 
-    doStep;
-    lastVblank;
-    throttle;
+    doStep:() => void;
+    /**
+     * This is rough, but the 2/3ms difference gives us a good overhead
+     */
+    throttle = 16;
 
     constructor() {
         // TODO: simplify this graph
@@ -71,29 +79,26 @@ class GameBoyAdvance {
 
         this.seenFrame = false;
         this.seenSave = false;
-        this.lastVblank = 0;
 
         this.queue = null;
         this.reportFPS = null;
-        this.throttle = 16; // This is rough, but the 2/3ms difference gives us a good overhead
 
-        var self = this;
-        (<any>window).queueFrame = function (f) {
-            self.queue = window.setTimeout(f, self.throttle);
+        (<any>window).queueFrame = (f) => {
+            this.queue = window.setTimeout(f, this.throttle);
         };
 
         (<any>window).URL = (<any>window).URL || (<any>window).webkitURL;
 
-        this.video.vblankCallback = function () {
-            self.seenFrame = true;
+        this.video.vblankCallback = () => {
+            this.seenFrame = true;
         };
     }
 
-    indirectCanvas;
+    indirectCanvas:HTMLElement;
     targetCanvas;
+    context;
 
-    setCanvas(canvas) {
-        var self = this;
+    setCanvas(canvas):void {
         if (canvas.offsetWidth != 240 || canvas.offsetHeight != 160) {
             this.indirectCanvas = document.createElement("canvas");
             this.indirectCanvas.setAttribute("height", "160");
@@ -101,27 +106,24 @@ class GameBoyAdvance {
             this.targetCanvas = canvas;
             this.setCanvasDirect(this.indirectCanvas);
             var targetContext = canvas.getContext('2d');
-            this.video.drawCallback = function () {
-                targetContext.drawImage(self.indirectCanvas, 0, 0, canvas.offsetWidth, canvas.offsetHeight);
+            this.video.drawCallback = () => {
+                targetContext.drawImage(this.indirectCanvas, 0, 0, canvas.offsetWidth, canvas.offsetHeight);
             }
         } else {
             this.setCanvasDirect(canvas);
-            var self = this;
         }
     }
 
-    context;
-
-    setCanvasDirect(canvas) {
+    setCanvasDirect(canvas):void {
         this.context = canvas.getContext('2d');
         this.video.setBacking(this.context);
     }
 
-    setBios(bios, real) {
+    setBios(bios, real:boolean):void {
         this.mmu.loadBios(bios, real);
     }
 
-    setRom(rom) {
+    setRom(rom):boolean {
         this.reset();
 
         this.rom = this.mmu.loadRom(rom, true);
@@ -132,15 +134,14 @@ class GameBoyAdvance {
         return true;
     }
 
-    hasRom() {
+    hasRom():boolean {
         return !!this.rom;
     }
 
-    loadRomFromFile(romFile, callback) {
+    loadRomFromFile(romFile:Blob, callback:(result:boolean) => void) {
         var reader = new FileReader();
-        var self = this;
-        reader.onload = function (e:any) {
-            var result = self.setRom(e.target.result);
+        reader.onload = (e:any) => {
+            var result = this.setRom(e.target.result);
             if (callback) {
                 callback(result);
             }
@@ -148,7 +149,7 @@ class GameBoyAdvance {
         reader.readAsArrayBuffer(romFile);
     }
 
-    reset() {
+    reset():void {
         this.audio.pause(true);
 
         this.mmu.clear();
@@ -165,24 +166,24 @@ class GameBoyAdvance {
         this.cpu.resetCPU(0);
     }
 
-    step() {
+    step():void {
         while (this.doStep()) {
             this.cpu.step();
         }
     }
 
-    seenFrame;
+    seenFrame:boolean;
 
-    waitFrame() {
+    waitFrame():boolean {
         var seen = this.seenFrame;
         this.seenFrame = false;
         return !seen;
     }
 
-    paused;
-    queue;
+    paused:boolean;
+    queue:any;
 
-    pause() {
+    pause():void {
         this.paused = true;
         this.audio.pause(true);
         if (this.queue) {
@@ -191,9 +192,9 @@ class GameBoyAdvance {
         }
     }
 
-    seenSave;
+    seenSave:boolean;
 
-    advanceFrame() {
+    advanceFrame():void {
         this.step();
         if (this.seenSave) {
             if (!this.mmu.saveNeedsFlush()) {
@@ -209,58 +210,57 @@ class GameBoyAdvance {
     }
 
     interval;
-    reportFPS;
+    reportFPS:(fps:number) => void;
 
     runStable() {
         if (this.interval) {
             return; // Already running
         }
-        var self = this;
         var timer = 0;
         var frames = 0;
-        var runFunc;
+        var runFunc:() => void;
         var start = Date.now();
         this.paused = false;
         this.audio.pause(false);
 
         if (this.reportFPS) {
-            runFunc = function () {
+            runFunc = () => {
                 try {
                     timer += Date.now() - start;
-                    if (self.paused) {
+                    if (this.paused) {
                         return;
                     } else {
                         (<any>window).queueFrame(runFunc);
                     }
                     start = Date.now();
-                    self.advanceFrame();
+                    this.advanceFrame();
                     ++frames;
                     if (frames == 60) {
-                        self.reportFPS((frames * 1000) / timer);
+                        this.reportFPS((frames * 1000) / timer);
                         frames = 0;
                         timer = 0;
                     }
                 } catch (exception) {
-                    self.ERROR(exception);
+                    this.ERROR(exception);
                     if (exception.stack) {
-                        self.logStackTrace(exception.stack.split('\n'));
+                        this.logStackTrace(exception.stack.split('\n'));
                     }
                     throw exception;
                 }
             };
         } else {
-            runFunc = function () {
+            runFunc = () => {
                 try {
-                    if (self.paused) {
+                    if (this.paused) {
                         return;
                     } else {
                         (<any>window).queueFrame(runFunc);
                     }
-                    self.advanceFrame();
+                    this.advanceFrame();
                 } catch (exception) {
-                    self.ERROR(exception);
+                    this.ERROR(exception);
                     if (exception.stack) {
-                        self.logStackTrace(exception.stack.split('\n'));
+                        this.logStackTrace(exception.stack.split('\n'));
                     }
                     throw exception;
                 }
@@ -269,96 +269,49 @@ class GameBoyAdvance {
         (<any>window).queueFrame(runFunc);
     }
 
-    setSavedata(data) {
+    setSavedata(data):void {
         this.mmu.loadSavedata(data);
     }
 
-    loadSavedataFromFile(saveFile) {
+    loadSavedataFromFile(saveFile:Blob):void {
         var reader = new FileReader();
-        var self = this;
-        reader.onload = function (e:any) {
-            self.setSavedata(e.target.result);
+        reader.onload = (e:any) => {
+            this.setSavedata(e.target.result);
         };
         reader.readAsArrayBuffer(saveFile);
     }
 
-    decodeSavedata(string) {
-        this.setSavedata(GameBoyAdvance.decodeBase64(string));
+    decodeSavedata(string:string) {
+        this.setSavedata(decodeBase64(string));
     }
 
-    static decodeBase64(string) {
-        var length = (string.length * 3 / 4);
-        if (string[string.length - 2] == '=') {
-            length -= 2;
-        } else if (string[string.length - 1] == '=') {
-            length -= 1;
-        }
-        var buffer = new ArrayBuffer(length);
-        var view = new Uint8Array(buffer);
-        var bits = string.match(/..../g);
-        for (var i = 0; i + 2 < length; i += 3) {
-            var s = atob(bits.shift());
-            view[i] = s.charCodeAt(0);
-            view[i + 1] = s.charCodeAt(1);
-            view[i + 2] = s.charCodeAt(2);
-        }
-        if (i < length) {
-            var s = atob(bits.shift());
-            view[i++] = s.charCodeAt(0);
-            if (s.length > 1) {
-                view[i++] = s.charCodeAt(1);
-            }
-        }
-
-        return buffer;
-    }
-
-    static encodeBase64(view) {
-        var data = [];
-        var b;
-        var wordstring = [];
-        var triplet;
-        for (var i = 0; i < view.byteLength; ++i) {
-            b = view.getUint8(i);
-            wordstring.push(String.fromCharCode(b));
-            while (wordstring.length >= 3) {
-                triplet = wordstring.splice(0, 3);
-                data.push(btoa(triplet.join('')));
-            }
-        }
-        if (wordstring.length) {
-            data.push(btoa(wordstring.join('')));
-        }
-        return data.join('');
-    }
-
-    downloadSavedata() {
+    downloadSavedata():void {
         var sram = this.mmu.save;
         if (!sram) {
             this.WARN("No save data available");
-            return null;
+            return;
         }
         if ((<any>window).URL) {
             var url = (<any>window).URL.createObjectURL(new Blob([sram.buffer], { type: 'application/octet-stream' }));
             window.open(url);
         } else {
-            var data = GameBoyAdvance.encodeBase64(sram.view);
+            var data = encodeBase64(sram.view);
             window.open('data:application/octet-stream;base64,' + data, this.rom.code + '.sav');
         }
     }
 
 
-    storeSavedata() {
+    storeSavedata():void {
         var sram = this.mmu.save;
         try {
             var storage = window.localStorage;
-            storage[this.SYS_ID + '.' + this.mmu.cart.code] = GameBoyAdvance.encodeBase64(sram.view);
+            storage[this.SYS_ID + '.' + this.mmu.cart.code] = encodeBase64(sram.view);
         } catch (e) {
             this.WARN('Could not store savedata! ' + e);
         }
     }
 
-    retrieveSavedata() {
+    retrieveSavedata():boolean {
         try {
             var storage = window.localStorage;
             var data = storage[this.SYS_ID + '.' + this.mmu.cart.code];
@@ -374,16 +327,16 @@ class GameBoyAdvance {
 
     freeze() {
         return {
-            'cpu': this.cpu.freeze(),
-            'mmu': this.mmu.freeze(),
-            'irq': this.irq.freeze(),
-            'io': this.io.freeze(),
-            'audio': this.audio.freeze(),
-            'video': this.video.freeze()
+            cpu: this.cpu.freeze(),
+            mmu: this.mmu.freeze(),
+            irq: this.irq.freeze(),
+            io: this.io.freeze(),
+            audio: this.audio.freeze(),
+            video: this.video.freeze()
         }
     }
 
-    defrost(frost) {
+    defrost(frost):void {
         this.cpu.defrost(frost.cpu);
         this.mmu.defrost(frost.mmu);
         this.audio.defrost(frost.audio);
@@ -392,14 +345,13 @@ class GameBoyAdvance {
         this.io.defrost(frost.io);
     }
 
-    log(level, message) {
-    }
+    log:(level:number, error:any) => void;
 
-    setLogger(logger) {
+    setLogger(logger:(level:number, error:any) => void):void {
         this.log = logger;
     }
 
-    logStackTrace(stack) {
+    logStackTrace(stack:any[]) {
         var overflow = stack.length - 32;
         this.ERROR('Stack trace follows:');
         if (overflow > 0) {
@@ -410,41 +362,41 @@ class GameBoyAdvance {
         }
     }
 
-    ERROR(error) {
+    ERROR(error:any) {
         if (this.logLevel & this.LOG_ERROR) {
             this.log(this.LOG_ERROR, error);
         }
     }
 
-    WARN(warn) {
+    WARN(warn:any) {
         if (this.logLevel & this.LOG_WARN) {
             this.log(this.LOG_WARN, warn);
         }
     }
 
-    STUB(func) {
+    STUB(func:any) {
         if (this.logLevel & this.LOG_STUB) {
             this.log(this.LOG_STUB, func);
         }
     }
 
-    INFO(info) {
+    INFO(info:any) {
         if (this.logLevel & this.LOG_INFO) {
             this.log(this.LOG_INFO, info);
         }
     }
 
-    DEBUG(info) {
+    DEBUG(info:any) {
         if (this.logLevel & this.LOG_DEBUG) {
             this.log(this.LOG_DEBUG, info);
         }
     }
 
-    static ASSERT_UNREACHED(err) {
+    static ASSERT_UNREACHED(err:any) {
         throw new Error("Should be unreached: " + err);
     }
 
-    static ASSERT(test, err) {
+    static ASSERT(test:boolean, err:any) {
         if (!test) {
             throw new Error("Assertion failed: " + err);
         }

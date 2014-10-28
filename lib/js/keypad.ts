@@ -132,7 +132,7 @@ class GameBoyAdvanceKeypad {
     }
 
     gamepadDisconnectHandler(gamepad) {
-        this.gamepads = this.gamepads.filter(function (other) {
+        this.gamepads = this.gamepads.filter((other) => {
             return other != gamepad
         });
     }

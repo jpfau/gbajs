@@ -18,10 +18,8 @@ class GameBoyAdvanceVideo {
 
     TOTAL_LENGTH = 280896;
 
-    drawCallback = function () {
-    };
-    vblankCallback = function () {
-    };
+    drawCallback:() => void;
+    vblankCallback:() => void;
 
     cpu;
     DISPSTAT_MASK;
@@ -86,7 +84,7 @@ class GameBoyAdvanceVideo {
             'nextHblankIRQ': this.nextHblankIRQ,
             'nextVblankIRQ': this.nextVblankIRQ,
             'nextVcounterIRQ': this.nextVcounterIRQ,
-            'renderPath': this.renderPath.freeze(GameBoyAdvance.encodeBase64)
+            'renderPath': this.renderPath.freeze(encodeBase64)
         };
     }
 
@@ -105,7 +103,7 @@ class GameBoyAdvanceVideo {
         this.nextHblankIRQ = frost.nextHblankIRQ;
         this.nextVblankIRQ = frost.nextVblankIRQ;
         this.nextVcounterIRQ = frost.nextVcounterIRQ;
-        this.renderPath.defrost(frost.renderPath, GameBoyAdvance.decodeBase64);
+        this.renderPath.defrost(frost.renderPath, decodeBase64);
     }
 
     context;

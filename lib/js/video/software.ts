@@ -709,7 +709,7 @@ class GameBoyAdvanceSoftwareRenderer {
             this.index = video.LAYER_BACKDROP;
             this.enabled = true;
 
-            this.drawScanline = function (backing, layer, start, end) {
+            this.drawScanline = (backing, layer, start, end) => {
                 // TODO: interactions with blend modes and OBJWIN
                 for (var x = start; x < end; ++x) {
                     if (!(backing.stencil[x] & video.WRITTEN_MASK)) {
