@@ -68,7 +68,7 @@
             var canvas = document.getElementById('screen');
             core.setCanvas(canvas);
 
-            gbaCon = new Console(core);
+            gbaCon = new GameBoyAdvanceConsole(core);
             core.DEBUG("Logging begun!");
             core.DEBUG("Loading BIOS...");
             loadRom('resources/bios.bin', function (bios) {

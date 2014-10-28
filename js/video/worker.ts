@@ -1,11 +1,13 @@
+/// <reference path="software.ts"/>
+
 importScripts('software.js');
 
 var video = new GameBoyAdvanceSoftwareRenderer();
 var proxyBacking = null;
 var currentFrame = 0;
 
-self.finishDraw = function (pixelData) {
-    self.postMessage({ type: 'finish', backing: pixelData, frame: currentFrame });
+(<any>self).finishDraw = function (pixelData) {
+    self.postMessage({ type: 'finish', backing: pixelData, frame: currentFrame }, undefined);
 };
 
 function receiveDirty(dirty) {

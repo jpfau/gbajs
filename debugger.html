@@ -35,7 +35,7 @@
         function initialize(gba) {
             window.gba = gba;
             gba.logLevel = gba.LOG_ERROR | gba.LOG_WARN | gba.LOG_DEBUG;
-            gbaCon = new Console(gba);
+            gbaCon = new GameBoyAdvanceConsole(gba);
             gba.DEBUG('Debugger initialized');
         }
 

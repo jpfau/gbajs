@@ -1,24 +1,12 @@
-Object.prototype.inherit = function () {
-    for (var v in this) {
-        this[v] = this[v];
-    }
-};
-
-function hex(number, leading, usePrefix) {
-    if (typeof(usePrefix) === 'undefined') {
-        usePrefix = true;
-    }
-    if (typeof(leading) === 'undefined') {
-        leading = 8;
-    }
-    var string = (number >>> 0).toString(16).toUpperCase();
-    leading -= string.length;
+function hex(i:number, leading = 8, usePrefix = true) {
+    var s = (i >>> 0).toString(16).toUpperCase();
+    leading -= s.length;
     if (leading < 0)
-        return string;
-    return (usePrefix ? '0x' : '') + new Array(leading + 1).join('0') + string;
+        return s;
+    return (usePrefix ? '0x' : '') + new Array(leading + 1).join('0') + s;
 }
 
-Serializer = {
+var Serializer = {
     TAG_INT: 1,
     TAG_STRING: 2,
     TAG_STRUCT: 3,
@@ -40,7 +28,7 @@ Serializer = {
 
     pack8: function (value) {
         var object = new DataView(new ArrayBuffer(1));
-        object.setUint8(0, value, true);
+        object.setUint8(0, value);
         return object.buffer;
     },
 
@@ -51,7 +39,7 @@ Serializer = {
     serialize: function (stream) {
         var parts = [];
         var size = 4;
-        for (i in stream) {
+        for (var i in stream) {
             if (stream.hasOwnProperty(i)) {
                 var tag;
                 var head = Serializer.prefix(i);
@@ -94,7 +82,7 @@ Serializer = {
 
     deserialize: function (blob, callback) {
         var reader = new FileReader();
-        reader.onload = function (data) {
+        reader.onload = function (data:any) {
             callback(Serializer.deserealizeStream(new DataView(data.target.result), new Serializer.Pointer));
         };
         reader.readAsArrayBuffer(blob);
@@ -151,11 +139,11 @@ Serializer = {
         for (var multiplier = 1; (bytesInCanvas * multiplier * multiplier) < blob.size; ++multiplier);
         var edges = bytesInCanvas * multiplier * multiplier - blob.size;
         var padding = Math.ceil(edges / (base.width * multiplier));
-        canvas.setAttribute('width', base.width * multiplier);
-        canvas.setAttribute('height', base.height * multiplier + padding);
+        canvas.setAttribute('width', (base.width * multiplier).toString());
+        canvas.setAttribute('height', (base.height * multiplier + padding).toString());
 
         var reader = new FileReader();
-        reader.onload = function (data) {
+        reader.onload = function (data:any) {
             var view = new Uint8Array(data.target.result);
             var pointer = 0;
             var pixelPointer = 0;
@@ -187,12 +175,12 @@ Serializer = {
 
     deserializePNG: function (blob, callback) {
         var reader = new FileReader();
-        reader.onload = function (data) {
+        reader.onload = function (read:any) {
             var image = document.createElement('img');
-            image.setAttribute('src', data.target.result);
+            image.setAttribute('src', read.target.result);
             var canvas = document.createElement('canvas');
-            canvas.setAttribute('height', image.height);
-            canvas.setAttribute('width', image.width);
+            canvas.setAttribute('height', image.height.toString());
+            canvas.setAttribute('width', image.width.toString());
             var context = canvas.getContext('2d');
             context.drawImage(image, 0, 0);
             var pixels = context.getImageData(0, 0, canvas.width, canvas.height);
@@ -212,7 +200,7 @@ Serializer = {
                     }
                 }
             }
-            newBlob = new Blob(data.map(function (byte) {
+            var newBlob = new Blob(data.map(function (byte) {
                 var array = new Uint8Array(1);
                 array[0] = byte;
                 return array;
