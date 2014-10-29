@@ -40,7 +40,11 @@ class GameBoyAdvanceKeypad {
 
     gamepads = [];
 
-    core;
+    gba:GameBoyAdvance;
+
+    constructor(gba:GameBoyAdvance) {
+        this.gba = gba;
+    }
 
     keyboardHandler(e) {
         var toggle = 0;

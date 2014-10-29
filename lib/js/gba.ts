@@ -20,14 +20,14 @@ class GameBoyAdvance {
         saveType: any;
     };
 
-    cpu = new ARMCore();
-    mmu = new GameBoyAdvanceMMU();
-    irq = new GameBoyAdvanceInterruptHandler();
-    io = new GameBoyAdvanceIO();
-    audio = new GameBoyAdvanceAudio();
-    video = new GameBoyAdvanceVideo();
-    keypad = new GameBoyAdvanceKeypad();
-    sio = new GameBoyAdvanceSIO();
+    cpu:ARMCore;
+    mmu:GameBoyAdvanceMMU;
+    irq:GameBoyAdvanceInterruptHandler;
+    io:GameBoyAdvanceIO;
+    audio:GameBoyAdvanceAudio;
+    video:GameBoyAdvanceVideo;
+    keypad:GameBoyAdvanceKeypad;
+    sio:GameBoyAdvanceSIO;
 
     logger = new Logger(LoggerLevel.ERROR | LoggerLevel.WARN);
 
@@ -38,35 +38,14 @@ class GameBoyAdvance {
     throttle = 16;
 
     constructor() {
-        // TODO: simplify this graph
-        this.cpu.mmu = this.mmu;
-        this.cpu.irq = this.irq;
-
-        this.mmu.cpu = this.cpu;
-        this.mmu.core = this;
-
-        this.irq.cpu = this.cpu;
-        this.irq.io = this.io;
-        this.irq.audio = this.audio;
-        this.irq.video = this.video;
-        this.irq.gba = this;
-
-        this.io.cpu = this.cpu;
-        this.io.audio = this.audio;
-        this.io.video = this.video;
-        this.io.keypad = this.keypad;
-        this.io.sio = this.sio;
-        this.io.gba = this;
-
-        this.audio.cpu = this.cpu;
-        this.audio.core = this;
-
-        this.video.cpu = this.cpu;
-        this.video.core = this;
-
-        this.keypad.core = this;
-
-        this.sio.gba = this;
+        this.cpu = new ARMCore(this);
+        this.mmu = new GameBoyAdvanceMMU(this);
+        this.irq = new GameBoyAdvanceInterruptHandler(this);
+        this.io = new GameBoyAdvanceIO(this);
+        this.audio = new GameBoyAdvanceAudio(this);
+        this.video = new GameBoyAdvanceVideo(this);
+        this.keypad = new GameBoyAdvanceKeypad(this);
+        this.sio = new GameBoyAdvanceSIO(this);
 
         this.keypad.registerHandlers();
         this.doStep = this.waitFrame;
@@ -114,7 +93,7 @@ class GameBoyAdvance {
         this.video.setBacking(this.context);
     }
 
-    setBios(bios, real=false):void {
+    setBios(bios, real = false):void {
         this.mmu.loadBios(bios, real);
     }
 

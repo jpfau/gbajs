@@ -2,7 +2,6 @@ class GameBoyAdvanceInterruptHandler {
 
     FREQUENCY = 0x1000000;
 
-    cpu:ARMCore = null;
     enable = false;
 
     IRQ_VBLANK = 0x0;
@@ -34,6 +33,28 @@ class GameBoyAdvanceInterruptHandler {
     MASK_DMA3 = 0x0800;
     MASK_KEYPAD = 0x1000;
     MASK_GAMEPAK = 0x2000;
+
+    gba:GameBoyAdvance;
+
+    get cpu() {
+        return this.gba.cpu
+    }
+
+    get io() {
+        return this.gba.io
+    }
+
+    get audio() {
+        return  this.gba.audio
+    }
+
+    get video() {
+        return this.gba.video
+    }
+
+    constructor(gba:GameBoyAdvance) {
+        this.gba = gba;
+    }
 
     enabledIRQs;
     interruptFlags;
@@ -125,10 +146,6 @@ class GameBoyAdvanceInterruptHandler {
         this.nextEvent = frost.nextEvent;
         this.springIRQ = frost.springIRQ;
     }
-
-    video;
-    audio;
-    io;
 
     updateTimers() {
         if (this.nextEvent > this.cpu.cycles) {
@@ -298,8 +315,6 @@ class GameBoyAdvanceInterruptHandler {
     swi32(opcode) {
         this.swi(opcode >> 16);
     }
-
-    gba:GameBoyAdvance;
 
     swi(opcode) {
         if (this.gba.mmu.bios.real) {

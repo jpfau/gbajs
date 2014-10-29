@@ -10,6 +10,12 @@ class GameBoyAdvanceSIO {
 
     BAUD = [ 9600, 38400, 57600, 115200 ];
 
+    gba:GameBoyAdvance;
+
+    constructor(gba:GameBoyAdvance) {
+        this.gba = gba;
+    }
+
     mode;
     sd:boolean;
     irq;
@@ -33,8 +39,6 @@ class GameBoyAdvanceSIO {
 
         this.linkLayer = null;
     }
-
-    gba:GameBoyAdvance;
 
     setMode(mode) {
         if (mode & 0x8) {

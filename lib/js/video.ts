@@ -21,7 +21,16 @@ class GameBoyAdvanceVideo {
     drawCallback:() => void;
     vblankCallback:() => void;
 
-    cpu;
+    gba:GameBoyAdvance;
+
+    get cpu() {
+        return this.gba.cpu;
+    }
+
+    constructor(gba:GameBoyAdvance) {
+        this.gba = gba;
+    }
+
     DISPSTAT_MASK;
     inHblank;
     inVblank;
@@ -40,8 +49,6 @@ class GameBoyAdvanceVideo {
     nextHblankIRQ;
     nextVblankIRQ;
     nextVcounterIRQ;
-
-    core;
 
     clear() {
         this.renderPath.clear(this.cpu.mmu);

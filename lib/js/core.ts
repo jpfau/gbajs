@@ -65,13 +65,22 @@ class ARMCore {
      */
     gprs = new Int32Array(16);
 
-    mmu;
-    irq;
+    gba:GameBoyAdvance;
+
+    get mmu() {
+        return this.gba.mmu;
+    }
+
+    get irq() {
+        return this.gba.irq;
+    }
+
     cycles:number;
 
     step;
 
-    constructor() {
+    constructor(gba:GameBoyAdvance) {
+        this.gba = gba;
         this.armCompiler = new ARMCoreArm(this);
         this.thumbCompiler = new ARMCoreThumb(this);
         this.generateConds();

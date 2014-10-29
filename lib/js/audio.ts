@@ -36,8 +36,11 @@ class GameBoyAdvanceAudio {
     FIFO_MAX = 0x200;
     PSG_MAX = 0x080;
 
-    cpu:ARMCore;
-    core;
+    gba:GameBoyAdvance;
+
+    get cpu() {
+        return this.gba.cpu;
+    }
 
     fifoA:number[];
     fifoB:number[];
@@ -106,7 +109,8 @@ class GameBoyAdvanceAudio {
     masterVolumeLeft:number;
     masterVolumeRight:number;
 
-    constructor() {
+    constructor(gba:GameBoyAdvance) {
+        this.gba = gba;
         var AudioContext = (<any>window).AudioContext || (<any>window).webkitAudioContext;
         if (AudioContext) {
             this.context = new AudioContext();
@@ -204,7 +208,7 @@ class GameBoyAdvanceAudio {
         this.channel3Pointer = 0;
         this.channel3Sample = 0;
 
-        this.cpuFrequency = this.core.irq.FREQUENCY;
+        this.cpuFrequency = this.gba.irq.FREQUENCY;
 
         this.channel4 = {
             sample: 0,
@@ -343,7 +347,7 @@ class GameBoyAdvanceAudio {
         this.nextEvent = this.cpu.cycles;
         this.nextSample = this.nextEvent;
         this.updateTimers();
-        this.core.irq.pollNextEvent();
+        this.gba.irq.pollNextEvent();
         if (this.context) {
             if (value) {
                 this.jsAudio.connect(this.context.destination);
@@ -365,7 +369,7 @@ class GameBoyAdvanceAudio {
         this.setChannel4Enabled((this.enabledLeft | this.enabledRight) & 0x8);
 
         this.updateTimers();
-        this.core.irq.pollNextEvent();
+        this.gba.irq.pollNextEvent();
     }
 
     writeSoundControlHi(value) {
@@ -411,14 +415,14 @@ class GameBoyAdvanceAudio {
         }
         channel.playing = channel.enabled;
         this.updateTimers();
-        this.core.irq.pollNextEvent();
+        this.gba.irq.pollNextEvent();
     }
 
     setSquareChannelEnabled(channel, enable) {
         if (!(channel.enabled && channel.playing) && enable) {
             channel.enabled = !!enable;
             this.updateTimers();
-            this.core.irq.pollNextEvent();
+            this.gba.irq.pollNextEvent();
         } else {
             channel.enabled = !!enable;
         }
@@ -559,7 +563,7 @@ class GameBoyAdvanceAudio {
         this.channel3End = this.cpu.cycles + this.channel3Length;
         this.playingChannel3 = this.channel3Write;
         this.updateTimers();
-        this.core.irq.pollNextEvent();
+        this.gba.irq.pollNextEvent();
     }
 
     writeWaveData(offset, data, width) {
@@ -583,7 +587,7 @@ class GameBoyAdvanceAudio {
             this.nextEvent = this.cpu.cycles;
             this.updateEnvelope(this.channel4);
             this.updateTimers();
-            this.core.irq.pollNextEvent();
+            this.gba.irq.pollNextEvent();
         } else {
             this.enableChannel4 = enable;
         }
@@ -635,7 +639,7 @@ class GameBoyAdvanceAudio {
 
         this.playingChannel4 = this.enableChannel4;
         this.updateTimers();
-        this.core.irq.pollNextEvent();
+        this.gba.irq.pollNextEvent();
     }
 
     writeChannelLE(channel, value) {
@@ -695,18 +699,18 @@ class GameBoyAdvanceAudio {
 
     sampleFifoA() {
         if (this.fifoA.length <= 16) {
-            var dma = this.core.irq.dma[this.dmaA];
+            var dma = this.gba.irq.dma[this.dmaA];
             dma.nextCount = 4;
-            this.core.mmu.serviceDma(this.dmaA, dma);
+            this.gba.mmu.serviceDma(this.dmaA, dma);
         }
         this.fifoASample = this.fifoA.shift();
     }
 
     sampleFifoB() {
         if (this.fifoB.length <= 16) {
-            var dma = this.core.irq.dma[this.dmaB];
+            var dma = this.gba.irq.dma[this.dmaB];
             dma.nextCount = 4;
-            this.core.mmu.serviceDma(this.dmaB, dma);
+            this.gba.mmu.serviceDma(this.dmaB, dma);
         }
         this.fifoBSample = this.fifoB.shift();
     }
@@ -723,7 +727,7 @@ class GameBoyAdvanceAudio {
                 this.dmaB = number;
                 break;
             default:
-                this.core.WARN('Tried to schedule FIFO DMA for non-FIFO destination');
+                this.gba.logger.WARN('Tried to schedule FIFO DMA for non-FIFO destination');
                 break;
         }
     }

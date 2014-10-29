@@ -323,7 +323,14 @@ class GameBoyAdvanceMMU {
 
     bios:BIOSView = null;
 
-    constructor() {
+    gba:GameBoyAdvance;
+
+    get cpu() {
+        return this.gba.cpu;
+    }
+
+    constructor(gba:GameBoyAdvance) {
+        this.gba = gba;
         this.WAITSTATES = [ 0, 0, 2, 0, 0, 0, 0, 0, 4, 4, 4, 4, 4, 4, 4 ];
         this.WAITSTATES_32 = [ 0, 0, 5, 0, 0, 1, 0, 1, 7, 7, 9, 9, 13, 13, 8 ];
         this.WAITSTATES_SEQ = [ 0, 0, 2, 0, 0, 0, 0, 0, 2, 2, 4, 4, 8, 8, 4 ];
@@ -339,10 +346,8 @@ class GameBoyAdvanceMMU {
     }
 
     memory;
-    cpu;
     cart;
     save;
-    core;
 
     mmap(region, object) {
         this.memory[region] = object;
@@ -386,10 +391,10 @@ class GameBoyAdvanceMMU {
         this.save = null;
 
         this.DMA_REGISTER = [
-                this.core.io.DMA0CNT_HI >> 1,
-                this.core.io.DMA1CNT_HI >> 1,
-                this.core.io.DMA2CNT_HI >> 1,
-                this.core.io.DMA3CNT_HI >> 1
+                this.gba.io.DMA0CNT_HI >> 1,
+                this.gba.io.DMA1CNT_HI >> 1,
+                this.gba.io.DMA2CNT_HI >> 1,
+                this.gba.io.DMA3CNT_HI >> 1
         ];
     }
 
@@ -669,7 +674,7 @@ class GameBoyAdvanceMMU {
             case this.DMA_TIMING_CUSTOM:
                 switch (number) {
                     case 0:
-                        this.core.WARN('Discarding invalid DMA0 scheduling');
+                        this.gba.logger.WARN('Discarding invalid DMA0 scheduling');
                         break;
                     case 1:
                     case 2:
@@ -796,7 +801,7 @@ class GameBoyAdvanceMMU {
                 }
             }
         } else {
-            this.core.WARN('Invalid DMA');
+            this.gba.logger.WARN('Invalid DMA');
         }
 
         if (info.doIrq) {
@@ -885,6 +890,6 @@ class GameBoyAdvanceMMU {
     }
 
     allocGPIO(rom) {
-        return new GameBoyAdvanceGPIO(this.core, rom);
+        return new GameBoyAdvanceGPIO(this.gba, rom);
     }
 }

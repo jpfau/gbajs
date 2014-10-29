@@ -145,8 +145,33 @@ class GameBoyAdvanceIO {
     DEFAULT_RCNT = 0x8000;
 
     registers;
+    value;
+
     gba:GameBoyAdvance;
-    cpu:ARMCore;
+
+    get cpu() {
+        return this.gba.cpu;
+    }
+
+    get audio() {
+        return this.gba.audio;
+    }
+
+    get video() {
+        return this.gba.video;
+    }
+
+    get keypad() {
+        return this.gba.keypad;
+    }
+
+    get sio() {
+        return this.gba.sio;
+    }
+
+    constructor(gba:GameBoyAdvance) {
+        this.gba = gba;
+    }
 
     clear() {
         this.registers = new Uint16Array(this.cpu.mmu.SIZE_IO);
@@ -206,10 +231,6 @@ class GameBoyAdvanceIO {
         var value = this.loadU16(offset & 0xFFFE);
         return (value >>> (odd << 3)) & 0xFF;
     }
-
-    video;
-    sio;
-    keypad;
 
     loadU16(offset) {
         switch (offset) {
@@ -371,8 +392,6 @@ class GameBoyAdvanceIO {
         return this.registers[offset >> 1];
     }
 
-    value;
-
     store8(offset, value) {
         switch (offset) {
             case this.WININ:
@@ -438,8 +457,6 @@ class GameBoyAdvanceIO {
         }
         this.store16(offset & 0xFFFFFFE, value);
     }
-
-    audio;
 
     store16(offset, value) {
         switch (offset) {
