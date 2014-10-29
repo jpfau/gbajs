@@ -1,3 +1,21 @@
+interface DMA {
+    source:number
+    dest:number
+    count:number
+    nextSource:number
+    nextDest:number
+    nextCount:number
+    srcControl:number
+    dstControl:number
+    repeat:boolean
+    width:number
+    drq:boolean
+    timing:number
+    doIrq:boolean
+    enable:boolean
+    nextIRQ:number
+}
+
 class GameBoyAdvanceInterruptHandler {
 
     FREQUENCY = 0x1000000;
@@ -58,7 +76,7 @@ class GameBoyAdvanceInterruptHandler {
 
     enabledIRQs;
     interruptFlags;
-    dma;
+    dma:DMA[];
     timers;
     nextEvent;
     springIRQ;

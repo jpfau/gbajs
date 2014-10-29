@@ -658,7 +658,7 @@ class GameBoyAdvanceMMU {
         return page;
     }
 
-    dma;
+    dma:DMA;
 
     scheduleDma(number, info) {
         switch (info.timing) {

@@ -212,4 +212,8 @@ class GameBoyAdvanceVideo {
         this.drawCallback();
     }
 
+    scheduleVCaptureDma(dma:DMA, info) {
+        this.gba.logger.STUB('Unimplemented DMA: Video Capture Mode ');
+    }
+
 }
