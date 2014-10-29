@@ -1,6 +1,6 @@
 /// <reference path="mmu.ts"/>
 
-class SRAMSavedata extends MemoryView {
+class SRAMSavedata extends DefaultMemoryView {
 
     writePending;
 
@@ -25,7 +25,7 @@ class SRAMSavedata extends MemoryView {
     }
 }
 
-class FlashSavedata extends MemoryView {
+class FlashSavedata extends DefaultMemoryView {
 
     COMMAND_WIPE = 0x10;
     COMMAND_ERASE_SECTOR = 0x30;
@@ -181,7 +181,7 @@ class FlashSavedata extends MemoryView {
 
     replaceData(memory) {
         var bank = this.view === this.bank1;
-        MemoryView.prototype.replaceData.call(this, memory, 0);
+        super.replaceData(memory, 0);
 
         this.bank0 = new DataView(this.buffer, 0, 0x00010000);
         if (memory.byteLength > 0x00010000) {
@@ -194,7 +194,7 @@ class FlashSavedata extends MemoryView {
 
 }
 
-class EEPROMSavedata extends MemoryView {
+class EEPROMSavedata extends DefaultMemoryView {
 
     writeAddress = 0;
     readBitsRemaining = 0;

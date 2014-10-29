@@ -8,14 +8,50 @@ interface Page {
     invalid:boolean
 }
 
-class MemoryView {
+interface MemoryView {
+
     buffer;
+    icache;
+    ICACHE_PAGE_BITS;
+    PAGE_MASK;
     view:DataView;
     mask;
     mask8;
     mask16;
     mask32;
+
+    load8(offset);
+
+    load16(offset) ;
+
+    loadU8(offset) ;
+
+    loadU16(offset) ;
+
+    load32(offset);
+
+    store8(offset:number, value);
+
+    store16(offset:number, value);
+
+    store32(offset:number, value);
+
+    invalidatePage(address);
+
+    replaceData(memory, offset:number);
+}
+
+class DefaultMemoryView implements MemoryView {
+
+    buffer;
     icache;
+    ICACHE_PAGE_BITS;
+    PAGE_MASK;
+    view:DataView;
+    mask;
+    mask8;
+    mask16;
+    mask32;
 
     constructor(memory, offset = 0) {
         this.buffer = memory;
@@ -70,20 +106,16 @@ class MemoryView {
     invalidatePage(address) {
     }
 
-    replaceData(memory, offset) {
+    replaceData(memory, offset = 0) {
         this.buffer = memory;
-        this.view = new DataView(this.buffer, typeof(offset) === "number" ? offset : 0);
+        this.view = new DataView(this.buffer, offset);
         if (this.icache) {
             this.icache = new Array(this.icache.length);
         }
     }
 }
 
-class MemoryBlock extends MemoryView {
-
-    ICACHE_PAGE_BITS;
-    PAGE_MASK;
-    icache;
+class MemoryBlock extends DefaultMemoryView {
 
     constructor(size, cacheBits) {
         super(new ArrayBuffer(size));
@@ -100,11 +132,8 @@ class MemoryBlock extends MemoryView {
     }
 }
 
-class ROMView extends MemoryView {
+class ROMView extends DefaultMemoryView {
 
-    ICACHE_PAGE_BITS;
-    PAGE_MASK;
-    icache;
     mmu;
     gpio;
 
@@ -140,11 +169,9 @@ class ROMView extends MemoryView {
     }
 }
 
-class BIOSView extends MemoryView {
+class BIOSView extends DefaultMemoryView {
 
-    ICACHE_PAGE_BITS;
     PAGE_MASK;
-    icache;
     real:boolean;
 
     constructor(rom, offset = 0) {
@@ -345,7 +372,7 @@ class GameBoyAdvanceMMU {
         }
     }
 
-    memory;
+    memory:MemoryView[];
     cart;
     save;
 
@@ -406,8 +433,8 @@ class GameBoyAdvanceMMU {
     }
 
     defrost(frost) {
-        this.memory[this.REGION_WORKING_RAM].replaceData(frost.ram);
-        this.memory[this.REGION_WORKING_IRAM].replaceData(frost.iram);
+        this.memory[this.REGION_WORKING_RAM].replaceData(frost.ram, 0);
+        this.memory[this.REGION_WORKING_IRAM].replaceData(frost.iram, 0);
     }
 
     loadBios(bios, real:boolean) {
@@ -820,7 +847,7 @@ class GameBoyAdvanceMMU {
             info.enable = false;
 
             // Clear the enable bit in memory
-            var io = this.memory[this.REGION_IO];
+            var io = <GameBoyAdvanceIO><any>this.memory[this.REGION_IO];
             io.registers[this.DMA_REGISTER[number]] &= 0x7FE0;
         } else {
             info.nextCount = info.count;
