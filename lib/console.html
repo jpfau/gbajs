@@ -15,6 +15,7 @@
     <script src="js/sio.js"></script>
     <script src="js/savedata.js"></script>
     <script src="js/gpio.js"></script>
+    <script src="js/log.js"></script>
     <script src="js/gba.js"></script>
 
     <script src="resources/xhr.js"></script>
@@ -83,11 +84,11 @@
 <section id="top">
     <section id="consoleContainer">
         <div id="consoleControls">
-            <label><input type="checkbox" checked onclick="setLogLevel(core.LOG_ERROR, this.checked)">ERROR</label>
-            <label><input type="checkbox" checked onclick="setLogLevel(core.LOG_WARN, this.checked)">WARN</label>
-            <label><input type="checkbox" onclick="setLogLevel(core.LOG_STUB, this.checked)">STUB</label>
-            <label><input type="checkbox" onclick="setLogLevel(core.LOG_INFO, this.checked)">INFO</label>
-            <label><input type="checkbox" checked onclick="setLogLevel(core.LOG_DEBUG, this.checked)">DEBUG</label>
+            <label><input type="checkbox" checked onclick="setLogLevel(LoggerLevel.ERROR, this.checked)">ERROR</label>
+            <label><input type="checkbox" checked onclick="setLogLevel(LoggerLevel.WARN, this.checked)">WARN</label>
+            <label><input type="checkbox" onclick="setLogLevel(LoggerLevel.STUB, this.checked)">STUB</label>
+            <label><input type="checkbox" onclick="setLogLevel(LoggerLevel.INFO, this.checked)">INFO</label>
+            <label><input type="checkbox" checked onclick="setLogLevel(LoggerLevel.DEBUG, this.checked)">DEBUG</label>
         </div>
         <ul id="console"></ul>
         <img id="saveState">

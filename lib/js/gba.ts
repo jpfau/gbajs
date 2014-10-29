@@ -6,18 +6,11 @@
 /// <reference path="video.ts"/>
 /// <reference path="keypad.ts"/>
 /// <reference path="sio.ts"/>
+/// <reference path="log.ts"/>
 
 class GameBoyAdvance {
 
-    LOG_ERROR = 1;
-    LOG_WARN = 2;
-    LOG_STUB = 4;
-    LOG_INFO = 8;
-    LOG_DEBUG = 16;
-
     SYS_ID = 'com.endrift.gbajs';
-
-    logLevel = this.LOG_ERROR | this.LOG_WARN;
 
     rom:{
         title: any;
@@ -35,6 +28,8 @@ class GameBoyAdvance {
     video = new GameBoyAdvanceVideo();
     keypad = new GameBoyAdvanceKeypad();
     sio = new GameBoyAdvanceSIO();
+
+    logger = new Logger(LoggerLevel.ERROR | LoggerLevel.WARN);
 
     doStep:() => void;
     /**
@@ -54,14 +49,14 @@ class GameBoyAdvance {
         this.irq.io = this.io;
         this.irq.audio = this.audio;
         this.irq.video = this.video;
-        this.irq.core = this;
+        this.irq.gba = this;
 
         this.io.cpu = this.cpu;
         this.io.audio = this.audio;
         this.io.video = this.video;
         this.io.keypad = this.keypad;
         this.io.sio = this.sio;
-        this.io.core = this;
+        this.io.gba = this;
 
         this.audio.cpu = this.cpu;
         this.audio.core = this;
@@ -71,7 +66,7 @@ class GameBoyAdvance {
 
         this.keypad.core = this;
 
-        this.sio.core = this;
+        this.sio.gba = this;
 
         this.keypad.registerHandlers();
         this.doStep = this.waitFrame;
@@ -119,7 +114,7 @@ class GameBoyAdvance {
         this.video.setBacking(this.context);
     }
 
-    setBios(bios, real:boolean):void {
+    setBios(bios, real=false):void {
         this.mmu.loadBios(bios, real);
     }
 
@@ -241,9 +236,9 @@ class GameBoyAdvance {
                         timer = 0;
                     }
                 } catch (exception) {
-                    this.ERROR(exception);
+                    this.logger.ERROR(exception);
                     if (exception.stack) {
-                        this.logStackTrace(exception.stack.split('\n'));
+                        this.logger.logStackTrace(exception.stack.split('\n'));
                     }
                     throw exception;
                 }
@@ -258,9 +253,9 @@ class GameBoyAdvance {
                     }
                     this.advanceFrame();
                 } catch (exception) {
-                    this.ERROR(exception);
+                    this.logger.ERROR(exception);
                     if (exception.stack) {
-                        this.logStackTrace(exception.stack.split('\n'));
+                        this.logger.logStackTrace(exception.stack.split('\n'));
                     }
                     throw exception;
                 }
@@ -288,7 +283,7 @@ class GameBoyAdvance {
     downloadSavedata():void {
         var sram = this.mmu.save;
         if (!sram) {
-            this.WARN("No save data available");
+            this.logger.WARN("No save data available");
             return;
         }
         if ((<any>window).URL) {
@@ -300,14 +295,13 @@ class GameBoyAdvance {
         }
     }
 
-
     storeSavedata():void {
         var sram = this.mmu.save;
         try {
             var storage = window.localStorage;
             storage[this.SYS_ID + '.' + this.mmu.cart.code] = encodeBase64(sram.view);
         } catch (e) {
-            this.WARN('Could not store savedata! ' + e);
+            this.logger.WARN('Could not store savedata! ' + e);
         }
     }
 
@@ -320,7 +314,7 @@ class GameBoyAdvance {
                 return true;
             }
         } catch (e) {
-            this.WARN('Could not retrieve savedata! ' + e);
+            this.logger.WARN('Could not retrieve savedata! ' + e);
         }
         return false;
     }
@@ -345,60 +339,4 @@ class GameBoyAdvance {
         this.io.defrost(frost.io);
     }
 
-    log:(level:number, error:any) => void;
-
-    setLogger(logger:(level:number, error:any) => void):void {
-        this.log = logger;
-    }
-
-    logStackTrace(stack:any[]) {
-        var overflow = stack.length - 32;
-        this.ERROR('Stack trace follows:');
-        if (overflow > 0) {
-            this.log(-1, '> (Too many frames)');
-        }
-        for (var i = Math.max(overflow, 0); i < stack.length; ++i) {
-            this.log(-1, '> ' + stack[i]);
-        }
-    }
-
-    ERROR(error:any) {
-        if (this.logLevel & this.LOG_ERROR) {
-            this.log(this.LOG_ERROR, error);
-        }
-    }
-
-    WARN(warn:any) {
-        if (this.logLevel & this.LOG_WARN) {
-            this.log(this.LOG_WARN, warn);
-        }
-    }
-
-    STUB(func:any) {
-        if (this.logLevel & this.LOG_STUB) {
-            this.log(this.LOG_STUB, func);
-        }
-    }
-
-    INFO(info:any) {
-        if (this.logLevel & this.LOG_INFO) {
-            this.log(this.LOG_INFO, info);
-        }
-    }
-
-    DEBUG(info:any) {
-        if (this.logLevel & this.LOG_DEBUG) {
-            this.log(this.LOG_DEBUG, info);
-        }
-    }
-
-    static ASSERT_UNREACHED(err:any) {
-        throw new Error("Should be unreached: " + err);
-    }
-
-    static ASSERT(test:boolean, err:any) {
-        if (!test) {
-            throw new Error("Assertion failed: " + err);
-        }
-    }
 }

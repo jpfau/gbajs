@@ -219,7 +219,7 @@ class EEPROMSavedata extends MemoryView {
     constructor(size, mmu) {
         super(new ArrayBuffer(size));
 
-        this.dma = mmu.core.irq.dma[3];
+        this.dma = mmu.gba.irq.dma[3];
     }
 
 

@@ -13,7 +13,7 @@ class GameBoyAdvanceConsole {
     paletteView;
     tileView;
 
-    constructor(gba) {
+    constructor(gba:GameBoyAdvance) {
         this.cpu = gba.cpu;
         this.gba = gba;
         this.ul = document.getElementById('console');
@@ -27,9 +27,7 @@ class GameBoyAdvanceConsole {
         this.tileView = new TileViewer(gba.video.renderPath.vram, gba.video.renderPath.palette);
         this.update();
 
-        gba.setLogger((level, message) => {
-            this.log(level, message)
-        });
+        gba.logger.log = this.log;
         this.gba.doStep = () => {
             return this.testBreakpoints()
         };
@@ -91,24 +89,24 @@ class GameBoyAdvanceConsole {
 
     log(level, message) {
         switch (level) {
-            case this.gba.LOG_ERROR:
+            case LoggerLevel.ERROR:
                 message = '[ERROR] ' + message;
                 break;
-            case this.gba.LOG_WARN:
+            case LoggerLevel.WARN:
                 message = '[WARN] ' + message;
                 break;
-            case this.gba.LOG_STUB:
+            case LoggerLevel.STUB:
                 message = '[STUB] ' + message;
                 break;
-            case this.gba.LOG_INFO:
+            case LoggerLevel.INFO:
                 message = '[INFO] ' + message;
                 break;
-            case this.gba.LOG_DEBUG:
+            case LoggerLevel.DEBUG:
                 message = '[DEBUG] ' + message;
                 break;
         }
         this.logQueue.push(message);
-        if (level == this.gba.LOG_ERROR) {
+        if (level == LoggerLevel.ERROR) {
             this.pause();
         }
         if (!this.stillRunning) {
@@ -165,7 +163,7 @@ class GameBoyAdvanceConsole {
             this.cpu.step();
             this.update();
         } catch (exception) {
-            this.log(this.gba.LOG_DEBUG, exception);
+            this.log(LoggerLevel.DEBUG, exception);
             throw exception;
         }
     }
@@ -188,7 +186,7 @@ class GameBoyAdvanceConsole {
                     self.flushLog();
                     setTimeout(run, 0);
                 } catch (exception) {
-                    self.log(this.gba.LOG_DEBUG, exception);
+                    self.log(LoggerLevel.DEBUG, exception);
                     self.pause();
                     throw exception;
                 }
@@ -244,7 +242,7 @@ class GameBoyAdvanceConsole {
 
     breakpointHit() {
         this.pause();
-        this.log(this.gba.LOG_DEBUG, 'Hit breakpoint at ' + hex(this.cpu.gprs[this.cpu.PC]));
+        this.log(LoggerLevel.DEBUG, 'Hit breakpoint at ' + hex(this.cpu.gprs[this.cpu.PC]));
     }
 
     addBreakpoint(addr) {

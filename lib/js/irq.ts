@@ -299,10 +299,10 @@ class GameBoyAdvanceInterruptHandler {
         this.swi(opcode >> 16);
     }
 
-    core;
+    gba:GameBoyAdvance;
 
     swi(opcode) {
-        if (this.core.mmu.bios.real) {
+        if (this.gba.mmu.bios.real) {
             this.cpu.raiseTrap();
             return;
         }
@@ -310,7 +310,7 @@ class GameBoyAdvanceInterruptHandler {
         switch (opcode) {
             case 0x00:
                 // SoftReset
-                var mem = this.core.mmu.memory[this.core.mmu.REGION_WORKING_IRAM];
+                var mem = this.gba.mmu.memory[this.gba.mmu.REGION_WORKING_IRAM];
                 var flag = mem.loadU8(0x7FFA);
                 for (var i = 0x7E00; i < 0x8000; i += 4) {
                     mem.store32(i, 0);
@@ -329,18 +329,18 @@ class GameBoyAdvanceInterruptHandler {
                 // RegisterRamReset
                 var regions = this.cpu.gprs[0];
                 if (regions & 0x01) {
-                    this.core.mmu.memory[this.core.mmu.REGION_WORKING_RAM] = new MemoryBlock(this.core.mmu.SIZE_WORKING_RAM, 9);
+                    this.gba.mmu.memory[this.gba.mmu.REGION_WORKING_RAM] = new MemoryBlock(this.gba.mmu.SIZE_WORKING_RAM, 9);
                 }
                 if (regions & 0x02) {
-                    for (var i = 0; i < this.core.mmu.SIZE_WORKING_IRAM - 0x200; i += 4) {
-                        this.core.mmu.memory[this.core.mmu.REGION_WORKING_IRAM].store32(i, 0);
+                    for (var i = 0; i < this.gba.mmu.SIZE_WORKING_IRAM - 0x200; i += 4) {
+                        this.gba.mmu.memory[this.gba.mmu.REGION_WORKING_IRAM].store32(i, 0);
                     }
                 }
                 if (regions & 0x1C) {
-                    this.video.renderPath.clearSubsets(this.core.mmu, regions);
+                    this.video.renderPath.clearSubsets(this.gba.mmu, regions);
                 }
                 if (regions & 0xE0) {
-                    this.core.STUB('Unimplemented RegisterRamReset');
+                    this.gba.logger.STUB('Unimplemented RegisterRamReset');
                 }
                 break;
             case 0x02:
@@ -467,13 +467,13 @@ class GameBoyAdvanceInterruptHandler {
                     // [ sx   0  0 ]   [ cos(theta)  -sin(theta)  0 ]   [ 1  0  cx - ox ]   [ A B rx ]
                     // [  0  sy  0 ] * [ sin(theta)   cos(theta)  0 ] * [ 0  1  cy - oy ] = [ C D ry ]
                     // [  0   0  1 ]   [     0            0       1 ]   [ 0  0     1    ]   [ 0 0  1 ]
-                    ox = this.core.mmu.load32(offset) / 256;
-                    oy = this.core.mmu.load32(offset + 4) / 256;
-                    cx = this.core.mmu.load16(offset + 8);
-                    cy = this.core.mmu.load16(offset + 10);
-                    sx = this.core.mmu.load16(offset + 12) / 256;
-                    sy = this.core.mmu.load16(offset + 14) / 256;
-                    theta = (this.core.mmu.loadU16(offset + 16) >> 8) / 128 * Math.PI;
+                    ox = this.gba.mmu.load32(offset) / 256;
+                    oy = this.gba.mmu.load32(offset + 4) / 256;
+                    cx = this.gba.mmu.load16(offset + 8);
+                    cy = this.gba.mmu.load16(offset + 10);
+                    sx = this.gba.mmu.load16(offset + 12) / 256;
+                    sy = this.gba.mmu.load16(offset + 14) / 256;
+                    theta = (this.gba.mmu.loadU16(offset + 16) >> 8) / 128 * Math.PI;
                     offset += 20;
                     // Rotation
                     a = d = Math.cos(theta);
@@ -486,12 +486,12 @@ class GameBoyAdvanceInterruptHandler {
                     // Translate
                     rx = ox - (a * cx + b * cy);
                     ry = oy - (c * cx + d * cy);
-                    this.core.mmu.store16(destination, (a * 256) | 0);
-                    this.core.mmu.store16(destination + 2, (b * 256) | 0);
-                    this.core.mmu.store16(destination + 4, (c * 256) | 0);
-                    this.core.mmu.store16(destination + 6, (d * 256) | 0);
-                    this.core.mmu.store32(destination + 8, (rx * 256) | 0);
-                    this.core.mmu.store32(destination + 12, (ry * 256) | 0);
+                    this.gba.mmu.store16(destination, (a * 256) | 0);
+                    this.gba.mmu.store16(destination + 2, (b * 256) | 0);
+                    this.gba.mmu.store16(destination + 4, (c * 256) | 0);
+                    this.gba.mmu.store16(destination + 6, (d * 256) | 0);
+                    this.gba.mmu.store32(destination + 8, (rx * 256) | 0);
+                    this.gba.mmu.store32(destination + 12, (ry * 256) | 0);
                     destination += 16;
                 }
                 break;
@@ -507,9 +507,9 @@ class GameBoyAdvanceInterruptHandler {
                 while (i--) {
                     // [ sx   0 ]   [ cos(theta)  -sin(theta) ]   [ A B ]
                     // [  0  sy ] * [ sin(theta)   cos(theta) ] = [ C D ]
-                    sx = this.core.mmu.load16(offset) / 256;
-                    sy = this.core.mmu.load16(offset + 2) / 256;
-                    theta = (this.core.mmu.loadU16(offset + 4) >> 8) / 128 * Math.PI;
+                    sx = this.gba.mmu.load16(offset) / 256;
+                    sy = this.gba.mmu.load16(offset + 2) / 256;
+                    theta = (this.gba.mmu.loadU16(offset + 4) >> 8) / 128 * Math.PI;
                     offset += 6;
                     // Rotation
                     a = d = Math.cos(theta);
@@ -519,10 +519,10 @@ class GameBoyAdvanceInterruptHandler {
                     b *= -sx;
                     c *= sy;
                     d *= sy;
-                    this.core.mmu.store16(destination, (a * 256) | 0);
-                    this.core.mmu.store16(destination + diff, (b * 256) | 0);
-                    this.core.mmu.store16(destination + diff * 2, (c * 256) | 0);
-                    this.core.mmu.store16(destination + diff * 3, (d * 256) | 0);
+                    this.gba.mmu.store16(destination, (a * 256) | 0);
+                    this.gba.mmu.store16(destination + diff, (b * 256) | 0);
+                    this.gba.mmu.store16(destination + diff * 2, (c * 256) | 0);
+                    this.gba.mmu.store16(destination + diff * 3, (d * 256) | 0);
                     destination += diff * 4;
                 }
                 break;
@@ -568,11 +568,11 @@ class GameBoyAdvanceInterruptHandler {
         this.enabledIRQs = value;
 
         if (this.enabledIRQs & this.MASK_SIO) {
-            this.core.STUB('Serial I/O interrupts not implemented');
+            this.gba.logger.STUB('Serial I/O interrupts not implemented');
         }
 
         if (this.enabledIRQs & this.MASK_KEYPAD) {
-            this.core.STUB('Keypad interrupts not implemented');
+            this.gba.logger.STUB('Keypad interrupts not implemented');
         }
 
         if (this.enable && this.enabledIRQs & this.interruptFlags) {
@@ -639,7 +639,7 @@ class GameBoyAdvanceInterruptHandler {
             nextEvent = test;
         }
 
-        GameBoyAdvance.ASSERT(nextEvent >= this.cpu.cycles, "Next event is before present");
+        Logger.ASSERT(nextEvent >= this.cpu.cycles, "Next event is before present");
         this.nextEvent = nextEvent;
     }
 
@@ -724,7 +724,7 @@ class GameBoyAdvanceInterruptHandler {
         currentDma.nextIRQ = 0;
 
         if (currentDma.drq) {
-            this.core.WARN('DRQ not implemented');
+            this.gba.logger.WARN('DRQ not implemented');
         }
 
         if (!wasEnabled && currentDma.enable) {

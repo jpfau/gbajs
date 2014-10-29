@@ -18,6 +18,7 @@
 <script src="js/sio.js"></script>
 <script src="js/savedata.js"></script>
 <script src="js/gpio.js"></script>
+<script src="js/log.js"></script>
 <script src="js/gba.js"></script>
 <script src="resources/xhr.js"></script>
 
@@ -29,7 +30,7 @@ var debug = null;
 try {
     gba = new GameBoyAdvance();
     gba.keypad.eatInput = true;
-    gba.setLogger(function (level, error) {
+    gba.logger.log = function (level, error) {
         console.log(error);
         gba.pause();
         var screen = document.getElementById('screen');
@@ -42,7 +43,7 @@ try {
         crash.setAttribute('src', 'resources/crash.png');
         screen.parentElement.insertBefore(crash, screen);
         screen.setAttribute('class', 'dead');
-    });
+    };
 } catch (exception) {
     gba = null;
 }
@@ -52,7 +53,7 @@ window.onload = function () {
         var canvas = document.getElementById('screen');
         gba.setCanvas(canvas);
 
-        gba.logLevel = gba.LOG_ERROR;
+        gba.logger.logLevel = LoggerLevel.ERROR;
 
         loadRom('resources/bios.bin', function (bios) {
             gba.setBios(bios);

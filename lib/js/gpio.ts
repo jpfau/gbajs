@@ -181,7 +181,7 @@ class GameBoyAdvanceRTC {
                             break;
                     }
                 } else {
-                    this.gpio.core.WARN('Invalid RTC command byte: ' + this.bits.toString(16));
+                    this.gpio.gba.WARN('Invalid RTC command byte: ' + this.bits.toString(16));
                 }
                 break;
             case 4:

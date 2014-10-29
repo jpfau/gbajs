@@ -145,7 +145,8 @@ class GameBoyAdvanceIO {
     DEFAULT_RCNT = 0x8000;
 
     registers;
-    cpu;
+    gba:GameBoyAdvance;
+    cpu:ARMCore;
 
     clear() {
         this.registers = new Uint16Array(this.cpu.mmu.SIZE_IO);
@@ -181,8 +182,6 @@ class GameBoyAdvanceIO {
         return (this.loadU16(offset) << 16) >> 16;
     }
 
-    core;
-
     load32(offset) {
         offset &= 0xFFFFFFFC;
         switch (offset) {
@@ -195,7 +194,7 @@ class GameBoyAdvanceIO {
                 return this.loadU16(offset) & 0xFFFF;
             case this.JOY_RECV:
             case this.JOY_TRANS:
-                this.core.STUB('Unimplemented JOY register read: 0x' + offset.toString(16));
+                this.gba.logger.STUB('Unimplemented JOY register read: 0x' + offset.toString(16));
                 return 0;
         }
 
@@ -267,7 +266,7 @@ class GameBoyAdvanceIO {
             case this.SOUND4CNT_HI:
                 return this.registers[offset >> 1] & 0x40FF;
             case this.SOUNDCNT_X:
-                this.core.STUB('Unimplemented sound register read: SOUNDCNT_X');
+                this.gba.logger.STUB('Unimplemented sound register read: SOUNDCNT_X');
                 return this.registers[offset >> 1] | 0x0000;
 
             // Timers
@@ -288,7 +287,7 @@ class GameBoyAdvanceIO {
                 this.keypad.pollGamepads();
                 return this.keypad.currentDown;
             case this.KEYCNT:
-                this.core.STUB('Unimplemented I/O register read: KEYCNT');
+                this.gba.logger.STUB('Unimplemented I/O register read: KEYCNT');
                 return 0;
 
             case this.BG0HOFS:
@@ -344,11 +343,11 @@ class GameBoyAdvanceIO {
             case this.FIFO_A_HI:
             case this.FIFO_B_LO:
             case this.FIFO_B_HI:
-                this.core.WARN('Read for write-only register: 0x' + offset.toString(16));
-                return this.core.mmu.badMemory.loadU16(0);
+                this.gba.logger.WARN('Read for write-only register: 0x' + offset.toString(16));
+                return this.gba.mmu.badMemory.loadU16(0);
 
             case this.MOSAIC:
-                this.core.WARN('Read for write-only register: 0x' + offset.toString(16));
+                this.gba.logger.WARN('Read for write-only register: 0x' + offset.toString(16));
                 return 0;
 
             case this.SIOMULTI0:
@@ -358,16 +357,16 @@ class GameBoyAdvanceIO {
                 return this.sio.read((offset - this.SIOMULTI0) >> 1);
 
             case this.SIODATA8:
-                this.core.STUB('Unimplemented SIO register read: 0x' + offset.toString(16));
+                this.gba.logger.STUB('Unimplemented SIO register read: 0x' + offset.toString(16));
                 return 0;
             case this.JOYCNT:
             case this.JOYSTAT:
-                this.core.STUB('Unimplemented JOY register read: 0x' + offset.toString(16));
+                this.gba.logger.STUB('Unimplemented JOY register read: 0x' + offset.toString(16));
                 return 0;
 
             default:
-                this.core.WARN('Bad I/O register read: 0x' + offset.toString(16));
-                return this.core.mmu.badMemory.loadU16(0);
+                this.gba.logger.WARN('Bad I/O register read: 0x' + offset.toString(16));
+                return this.gba.mmu.badMemory.loadU16(0);
         }
         return this.registers[offset >> 1];
     }
@@ -420,9 +419,9 @@ class GameBoyAdvanceIO {
             case this.HALTCNT:
                 value &= 0x80;
                 if (!value) {
-                    this.core.irq.halt();
+                    this.gba.irq.halt();
                 } else {
-                    this.core.STUB('Stop');
+                    this.gba.logger.STUB('Stop');
                 }
                 return;
             default:
@@ -837,6 +836,6 @@ class GameBoyAdvanceIO {
     }
 
     STUB_REG(type, offset) {
-        this.core.STUB('Unimplemented ' + type + ' register write: ' + offset.toString(16));
+        this.gba.logger.STUB('Unimplemented ' + type + ' register write: ' + offset.toString(16));
     }
 }
