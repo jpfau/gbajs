@@ -31,27 +31,27 @@ class GameBoyAdvanceVideo {
         this.gba = gba;
     }
 
-    DISPSTAT_MASK;
-    inHblank;
-    inVblank;
-    vcounter;
-    vblankIRQ;
-    hblankIRQ;
-    vcounterIRQ;
-    vcountSetting;
+    DISPSTAT_MASK:number;
+    inHblank:boolean;
+    inVblank:boolean;
+    vcounter:number;
+    vblankIRQ:number;
+    hblankIRQ:number;
+    vcounterIRQ:number;
+    vcountSetting:number;
 
-    vcount;
+    vcount:number;
 
-    lastHblank;
-    nextHblank;
-    nextEvent;
+    lastHblank:number;
+    nextHblank:number;
+    nextEvent:number;
 
-    nextHblankIRQ;
-    nextVblankIRQ;
-    nextVcounterIRQ;
+    nextHblankIRQ:number;
+    nextVblankIRQ:number;
+    nextVcounterIRQ:number;
 
-    clear() {
-        this.renderPath.clear(this.cpu.mmu);
+    clear():void {
+        this.renderPath.clear();
 
         // DISPSTAT
         this.DISPSTAT_MASK = 0xFF38;
@@ -95,7 +95,7 @@ class GameBoyAdvanceVideo {
         };
     }
 
-    defrost(frost) {
+    defrost(frost:any):void {
         this.inHblank = frost.inHblank;
         this.inVblank = frost.inVblank;
         this.vcounter = frost.vcounter;
@@ -113,9 +113,9 @@ class GameBoyAdvanceVideo {
         this.renderPath.defrost(frost.renderPath, decodeBase64);
     }
 
-    context;
+    context:CanvasRenderingContext2D;
 
-    setBacking(backing) {
+    setBacking(backing:CanvasRenderingContext2D):void {
         var pixelData = backing.createImageData(this.HORIZONTAL_PIXELS, this.VERTICAL_PIXELS);
         this.context = backing;
 
@@ -130,7 +130,7 @@ class GameBoyAdvanceVideo {
         this.renderPath.setBacking(pixelData);
     }
 
-    updateTimers(cpu) {
+    updateTimers(cpu:ARMCore):void {
         var cycles = cpu.cycles;
 
         if (this.nextEvent <= cycles) {
@@ -161,7 +161,7 @@ class GameBoyAdvanceVideo {
                         break;
                 }
 
-                this.vcounter = this.vcount == this.vcountSetting;
+                this.vcounter = <number><any>(this.vcount == this.vcountSetting);
                 if (this.vcounter && this.vcounterIRQ) {
                     this.cpu.irq.raiseIRQ(this.cpu.irq.IRQ_VCOUNTER);
                     this.nextVcounterIRQ += this.TOTAL_LENGTH;
@@ -188,7 +188,7 @@ class GameBoyAdvanceVideo {
         }
     }
 
-    writeDisplayStat(value) {
+    writeDisplayStat(value:number):void {
         this.vblankIRQ = value & 0x0008;
         this.hblankIRQ = value & 0x0010;
         this.vcounterIRQ = value & 0x0020;
@@ -204,15 +204,15 @@ class GameBoyAdvanceVideo {
     }
 
     readDisplayStat() {
-        return (this.inVblank) | (this.inHblank << 1) | (this.vcounter << 2);
+        return (<number><any>this.inVblank) | (<number><any>this.inHblank << 1) | (this.vcounter << 2);
     }
 
-    finishDraw(pixelData) {
+    finishDraw(pixelData:ImageData):void {
         this.context.putImageData(pixelData, 0, 0);
         this.drawCallback();
     }
 
-    scheduleVCaptureDma(dma:DMA, info) {
+    scheduleVCaptureDma(dma:DMA, info:DMA):void {
         this.gba.logger.STUB('Unimplemented DMA: Video Capture Mode ');
     }
 

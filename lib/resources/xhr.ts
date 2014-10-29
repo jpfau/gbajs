@@ -1,4 +1,4 @@
-function loadRom(url, callback) {
+function loadRom(url:string, callback:{(data:any):void}) {
     var xhr = new XMLHttpRequest();
     xhr.open('GET', url);
     xhr.responseType = 'arraybuffer';

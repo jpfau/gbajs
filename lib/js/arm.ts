@@ -13,7 +13,7 @@ class ARMCoreArm {
 
         this.addressingMode23Immediate = [
             // 000x0
-            (rn, offset, condOp) => {
+            (rn:number, offset:number, condOp:{():boolean}) => {
                 var gprs = cpu.gprs;
                 var address:any = () => {
                     var addr = gprs[rn];
@@ -33,7 +33,7 @@ class ARMCoreArm {
             null,
 
             // 00Ux0
-            (rn, offset, condOp) => {
+            (rn:number, offset:number, condOp:{():boolean}) => {
                 var gprs = cpu.gprs;
                 var address:any = () => {
                     var addr = gprs[rn];
@@ -53,7 +53,7 @@ class ARMCoreArm {
             null,
 
             // 0P0x0
-            (rn, offset, condOp) => {
+            (rn:number, offset:number, condOp:{():boolean}) => {
                 var gprs = cpu.gprs;
                 var address:any = () => {
                     return gprs[rn] - offset
@@ -63,7 +63,7 @@ class ARMCoreArm {
             },
 
             // 0P0xW
-            (rn, offset, condOp) => {
+            (rn:number, offset:number, condOp:{():boolean}) => {
                 var gprs = cpu.gprs;
                 var address:any = () => {
                     var addr = gprs[rn] - offset;
@@ -80,7 +80,7 @@ class ARMCoreArm {
             null,
 
             // 0PUx0
-            (rn, offset, condOp) => {
+            (rn:number, offset:number, condOp:{():boolean}) => {
                 var gprs = cpu.gprs;
                 var address:any = () => {
                     return gprs[rn] + offset
@@ -90,7 +90,7 @@ class ARMCoreArm {
             },
 
             // 0PUxW
-            (rn, offset, condOp) => {
+            (rn:number, offset:number, condOp:{():boolean}) => {
                 var gprs = cpu.gprs;
                 var address:any = () => {
                     var addr = gprs[rn] + offset;
@@ -109,7 +109,7 @@ class ARMCoreArm {
 
         this.addressingMode23Register = [
             // I00x0
-            (rn, rm, condOp) => {
+            (rn:number, rm:number, condOp:{():boolean}) => {
                 var gprs = cpu.gprs;
                 var address:any = () => {
                     var addr = gprs[rn];
@@ -129,7 +129,7 @@ class ARMCoreArm {
             null,
 
             // I0Ux0
-            (rn, rm, condOp) => {
+            (rn:number, rm:number, condOp:{():boolean}) => {
                 var gprs = cpu.gprs;
                 var address:any = () => {
                     var addr = gprs[rn];
@@ -149,7 +149,7 @@ class ARMCoreArm {
             null,
 
             // IP0x0
-            (rn, rm, condOp) => {
+            (rn:number, rm:number, condOp:{():boolean}) => {
                 var gprs = cpu.gprs;
                 var address:any = () => {
                     return gprs[rn] - gprs[rm]
@@ -159,7 +159,7 @@ class ARMCoreArm {
             },
 
             // IP0xW
-            (rn, rm, condOp) => {
+            (rn:number, rm:number, condOp:{():boolean}) => {
                 var gprs = cpu.gprs;
                 var address:any = () => {
                     var addr = gprs[rn] - gprs[rm];
@@ -176,7 +176,7 @@ class ARMCoreArm {
             null,
 
             // IPUx0
-            (rn, rm, condOp) => {
+            (rn:number, rm:number, condOp:{():boolean}) => {
                 var gprs = cpu.gprs;
                 var address:any = () => {
                     return gprs[rn] + gprs[rm]
@@ -186,7 +186,7 @@ class ARMCoreArm {
             },
 
             // IPUxW
-            (rn, rm, condOp) => {
+            (rn:number, rm:number, condOp:{():boolean}) => {
                 var gprs = cpu.gprs;
                 var address:any = () => {
                     var addr = gprs[rn] + gprs[rm];
@@ -205,7 +205,7 @@ class ARMCoreArm {
 
         this.addressingMode2RegisterShifted = [
             // I00x0
-            (rn, shiftOp, condOp) => {
+            (rn:number, shiftOp:{():void}, condOp:{():boolean}) => {
                 var gprs = cpu.gprs;
                 var address:any = () => {
                     var addr = gprs[rn];
@@ -226,7 +226,7 @@ class ARMCoreArm {
             null,
 
             // I0Ux0
-            (rn, shiftOp, condOp) => {
+            (rn:number, shiftOp:{():void}, condOp:{():boolean}) => {
                 var gprs = cpu.gprs;
                 var address:any = () => {
                     var addr = gprs[rn];
@@ -246,7 +246,7 @@ class ARMCoreArm {
             null,
 
             // IP0x0
-            (rn, shiftOp, condOp) => {
+            (rn:number, shiftOp:{():void}, condOp:{():boolean}) => {
                 var gprs = cpu.gprs;
                 var address:any = () => {
                     shiftOp();
@@ -257,7 +257,7 @@ class ARMCoreArm {
             },
 
             // IP0xW
-            (rn, shiftOp, condOp) => {
+            (rn:number, shiftOp:{():void}, condOp:{():boolean}) => {
                 var gprs = cpu.gprs;
                 var address:any = () => {
                     shiftOp();
@@ -275,7 +275,7 @@ class ARMCoreArm {
             null,
 
             // IPUx0
-            (rn, shiftOp, condOp) => {
+            (rn:number, shiftOp:{():void}, condOp:{():boolean}) => {
                 var gprs = cpu.gprs;
                 var address:any = () => {
                     shiftOp();
@@ -286,7 +286,7 @@ class ARMCoreArm {
             },
 
             // IPUxW
-            (rn, shiftOp, condOp) => {
+            (rn:number, shiftOp:{():void}, condOp:{():boolean}) => {
                 var gprs = cpu.gprs;
                 var address:any = () => {
                     shiftOp();
@@ -305,7 +305,7 @@ class ARMCoreArm {
         ];
     }
 
-    constructAddressingMode1ASR(rs, rm) {
+    constructAddressingMode1ASR(rs:number, rm:number) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
         return () => {
@@ -335,7 +335,7 @@ class ARMCoreArm {
         }
     }
 
-    constructAddressingMode1Immediate(immediate) {
+    constructAddressingMode1Immediate(immediate:number) {
         var cpu = this.cpu;
         return () => {
             cpu.shifterOperand = immediate;
@@ -343,7 +343,7 @@ class ARMCoreArm {
         }
     }
 
-    constructAddressingMode1ImmediateRotate(immediate, rotate) {
+    constructAddressingMode1ImmediateRotate(immediate:number, rotate:number) {
         var cpu = this.cpu;
         return () => {
             cpu.shifterOperand = (immediate >>> rotate) | (immediate << (32 - rotate));
@@ -351,7 +351,7 @@ class ARMCoreArm {
         }
     }
 
-    constructAddressingMode1LSL(rs, rm) {
+    constructAddressingMode1LSL(rs:number, rm:number) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
         return () => {
@@ -381,7 +381,7 @@ class ARMCoreArm {
         }
     }
 
-    constructAddressingMode1LSR(rs, rm) {
+    constructAddressingMode1LSR(rs:number, rm:number) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
         return () => {
@@ -411,7 +411,7 @@ class ARMCoreArm {
         }
     }
 
-    constructAddressingMode1ROR(rs, rm) {
+    constructAddressingMode1ROR(rs:number, rm:number) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
         return () => {
@@ -439,33 +439,33 @@ class ARMCoreArm {
         }
     }
 
-    constructAddressingMode23Immediate(instruction, immediate, condOp) {
+    constructAddressingMode23Immediate(instruction:number, immediate:number, condOp:{():boolean}) {
         var rn = (instruction & 0x000F0000) >> 16;
         return this.addressingMode23Immediate[(instruction & 0x01A00000) >> 21](rn, immediate, condOp)
     }
 
-    constructAddressingMode23Register(instruction, rm, condOp) {
+    constructAddressingMode23Register(instruction:number, rm:number, condOp:{():boolean}) {
         var rn = (instruction & 0x000F0000) >> 16;
         return this.addressingMode23Register[(instruction & 0x01A00000) >> 21](rn, rm, condOp)
     }
 
-    constructAddressingMode2RegisterShifted(instruction, shiftOp:any, condOp) {
+    constructAddressingMode2RegisterShifted(instruction:number, shiftOp:any, condOp:{():boolean}) {
         var rn = (instruction & 0x000F0000) >> 16;
         return this.addressingMode2RegisterShifted[(instruction & 0x01A00000) >> 21](rn, shiftOp, condOp)
     }
 
-    constructAddressingMode4(immediate, rn) {
+    constructAddressingMode4(immediate:number, rn:number) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
-        return () => {
+        return ():number => {
             return gprs[rn] + immediate
-        }
+        };
     }
 
-    constructAddressingMode4Writeback(immediate, offset, rn, overlap) {
+    constructAddressingMode4Writeback(immediate:number, offset:number, rn:number, overlap:boolean) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
-        return (writeInitial) => {
+        return (writeInitial:boolean):number => {
             var addr = gprs[rn] + immediate;
             if (writeInitial && overlap) {
                 cpu.mmu.store32(gprs[rn] + immediate - 4, gprs[rn])
@@ -475,7 +475,7 @@ class ARMCoreArm {
         }
     }
 
-    constructADC(rd, rn, shiftOp, condOp) {
+    constructADC(rd:number, rn:number, shiftOp:{():void}, condOp:{():boolean}) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
         return () => {
@@ -489,7 +489,7 @@ class ARMCoreArm {
         }
     }
 
-    constructADCS(rd, rn, shiftOp, condOp) {
+    constructADCS(rd:number, rn:number, shiftOp:{():void}, condOp:{():boolean}) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
         return () => {
@@ -514,7 +514,7 @@ class ARMCoreArm {
         }
     }
 
-    constructADD(rd, rn, shiftOp, condOp) {
+    constructADD(rd:number, rn:number, shiftOp:{():void}, condOp:{():boolean}) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
         return () => {
@@ -527,7 +527,7 @@ class ARMCoreArm {
         }
     }
 
-    constructADDS(rd, rn, shiftOp, condOp) {
+    constructADDS(rd:number, rn:number, shiftOp:{():void}, condOp:{():boolean}) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
         return () => {
@@ -551,7 +551,7 @@ class ARMCoreArm {
         }
     }
 
-    constructAND(rd, rn, shiftOp, condOp) {
+    constructAND(rd:number, rn:number, shiftOp:{():void}, condOp:{():boolean}) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
         return () => {
@@ -564,7 +564,7 @@ class ARMCoreArm {
         }
     }
 
-    constructANDS(rd, rn, shiftOp, condOp) {
+    constructANDS(rd:number, rn:number, shiftOp:{():void}, condOp:{():boolean}) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
         return () => {
@@ -584,7 +584,7 @@ class ARMCoreArm {
         }
     }
 
-    constructB(immediate, condOp) {
+    constructB(immediate:number, condOp:{():boolean}) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
         return () => {
@@ -597,7 +597,7 @@ class ARMCoreArm {
         }
     }
 
-    constructBIC(rd, rn, shiftOp, condOp) {
+    constructBIC(rd:number, rn:number, shiftOp:{():void}, condOp:{():boolean}) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
         return () => {
@@ -610,7 +610,7 @@ class ARMCoreArm {
         }
     }
 
-    constructBICS(rd, rn, shiftOp, condOp) {
+    constructBICS(rd:number, rn:number, shiftOp:{():void}, condOp:{():boolean}) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
         return () => {
@@ -630,7 +630,7 @@ class ARMCoreArm {
         }
     }
 
-    constructBL(immediate, condOp) {
+    constructBL(immediate:number, condOp:{():boolean}) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
         return () => {
@@ -644,7 +644,7 @@ class ARMCoreArm {
         }
     }
 
-    constructBX(rm, condOp):any {
+    constructBX(rm:number, condOp:{():boolean}):any {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
         return () => {
@@ -658,7 +658,7 @@ class ARMCoreArm {
         }
     }
 
-    constructCMN(rd, rn, shiftOp, condOp) {
+    constructCMN(rd:number, rn:number, shiftOp:{():void}, condOp:{():boolean}) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
         return () => {
@@ -677,7 +677,7 @@ class ARMCoreArm {
         }
     }
 
-    constructCMP(rd, rn, shiftOp, condOp) {
+    constructCMP(rd:number, rn:number, shiftOp:{():void}, condOp:{():boolean}) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
         return () => {
@@ -695,7 +695,7 @@ class ARMCoreArm {
         }
     }
 
-    constructEOR(rd, rn, shiftOp, condOp) {
+    constructEOR(rd:number, rn:number, shiftOp:{():void}, condOp:{():boolean}) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
         return () => {
@@ -708,7 +708,7 @@ class ARMCoreArm {
         }
     }
 
-    constructEORS(rd, rn, shiftOp, condOp) {
+    constructEORS(rd:number, rn:number, shiftOp:{():void}, condOp:{():boolean}) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
         return () => {
@@ -728,7 +728,7 @@ class ARMCoreArm {
         }
     }
 
-    constructLDM(rs, address, condOp) {
+    constructLDM(rs:number, address:{(writeInitial?:boolean):number}, condOp:{():boolean}) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
         var mmu = cpu.mmu;
@@ -739,7 +739,7 @@ class ARMCoreArm {
             }
             var addr = address(false);
             var total = 0;
-            var m, i;
+            var m:number, i:number;
             for (m = rs, i = 0; m; m >>= 1, ++i) {
                 if (m & 1) {
                     gprs[i] = mmu.load32(addr & 0xFFFFFFFC);
@@ -752,7 +752,7 @@ class ARMCoreArm {
         }
     }
 
-    constructLDMS(rs, address, condOp) {
+    constructLDMS(rs:number, address:{(writeInitial?:boolean):number}, condOp:{():boolean}) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
         var mmu = cpu.mmu;
@@ -765,7 +765,7 @@ class ARMCoreArm {
             var total = 0;
             var mode = cpu.mode;
             cpu.switchMode(Mode.SYSTEM);
-            var m, i;
+            var m:number, i:number;
             for (m = rs, i = 0; m; m >>= 1, ++i) {
                 if (m & 1) {
                     gprs[i] = mmu.load32(addr & 0xFFFFFFFC);
@@ -779,7 +779,7 @@ class ARMCoreArm {
         }
     }
 
-    constructLDR(rd, address, condOp) {
+    constructLDR(rd:number, address:{(writeInitial?:boolean):number}, condOp:{():boolean}) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
         return () => {
@@ -794,7 +794,7 @@ class ARMCoreArm {
         }
     }
 
-    constructLDRB(rd, address, condOp) {
+    constructLDRB(rd:number, address:{(writeInitial?:boolean):number}, condOp:{():boolean}) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
         return () => {
@@ -809,7 +809,7 @@ class ARMCoreArm {
         }
     }
 
-    constructLDRH(rd, address, condOp) {
+    constructLDRH(rd:number, address:{(writeInitial?:boolean):number}, condOp:{():boolean}) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
         return () => {
@@ -824,7 +824,7 @@ class ARMCoreArm {
         }
     }
 
-    constructLDRSB(rd, address, condOp) {
+    constructLDRSB(rd:number, address:{(writeInitial?:boolean):number}, condOp:{():boolean}) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
         return () => {
@@ -839,7 +839,7 @@ class ARMCoreArm {
         }
     }
 
-    constructLDRSH(rd, address, condOp) {
+    constructLDRSH(rd:number, address:{(writeInitial?:boolean):number}, condOp:{():boolean}) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
         return () => {
@@ -854,7 +854,7 @@ class ARMCoreArm {
         }
     }
 
-    constructMLA(rd, rn, rs, rm, condOp) {
+    constructMLA(rd:number, rn:number, rs:number, rm:number, condOp:{():boolean}) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
         return () => {
@@ -875,7 +875,7 @@ class ARMCoreArm {
         }
     }
 
-    constructMLAS(rd, rn, rs, rm, condOp) {
+    constructMLAS(rd:number, rn:number, rs:number, rm:number, condOp:{():boolean}) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
         return () => {
@@ -898,7 +898,7 @@ class ARMCoreArm {
         }
     }
 
-    constructMOV(rd, rn, shiftOp, condOp) {
+    constructMOV(rd:number, rn:number, shiftOp:{():void}, condOp:{():boolean}) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
         return () => {
@@ -911,7 +911,7 @@ class ARMCoreArm {
         }
     }
 
-    constructMOVS(rd, rn, shiftOp, condOp) {
+    constructMOVS(rd:number, rn:number, shiftOp:{():void}, condOp:{():boolean}) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
         return () => {
@@ -931,7 +931,7 @@ class ARMCoreArm {
         }
     }
 
-    constructMRS(rd, r, condOp) {
+    constructMRS(rd:number, r:number, condOp:{():boolean}) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
         return () => {
@@ -947,7 +947,7 @@ class ARMCoreArm {
         }
     }
 
-    constructMSR(rm, r, instruction, immediate, condOp) {
+    constructMSR(rm:number, r:number, instruction:number, immediate:number, condOp:{():boolean}) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
         var c = instruction & 0x00010000;
@@ -959,7 +959,7 @@ class ARMCoreArm {
             if (condOp && !condOp()) {
                 return
             }
-            var operand;
+            var operand:number;
             if (instruction & 0x02000000) {
                 operand = immediate
             } else {
@@ -989,7 +989,7 @@ class ARMCoreArm {
         }
     }
 
-    constructMUL(rd, rs, rm, condOp) {
+    constructMUL(rd:number, rs:number, rm:number, condOp:{():boolean}) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
         return () => {
@@ -1009,7 +1009,7 @@ class ARMCoreArm {
         }
     }
 
-    constructMULS(rd, rs, rm, condOp) {
+    constructMULS(rd:number, rs:number, rm:number, condOp:{():boolean}) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
         return () => {
@@ -1031,7 +1031,7 @@ class ARMCoreArm {
         }
     }
 
-    constructMVN(rd, rn, shiftOp, condOp) {
+    constructMVN(rd:number, rn:number, shiftOp:{():void}, condOp:{():boolean}) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
         return () => {
@@ -1044,7 +1044,7 @@ class ARMCoreArm {
         }
     }
 
-    constructMVNS(rd, rn, shiftOp, condOp) {
+    constructMVNS(rd:number, rn:number, shiftOp:{():void}, condOp:{():boolean}) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
         return () => {
@@ -1064,7 +1064,7 @@ class ARMCoreArm {
         }
     }
 
-    constructORR(rd, rn, shiftOp, condOp) {
+    constructORR(rd:number, rn:number, shiftOp:{():void}, condOp:{():boolean}) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
         return () => {
@@ -1077,7 +1077,7 @@ class ARMCoreArm {
         }
     }
 
-    constructORRS(rd, rn, shiftOp, condOp) {
+    constructORRS(rd:number, rn:number, shiftOp:{():void}, condOp:{():boolean}) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
         return () => {
@@ -1097,7 +1097,7 @@ class ARMCoreArm {
         }
     }
 
-    constructRSB(rd, rn, shiftOp, condOp) {
+    constructRSB(rd:number, rn:number, shiftOp:{():void}, condOp:{():boolean}) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
         return () => {
@@ -1110,7 +1110,7 @@ class ARMCoreArm {
         }
     }
 
-    constructRSBS(rd, rn, shiftOp, condOp) {
+    constructRSBS(rd:number, rn:number, shiftOp:{():void}, condOp:{():boolean}) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
         return () => {
@@ -1133,7 +1133,7 @@ class ARMCoreArm {
         }
     }
 
-    constructRSC(rd, rn, shiftOp, condOp) {
+    constructRSC(rd:number, rn:number, shiftOp:{():void}, condOp:{():boolean}) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
         return () => {
@@ -1147,7 +1147,7 @@ class ARMCoreArm {
         }
     }
 
-    constructRSCS(rd, rn, shiftOp, condOp) {
+    constructRSCS(rd:number, rn:number, shiftOp:{():void}, condOp:{():boolean}) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
         return () => {
@@ -1171,7 +1171,7 @@ class ARMCoreArm {
         }
     }
 
-    constructSBC(rd, rn, shiftOp, condOp) {
+    constructSBC(rd:number, rn:number, shiftOp:{():void}, condOp:{():boolean}) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
         return () => {
@@ -1185,7 +1185,7 @@ class ARMCoreArm {
         }
     }
 
-    constructSBCS(rd, rn, shiftOp, condOp) {
+    constructSBCS(rd:number, rn:number, shiftOp:{():void}, condOp:{():boolean}) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
         return () => {
@@ -1209,7 +1209,7 @@ class ARMCoreArm {
         }
     }
 
-    constructSMLAL(rd, rn, rs, rm, condOp) {
+    constructSMLAL(rd:number, rn:number, rs:number, rm:number, condOp:{():boolean}) {
         var cpu = this.cpu;
         var SHIFT_32 = 1 / 0x100000000;
         var gprs = this.cpu.gprs;
@@ -1228,7 +1228,7 @@ class ARMCoreArm {
         }
     }
 
-    constructSMLALS(rd, rn, rs, rm, condOp) {
+    constructSMLALS(rd:number, rn:number, rs:number, rm:number, condOp:{():boolean}) {
         var cpu = this.cpu;
         var SHIFT_32 = 1 / 0x100000000;
         var gprs = this.cpu.gprs;
@@ -1249,7 +1249,7 @@ class ARMCoreArm {
         }
     }
 
-    constructSMULL(rd, rn, rs, rm, condOp) {
+    constructSMULL(rd:number, rn:number, rs:number, rm:number, condOp:{():boolean}) {
         var cpu = this.cpu;
         var SHIFT_32 = 1 / 0x100000000;
         var gprs = this.cpu.gprs;
@@ -1267,7 +1267,7 @@ class ARMCoreArm {
         }
     }
 
-    constructSMULLS(rd, rn, rs, rm, condOp) {
+    constructSMULLS(rd:number, rn:number, rs:number, rm:number, condOp:{():boolean}) {
         var cpu = this.cpu;
         var SHIFT_32 = 1 / 0x100000000;
         var gprs = this.cpu.gprs;
@@ -1287,7 +1287,7 @@ class ARMCoreArm {
         }
     }
 
-    constructSTM(rs, address, condOp) {
+    constructSTM(rs:number, address:{(writeInitial?:boolean):number}, condOp:{():boolean}) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
         var mmu = cpu.mmu;
@@ -1299,7 +1299,7 @@ class ARMCoreArm {
             mmu.wait32(gprs[Register.PC]);
             var addr = address(true);
             var total = 0;
-            var m, i;
+            var m:number, i:number;
             for (m = rs, i = 0; m; m >>= 1, ++i) {
                 if (m & 1) {
                     mmu.store32(addr, gprs[i]);
@@ -1311,7 +1311,7 @@ class ARMCoreArm {
         }
     }
 
-    constructSTMS(rs, address, condOp) {
+    constructSTMS(rs:number, address:{(writeInitial?:boolean):number}, condOp:{():boolean}) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
         var mmu = cpu.mmu;
@@ -1324,7 +1324,7 @@ class ARMCoreArm {
             var mode = cpu.mode;
             var addr = address(true);
             var total = 0;
-            var m, i;
+            var m:number, i:number;
             cpu.switchMode(Mode.SYSTEM);
             for (m = rs, i = 0; m; m >>= 1, ++i) {
                 if (m & 1) {
@@ -1338,7 +1338,7 @@ class ARMCoreArm {
         }
     }
 
-    constructSTR(rd, address, condOp) {
+    constructSTR(rd:number, address:{(writeInitial?:boolean):number}, condOp:{():boolean}) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
         return () => {
@@ -1353,7 +1353,7 @@ class ARMCoreArm {
         }
     }
 
-    constructSTRB(rd, address, condOp) {
+    constructSTRB(rd:number, address:{(writeInitial?:boolean):number}, condOp:{():boolean}) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
         return () => {
@@ -1368,7 +1368,7 @@ class ARMCoreArm {
         }
     }
 
-    constructSTRH(rd, address, condOp) {
+    constructSTRH(rd:number, address:{(writeInitial?:boolean):number}, condOp:{():boolean}) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
         return () => {
@@ -1383,7 +1383,7 @@ class ARMCoreArm {
         }
     }
 
-    constructSUB(rd, rn, shiftOp, condOp) {
+    constructSUB(rd:number, rn:number, shiftOp:{():void}, condOp:{():boolean}) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
         return () => {
@@ -1396,7 +1396,7 @@ class ARMCoreArm {
         }
     }
 
-    constructSUBS(rd, rn, shiftOp, condOp) {
+    constructSUBS(rd:number, rn:number, shiftOp:{():void}, condOp:{():boolean}) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
         return () => {
@@ -1419,7 +1419,7 @@ class ARMCoreArm {
         }
     }
 
-    constructSWI(immediate, condOp) {
+    constructSWI(immediate:number, condOp:{():boolean}) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
         return () => {
@@ -1432,7 +1432,7 @@ class ARMCoreArm {
         }
     }
 
-    constructSWP(rd, rn, rm, condOp) {
+    constructSWP(rd:number, rn:number, rm:number, condOp:{():boolean}) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
         return () => {
@@ -1449,7 +1449,7 @@ class ARMCoreArm {
         }
     }
 
-    constructSWPB(rd, rn, rm, condOp) {
+    constructSWPB(rd:number, rn:number, rm:number, condOp:{():boolean}) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
         return () => {
@@ -1466,7 +1466,7 @@ class ARMCoreArm {
         }
     }
 
-    constructTEQ(rd, rn, shiftOp, condOp) {
+    constructTEQ(rd:number, rn:number, shiftOp:{():void}, condOp:{():boolean}) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
         return () => {
@@ -1482,7 +1482,7 @@ class ARMCoreArm {
         }
     }
 
-    constructTST(rd, rn, shiftOp, condOp) {
+    constructTST(rd:number, rn:number, shiftOp:{():void}, condOp:{():boolean}) {
         var cpu = this.cpu;
         var gprs = this.cpu.gprs;
         return () => {
@@ -1498,7 +1498,7 @@ class ARMCoreArm {
         }
     }
 
-    constructUMLAL(rd, rn, rs, rm, condOp) {
+    constructUMLAL(rd:number, rn:number, rs:number, rm:number, condOp:{():boolean}) {
         var cpu = this.cpu;
         var SHIFT_32 = 1 / 0x100000000;
         var gprs = this.cpu.gprs;
@@ -1517,7 +1517,7 @@ class ARMCoreArm {
         }
     }
 
-    constructUMLALS(rd, rn, rs, rm, condOp) {
+    constructUMLALS(rd:number, rn:number, rs:number, rm:number, condOp:{():boolean}) {
         var cpu = this.cpu;
         var SHIFT_32 = 1 / 0x100000000;
         var gprs = this.cpu.gprs;
@@ -1538,7 +1538,7 @@ class ARMCoreArm {
         }
     }
 
-    constructUMULL(rd, rn, rs, rm, condOp) {
+    constructUMULL(rd:number, rn:number, rs:number, rm:number, condOp:{():boolean}) {
         var cpu = this.cpu;
         var SHIFT_32 = 1 / 0x100000000;
         var gprs = this.cpu.gprs;
@@ -1556,7 +1556,7 @@ class ARMCoreArm {
         }
     }
 
-    constructUMULLS(rd, rn, rs, rm, condOp) {
+    constructUMULLS(rd:number, rn:number, rs:number, rm:number, condOp:{():boolean}) {
         var cpu = this.cpu;
         var SHIFT_32 = 1 / 0x100000000;
         var gprs = this.cpu.gprs;

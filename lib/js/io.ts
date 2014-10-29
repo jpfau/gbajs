@@ -1,6 +1,6 @@
 /// <reference path="util.ts"/>
 
-class GameBoyAdvanceIO {
+class GameBoyAdvanceIO implements MemoryIO {
     // Video
     DISPCNT = 0x000;
     GREENSWP = 0x002;
@@ -144,8 +144,8 @@ class GameBoyAdvanceIO {
     DEFAULT_BGPD = 1;
     DEFAULT_RCNT = 0x8000;
 
-    registers;
-    value;
+    registers:Uint16Array;
+    value:number;
 
     gba:GameBoyAdvance;
 
@@ -173,7 +173,7 @@ class GameBoyAdvanceIO {
         this.gba = gba;
     }
 
-    clear() {
+    clear():void {
         this.registers = new Uint16Array(this.cpu.mmu.SIZE_IO);
 
         this.registers[this.DISPCNT >> 1] = this.DEFAULT_DISPCNT;
@@ -185,13 +185,13 @@ class GameBoyAdvanceIO {
         this.registers[this.RCNT >> 1] = this.DEFAULT_RCNT;
     }
 
-    freeze() {
+    freeze():any {
         return {
             'registers': Serializer.prefix(this.registers.buffer)
         };
     }
 
-    defrost(frost) {
+    defrost(frost:any):void {
         this.registers = new Uint16Array(frost.registers);
         // Video registers don't serialize themselves
         for (var i = 0; i <= this.BLDY; i += 2) {
@@ -199,15 +199,15 @@ class GameBoyAdvanceIO {
         }
     }
 
-    load8(offset) {
+    load8(offset:number):number {
         throw 'Unimplmeneted unaligned I/O access';
     }
 
-    load16(offset) {
+    load16(offset:number):number {
         return (this.loadU16(offset) << 16) >> 16;
     }
 
-    load32(offset) {
+    load32(offset:number):number {
         offset &= 0xFFFFFFFC;
         switch (offset) {
             case this.DMA0CNT_LO:
@@ -226,13 +226,13 @@ class GameBoyAdvanceIO {
         return this.loadU16(offset) | (this.loadU16(offset | 2) << 16);
     }
 
-    loadU8(offset) {
+    loadU8(offset:number):number {
         var odd = offset & 0x0001;
         var value = this.loadU16(offset & 0xFFFE);
         return (value >>> (odd << 3)) & 0xFF;
     }
 
-    loadU16(offset) {
+    loadU16(offset:number):number {
         switch (offset) {
             case this.DISPCNT:
             case this.BG0CNT:
@@ -392,7 +392,7 @@ class GameBoyAdvanceIO {
         return this.registers[offset >> 1];
     }
 
-    store8(offset, value) {
+    store8(offset:number, value:number):void {
         switch (offset) {
             case this.WININ:
                 this.value & 0x3F;
@@ -458,7 +458,7 @@ class GameBoyAdvanceIO {
         this.store16(offset & 0xFFFFFFE, value);
     }
 
-    store16(offset, value) {
+    store16(offset:number, value:number):void {
         switch (offset) {
             // Video
             case this.DISPCNT:
@@ -641,7 +641,7 @@ class GameBoyAdvanceIO {
                 break;
             case this.SOUNDCNT_X:
                 value &= 0x0080;
-                this.audio.writeEnable(value);
+                this.audio.writeEnable(!!value);
                 break;
             case this.WAVE_RAM0_LO:
             case this.WAVE_RAM0_HI:
@@ -710,16 +710,16 @@ class GameBoyAdvanceIO {
 
             // Timers
             case this.TM0CNT_LO:
-                this.cpu.irq.timerSetReload(0, value);
+                this.cpu.irq.timerSetReload(0, <boolean><any>(value & 0xFFFF));
                 return;
             case this.TM1CNT_LO:
-                this.cpu.irq.timerSetReload(1, value);
+                this.cpu.irq.timerSetReload(1, <boolean><any>(value & 0xFFFF));
                 return;
             case this.TM2CNT_LO:
-                this.cpu.irq.timerSetReload(2, value);
+                this.cpu.irq.timerSetReload(2, <boolean><any>(value & 0xFFFF));
                 return;
             case this.TM3CNT_LO:
-                this.cpu.irq.timerSetReload(3, value);
+                this.cpu.irq.timerSetReload(3, <boolean><any>(value & 0xFFFF));
                 return;
 
             case this.TM0CNT_HI:
@@ -774,7 +774,7 @@ class GameBoyAdvanceIO {
                 break;
             case this.IME:
                 value &= 0x0001;
-                this.cpu.irq.masterEnable(value);
+                this.cpu.irq.masterEnable(<boolean><any>value);
                 break;
             default:
                 this.STUB_REG('I/O', offset);
@@ -782,7 +782,7 @@ class GameBoyAdvanceIO {
         this.registers[offset >> 1] = value;
     }
 
-    store32(offset, value) {
+    store32(offset:number, value:number):void {
         switch (offset) {
             case this.BG2X_LO:
                 value &= 0x0FFFFFFF;
@@ -849,10 +849,10 @@ class GameBoyAdvanceIO {
         this.registers[(offset >> 1) + 1] = value >>> 16;
     }
 
-    invalidatePage(address) {
+    invalidatePage(address:number):void {
     }
 
-    STUB_REG(type, offset) {
+    STUB_REG(type:string, offset:number):void {
         this.gba.logger.STUB('Unimplemented ' + type + ' register write: ' + offset.toString(16));
     }
 }

@@ -4,11 +4,11 @@ class ARMCoreThumb {
 
     cpu:ARMCore;
 
-    constructor(cpu) {
+    constructor(cpu:ARMCore) {
         this.cpu = cpu;
     }
 
-    constructADC(rd, rm) {
+    constructADC(rd:number, rm:number) {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
@@ -27,7 +27,7 @@ class ARMCoreThumb {
         };
     }
 
-    constructADD1(rd, rn, immediate) {
+    constructADD1(rd:number, rn:number, immediate:number) {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
@@ -41,7 +41,7 @@ class ARMCoreThumb {
         };
     }
 
-    constructADD2(rn, immediate) {
+    constructADD2(rn:number, immediate:number) {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
@@ -55,7 +55,7 @@ class ARMCoreThumb {
         };
     }
 
-    constructADD3(rd, rn, rm) {
+    constructADD3(rd:number, rn:number, rm:number) {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
@@ -69,7 +69,7 @@ class ARMCoreThumb {
         };
     }
 
-    constructADD4(rd, rm) {
+    constructADD4(rd:number, rm:number) {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
@@ -78,7 +78,7 @@ class ARMCoreThumb {
         };
     }
 
-    constructADD5(rd, immediate) {
+    constructADD5(rd:number, immediate:number) {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
@@ -87,7 +87,7 @@ class ARMCoreThumb {
         };
     }
 
-    constructADD6(rd, immediate) {
+    constructADD6(rd:number, immediate:number) {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
@@ -96,7 +96,7 @@ class ARMCoreThumb {
         };
     }
 
-    constructADD7(immediate) {
+    constructADD7(immediate:number) {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
@@ -105,7 +105,7 @@ class ARMCoreThumb {
         };
     }
 
-    constructAND(rd, rm) {
+    constructAND(rd:number, rm:number) {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
@@ -116,7 +116,7 @@ class ARMCoreThumb {
         };
     }
 
-    constructASR1(rd, rm, immediate) {
+    constructASR1(rd:number, rm:number, immediate:number) {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
@@ -137,7 +137,7 @@ class ARMCoreThumb {
         };
     }
 
-    constructASR2(rd, rm) {
+    constructASR2(rd:number, rm:number) {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
@@ -161,7 +161,7 @@ class ARMCoreThumb {
         };
     }
 
-    constructB1(immediate, condOp) {
+    constructB1(immediate:number, condOp:{():any}) {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
@@ -172,7 +172,7 @@ class ARMCoreThumb {
         };
     }
 
-    constructB2(immediate) {
+    constructB2(immediate:number) {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
@@ -181,7 +181,7 @@ class ARMCoreThumb {
         };
     }
 
-    constructBIC(rd, rm) {
+    constructBIC(rd:number, rm:number) {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
@@ -192,7 +192,7 @@ class ARMCoreThumb {
         };
     }
 
-    constructBL1(immediate) {
+    constructBL1(immediate:number) {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
@@ -201,7 +201,7 @@ class ARMCoreThumb {
         }
     }
 
-    constructBL2(immediate) {
+    constructBL2(immediate:number) {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
@@ -212,7 +212,7 @@ class ARMCoreThumb {
         }
     }
 
-    constructBX(rd, rm) {
+    constructBX(rd:number, rm:number) {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
@@ -226,7 +226,7 @@ class ARMCoreThumb {
         };
     }
 
-    constructCMN(rd, rm) {
+    constructCMN(rd:number, rm:number) {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
@@ -241,7 +241,7 @@ class ARMCoreThumb {
         };
     }
 
-    constructCMP1(rn, immediate) {
+    constructCMP1(rn:number, immediate:number) {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
@@ -254,7 +254,7 @@ class ARMCoreThumb {
         };
     }
 
-    constructCMP2(rd, rm) {
+    constructCMP2(rd:number, rm:number) {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
@@ -271,7 +271,7 @@ class ARMCoreThumb {
         };
     }
 
-    constructCMP3(rd, rm) {
+    constructCMP3(rd:number, rm:number) {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
@@ -284,7 +284,7 @@ class ARMCoreThumb {
         };
     }
 
-    constructEOR(rd, rm) {
+    constructEOR(rd:number, rm:number) {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
@@ -295,14 +295,14 @@ class ARMCoreThumb {
         };
     }
 
-    constructLDMIA(rn, rs) {
+    constructLDMIA(rn:number, rs:number) {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
             cpu.mmu.waitPrefetch(gprs[Register.PC]);
             var address = gprs[rn];
             var total = 0;
-            var m, i;
+            var m:number, i:number;
             for (m = 0x01, i = 0; i < 8; m <<= 1, ++i) {
                 if (rs & m) {
                     gprs[i] = cpu.mmu.load32(address);
@@ -317,7 +317,7 @@ class ARMCoreThumb {
         };
     }
 
-    constructLDR1(rd, rn, immediate) {
+    constructLDR1(rd:number, rn:number, immediate:number) {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
@@ -329,7 +329,7 @@ class ARMCoreThumb {
         };
     }
 
-    constructLDR2(rd, rn, rm) {
+    constructLDR2(rd:number, rn:number, rm:number) {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
@@ -340,7 +340,7 @@ class ARMCoreThumb {
         }
     }
 
-    constructLDR3(rd, immediate) {
+    constructLDR3(rd:number, immediate:number) {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
@@ -351,7 +351,7 @@ class ARMCoreThumb {
         };
     }
 
-    constructLDR4(rd, immediate) {
+    constructLDR4(rd:number, immediate:number) {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
@@ -362,7 +362,7 @@ class ARMCoreThumb {
         };
     }
 
-    constructLDRB1(rd, rn, immediate) {
+    constructLDRB1(rd:number, rn:number, immediate:number) {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
@@ -374,7 +374,7 @@ class ARMCoreThumb {
         };
     }
 
-    constructLDRB2(rd, rn, rm) {
+    constructLDRB2(rd:number, rn:number, rm:number) {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
@@ -385,7 +385,7 @@ class ARMCoreThumb {
         };
     }
 
-    constructLDRH1(rd, rn, immediate) {
+    constructLDRH1(rd:number, rn:number, immediate:number) {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
@@ -397,7 +397,7 @@ class ARMCoreThumb {
         };
     }
 
-    constructLDRH2(rd, rn, rm) {
+    constructLDRH2(rd:number, rn:number, rm:number) {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
@@ -408,7 +408,7 @@ class ARMCoreThumb {
         };
     }
 
-    constructLDRSB(rd, rn, rm) {
+    constructLDRSB(rd:number, rn:number, rm:number) {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
@@ -419,7 +419,7 @@ class ARMCoreThumb {
         };
     }
 
-    constructLDRSH(rd, rn, rm) {
+    constructLDRSH(rd:number, rn:number, rm:number) {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
@@ -430,7 +430,7 @@ class ARMCoreThumb {
         };
     }
 
-    constructLSL1(rd, rm, immediate) {
+    constructLSL1(rd:number, rm:number, immediate:number) {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
@@ -446,7 +446,7 @@ class ARMCoreThumb {
         };
     }
 
-    constructLSL2(rd, rm) {
+    constructLSL2(rd:number, rm:number) {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
@@ -470,7 +470,7 @@ class ARMCoreThumb {
         };
     }
 
-    constructLSR1(rd, rm, immediate) {
+    constructLSR1(rd:number, rm:number, immediate:number) {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
@@ -487,7 +487,7 @@ class ARMCoreThumb {
         };
     }
 
-    constructLSR2(rd, rm) {
+    constructLSR2(rd:number, rm:number) {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
@@ -511,7 +511,7 @@ class ARMCoreThumb {
         };
     }
 
-    constructMOV1(rn, immediate) {
+    constructMOV1(rn:number, immediate:number) {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
@@ -522,7 +522,7 @@ class ARMCoreThumb {
         };
     }
 
-    constructMOV2(rd, rn, rm) {
+    constructMOV2(rd:number, rn:number, rm:number) {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
@@ -536,7 +536,7 @@ class ARMCoreThumb {
         };
     }
 
-    constructMOV3(rd, rm) {
+    constructMOV3(rd:number, rm:number) {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
@@ -545,7 +545,7 @@ class ARMCoreThumb {
         };
     }
 
-    constructMUL(rd, rm) {
+    constructMUL(rd:number, rm:number) {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
@@ -564,7 +564,7 @@ class ARMCoreThumb {
         };
     }
 
-    constructMVN(rd, rm) {
+    constructMVN(rd:number, rm:number) {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
@@ -575,7 +575,7 @@ class ARMCoreThumb {
         };
     }
 
-    constructNEG(rd, rm) {
+    constructNEG(rd:number, rm:number) {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
@@ -589,7 +589,7 @@ class ARMCoreThumb {
         };
     }
 
-    constructORR(rd, rm) {
+    constructORR(rd:number, rm:number) {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
@@ -600,7 +600,7 @@ class ARMCoreThumb {
         };
     }
 
-    constructPOP(rs, r) {
+    constructPOP(rs:number, r:boolean) {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
@@ -608,7 +608,7 @@ class ARMCoreThumb {
             ++cpu.cycles;
             var address = gprs[Register.SP];
             var total = 0;
-            var m, i;
+            var m:number, i:number;
             for (m = 0x01, i = 0; i < 8; m <<= 1, ++i) {
                 if (rs & m) {
                     cpu.mmu.waitSeq32(address);
@@ -627,7 +627,7 @@ class ARMCoreThumb {
         };
     }
 
-    constructPUSH(rs, r) {
+    constructPUSH(rs:number, r:boolean) {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
@@ -639,7 +639,7 @@ class ARMCoreThumb {
                 address -= 4;
                 ++total;
             }
-            var m, i;
+            var m:number, i:number;
             for (m = 0x80, i = 7; m; m >>= 1, --i) {
                 if (rs & m) {
                     cpu.mmu.store32(address, gprs[i]);
@@ -660,7 +660,7 @@ class ARMCoreThumb {
         };
     }
 
-    constructROR(rd, rm) {
+    constructROR(rd:number, rm:number) {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
@@ -680,7 +680,7 @@ class ARMCoreThumb {
         };
     }
 
-    constructSBC(rd, rm) {
+    constructSBC(rd:number, rm:number) {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
@@ -695,14 +695,14 @@ class ARMCoreThumb {
         };
     }
 
-    constructSTMIA(rn, rs) {
+    constructSTMIA(rn:number, rs:number) {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
             cpu.mmu.wait(gprs[Register.PC]);
             var address = gprs[rn];
             var total = 0;
-            var m, i;
+            var m:number, i:number;
             for (m = 0x01, i = 0; i < 8; m <<= 1, ++i) {
                 if (rs & m) {
                     cpu.mmu.store32(address, gprs[i]);
@@ -723,7 +723,7 @@ class ARMCoreThumb {
         };
     }
 
-    constructSTR1(rd, rn, immediate) {
+    constructSTR1(rd:number, rn:number, immediate:number) {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
@@ -734,7 +734,7 @@ class ARMCoreThumb {
         };
     }
 
-    constructSTR2(rd, rn, rm) {
+    constructSTR2(rd:number, rn:number, rm:number) {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
@@ -744,7 +744,7 @@ class ARMCoreThumb {
         };
     }
 
-    constructSTR3(rd, immediate) {
+    constructSTR3(rd:number, immediate:number) {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
@@ -754,7 +754,7 @@ class ARMCoreThumb {
         };
     }
 
-    constructSTRB1(rd, rn, immediate) {
+    constructSTRB1(rd:number, rn:number, immediate:number) {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
@@ -765,7 +765,7 @@ class ARMCoreThumb {
         };
     }
 
-    constructSTRB2(rd, rn, rm) {
+    constructSTRB2(rd:number, rn:number, rm:number) {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
@@ -775,7 +775,7 @@ class ARMCoreThumb {
         }
     }
 
-    constructSTRH1(rd, rn, immediate) {
+    constructSTRH1(rd:number, rn:number, immediate:number) {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
@@ -786,7 +786,7 @@ class ARMCoreThumb {
         };
     }
 
-    constructSTRH2(rd, rn, rm) {
+    constructSTRH2(rd:number, rn:number, rm:number) {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
@@ -796,7 +796,7 @@ class ARMCoreThumb {
         }
     }
 
-    constructSUB1(rd, rn, immediate) {
+    constructSUB1(rd:number, rn:number, immediate:number) {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
@@ -810,7 +810,7 @@ class ARMCoreThumb {
         };
     }
 
-    constructSUB2(rn, immediate) {
+    constructSUB2(rn:number, immediate:number) {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
@@ -824,7 +824,7 @@ class ARMCoreThumb {
         };
     }
 
-    constructSUB3(rd, rn, rm) {
+    constructSUB3(rd:number, rn:number, rm:number) {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
@@ -839,7 +839,7 @@ class ARMCoreThumb {
         };
     }
 
-    constructSWI(immediate) {
+    constructSWI(immediate:number) {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
@@ -848,7 +848,7 @@ class ARMCoreThumb {
         }
     }
 
-    constructTST(rd, rm) {
+    constructTST(rd:number, rm:number) {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {

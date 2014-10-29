@@ -2,20 +2,20 @@
 
 class GameBoyAdvanceConsole {
 
-    cpu;
-    gba;
-    ul;
-    gprs;
-    memory;
-    breakpoints;
-    logQueue;
-    activeView;
-    paletteView;
-    tileView;
+    cpu:ARMCore;
+    gba:GameBoyAdvance;
+    ul:HTMLElement;
+    gprs:HTMLElement;
+    memory:Memory;
+    breakpoints:boolean[];
+    logQueue:string[];
+    activeView:any;
+    paletteView:PaletteViewer;
+    tileView:TileViewer;
 
     constructor(gba:GameBoyAdvance) {
-        this.cpu = gba.cpu;
         this.gba = gba;
+        this.cpu = gba.cpu;
         this.ul = document.getElementById('console');
         this.gprs = document.getElementById('gprs');
         this.memory = new Memory(gba.mmu);
@@ -41,42 +41,42 @@ class GameBoyAdvanceConsole {
 
     updateCPSR() {
         var cpu = this.cpu;
-        var bit = (psr, member) => {
-            var element = document.getElementById(psr);
-            if (cpu[member]) {
+        var bit = (psr:string, member:string) => {
+            var element:any = document.getElementById(psr);
+            if ((<any>cpu)[member]) {
                 element.removeAttribute('class');
             } else {
                 element.setAttribute('class', 'disabled');
             }
         };
-        bit('cpsr.N', 'cpsr.N');
-        bit('cpsr.Z', 'cpsr.Z');
-        bit('cpsr.C', 'cpsr.C');
-        bit('cpsr.V', 'cpsr.V');
-        bit('cpsr.I', 'cpsr.I');
-        bit('cpsr.T', 'execMode');
+        bit('cpsrN', '.N');
+        bit('cpsrZ', 'cpsr.Z');
+        bit('cpsrC', 'cpsr.C');
+        bit('cpsrV', 'cpsr.V');
+        bit('cpsrI', 'cpsr.I');
+        bit('cpsrT', 'execMode');
 
         var mode = document.getElementById('mode');
         switch (cpu.mode) {
-            case cpu.MODE_USER:
+            case Mode.USER:
                 mode.textContent = 'USER';
                 break;
-            case cpu.MODE_IRQ:
+            case Mode.IRQ:
                 mode.textContent = 'IRQ';
                 break;
-            case cpu.MODE_FIQ:
+            case Mode.FIQ:
                 mode.textContent = 'FIQ';
                 break;
-            case cpu.MODE_SUPERVISOR:
+            case Mode.SUPERVISOR:
                 mode.textContent = 'SVC';
                 break;
-            case cpu.MODE_ABORT:
+            case Mode.ABORT:
                 mode.textContent = 'ABORT';
                 break;
-            case cpu.MODE_UNDEFINED:
+            case Mode.UNDEFINED:
                 mode.textContent = 'UNDEFINED';
                 break;
-            case cpu.MODE_SYSTEM:
+            case Mode.SYSTEM:
                 mode.textContent = 'SYSTEM';
                 break;
             default:
@@ -85,9 +85,9 @@ class GameBoyAdvanceConsole {
         }
     }
 
-    stillRunning;
+    stillRunning:boolean;
 
-    log(level, message) {
+    log(level:number, message:any):void {
         switch (level) {
             case LoggerLevel.ERROR:
                 message = '[ERROR] ' + message;
@@ -146,7 +146,7 @@ class GameBoyAdvanceConsole {
         }
     }
 
-    setView(view) {
+    setView(view:any) {
         var container = document.getElementById('debugViewer');
         while (container.hasChildNodes()) {
             container.removeChild(container.lastChild);
@@ -179,7 +179,7 @@ class GameBoyAdvanceConsole {
             if (self.stillRunning) {
                 try {
                     self.step();
-                    if (self.breakpoints.length && self.breakpoints[self.cpu.gprs[self.cpu.PC]]) {
+                    if (self.breakpoints.length && self.breakpoints[self.cpu.gprs[Register.PC]]) {
                         self.breakpointHit();
                         return;
                     }
@@ -242,10 +242,10 @@ class GameBoyAdvanceConsole {
 
     breakpointHit() {
         this.pause();
-        this.log(LoggerLevel.DEBUG, 'Hit breakpoint at ' + hex(this.cpu.gprs[this.cpu.PC]));
+        this.log(LoggerLevel.DEBUG, 'Hit breakpoint at ' + hex(this.cpu.gprs[Register.PC]));
     }
 
-    addBreakpoint(addr) {
+    addBreakpoint(addr:number) {
         this.breakpoints[addr] = true;
         var bpLi:any = document.getElementById('bp' + addr);
         if (!bpLi) {
@@ -265,7 +265,7 @@ class GameBoyAdvanceConsole {
     }
 
     testBreakpoints() {
-        if (this.breakpoints.length && this.breakpoints[this.cpu.gprs[this.cpu.PC]]) {
+        if (this.breakpoints.length && this.breakpoints[this.cpu.gprs[Register.PC]]) {
             this.breakpointHit();
             return false;
         }
@@ -276,13 +276,13 @@ class GameBoyAdvanceConsole {
 
 class Memory {
 
-    mmu;
-    ul;
-    rowHeight;
-    numberRows;
-    scrollTop;
+    mmu:GameBoyAdvanceMMU;
+    ul:any;
+    rowHeight:number;
+    numberRows:number;
+    scrollTop:number;
 
-    constructor(mmu) {
+    constructor(mmu:GameBoyAdvanceMMU) {
         this.mmu = mmu;
         this.ul = null;
         this.ul = document.getElementById('memoryView');
@@ -298,7 +298,7 @@ class Memory {
         }
         this.ul.parentElement.scrollTop = this.scrollTop;
 
-        this.ul.parentElement.addEventListener('scroll', (e) => {
+        this.ul.parentElement.addEventListener('scroll', (e:UIEvent) => {
             this.scroll(e)
         }, true);
         window.addEventListener('resize', (e) => {
@@ -306,7 +306,7 @@ class Memory {
         }, true);
     }
 
-    scroll(e) {
+    scroll(e:UIEvent) {
         while (this.ul.parentElement.scrollTop - this.scrollTop < this.rowHeight) {
             if (this.ul.firstChild.offset == 0) {
                 break;
@@ -349,10 +349,10 @@ class Memory {
         }
     }
 
-    refresh(row) {
-        var showChanged;
-        var newValue;
-        var child;
+    refresh(row:any) {
+        var showChanged:boolean;
+        var newValue:any;
+        var child:any;
         row.firstChild.textContent = hex(row.offset);
         if (row.oldOffset == row.offset) {
             showChanged = true;
@@ -392,7 +392,7 @@ class Memory {
         }
     }
 
-    static createRow(startOffset) {
+    static createRow(startOffset:number) {
         var li:any = document.createElement('li');
         var offset = document.createElement('span');
         offset.setAttribute('class', 'memoryOffset');
@@ -410,7 +410,7 @@ class Memory {
         return li;
     }
 
-    scrollTo(offset) {
+    scrollTo(offset:number) {
         offset &= 0xFFFFFFF0;
         if (offset) {
             for (var i = 0; i < this.ul.children.length; ++i) {
@@ -436,10 +436,10 @@ class Memory {
  */
 class PaletteViewer {
 
-    palette;
-    view;
+    palette:GameBoyAdvancePalette;
+    view:any;
 
-    constructor(palette) {
+    constructor(palette:GameBoyAdvancePalette) {
         this.palette = palette;
         this.view = document.createElement('canvas');
         this.view.setAttribute('class', 'paletteView');
@@ -447,7 +447,7 @@ class PaletteViewer {
         this.view.setAttribute('height', '500');
     }
 
-    insertChildren(container) {
+    insertChildren(container:any) {
         container.appendChild(this.view);
     }
 
@@ -469,19 +469,15 @@ class PaletteViewer {
     }
 }
 
-/**
- *
- * @constructor
- */
 class TileViewer {
 
     BG_MAP_WIDTH = 256;
-    vram;
-    palette;
-    view;
-    activePalette;
+    vram:GameBoyAdvanceVRAM;
+    palette:GameBoyAdvancePalette;
+    view:any;
+    activePalette:number;
 
-    constructor(vram, palette) {
+    constructor(vram:GameBoyAdvanceVRAM, palette:GameBoyAdvancePalette) {
         this.vram = vram;
         this.palette = palette;
 
@@ -493,7 +489,7 @@ class TileViewer {
         this.activePalette = 0;
     }
 
-    insertChildren(container) {
+    insertChildren(container:any) {
         container.appendChild(this.view);
     }
 
@@ -510,7 +506,7 @@ class TileViewer {
         context.putImageData(data, 0, 0);
     }
 
-    drawTile(data, tile, palette, offset, stride) {
+    drawTile(data:Uint8Array, tile:number, palette:number, offset:number, stride:number) {
         for (var j = 0; j < 8; ++j) {
             var memOffset = tile << 5;
             memOffset |= j << 2;

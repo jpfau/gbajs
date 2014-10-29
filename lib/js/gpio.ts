@@ -1,12 +1,12 @@
 class GameBoyAdvanceGPIO {
-    core;
-    rom;
+    gba:GameBoyAdvance;
+    rom:MemoryView;
     readWrite:number;
     direction:number;
     device:GameBoyAdvanceRTC;
 
-    constructor(core, rom) {
-        this.core = core;
+    constructor(gba:GameBoyAdvance, rom:MemoryView) {
+        this.gba = gba;
         this.rom = rom;
 
         this.readWrite = 0;
@@ -15,7 +15,7 @@ class GameBoyAdvanceGPIO {
         this.device = new GameBoyAdvanceRTC(this); // TODO: Support more devices
     }
 
-    store16(offset, value) {
+    store16(offset:number, value:number):void {
         switch (offset) {
             case 0xC4:
                 this.device.setPins(value & 0xF);
@@ -37,7 +37,7 @@ class GameBoyAdvanceGPIO {
         }
     }
 
-    outputPins(nybble) {
+    outputPins(nybble:number):void {
         if (this.readWrite) {
             var old = this.rom.view.getUint16(0xC4, true);
             old &= this.direction;
@@ -48,21 +48,21 @@ class GameBoyAdvanceGPIO {
 
 class GameBoyAdvanceRTC {
 
-    gpio;
-    pins;
-    direction;
-    totalBytes;
-    bytesRemaining;
-    transferStep;
-    reading;
-    bitsRead;
+    gpio:GameBoyAdvanceGPIO;
+    pins:number;
+    direction:number;
+    totalBytes:number[];
+    bytesRemaining:number;
+    transferStep:number;
+    reading:number;
+    bitsRead:number;
     bits:number;
-    command;
-    control;
-    time;
-    read;
+    command:number;
+    control:number;
+    time:number[];
+    read = false;
 
-    constructor(gpio) {
+    constructor(gpio:GameBoyAdvanceGPIO) {
         this.gpio = gpio;
 
         // PINOUT: SCK | SIO | CS | -
@@ -110,7 +110,7 @@ class GameBoyAdvanceRTC {
         ];
     }
 
-    setPins(nybble) {
+    setPins(nybble:number) {
         switch (this.transferStep) {
             case 0:
                 if ((nybble & 5) == 1) {
@@ -135,7 +135,7 @@ class GameBoyAdvanceRTC {
                                 this.processByte();
                             }
                         } else {
-                            this.gpio.outputPins(5 | (this.sioOutputPin() << 1));
+                            this.gpio.outputPins(5 | (<number><any>this.sioOutputPin() << 1));
                             ++this.bitsRead;
                             if (this.bitsRead == 8) {
                                 --this.bytesRemaining;
@@ -158,11 +158,11 @@ class GameBoyAdvanceRTC {
         this.pins = nybble & 7;
     }
 
-    setDirection(direction) {
+    setDirection(direction:number) {
         this.direction = direction;
     }
 
-    processByte() {
+    processByte():void {
         --this.bytesRemaining;
         switch (this.command) {
             case -1:
@@ -181,7 +181,7 @@ class GameBoyAdvanceRTC {
                             break;
                     }
                 } else {
-                    this.gpio.gba.WARN('Invalid RTC command byte: ' + this.bits.toString(16));
+                    this.gpio.gba.logger.WARN('Invalid RTC command byte: ' + this.bits.toString(16));
                 }
                 break;
             case 4:
@@ -196,7 +196,7 @@ class GameBoyAdvanceRTC {
         }
     }
 
-    sioOutputPin() {
+    sioOutputPin():boolean {
         var outputByte = 0;
         switch (this.command) {
             case 4:
@@ -207,10 +207,10 @@ class GameBoyAdvanceRTC {
                 outputByte = this.time[7 - this.bytesRemaining];
                 break;
         }
-        return (outputByte >> this.bitsRead) & 1;
+        return <boolean><any>((outputByte >> this.bitsRead) & 1);
     }
 
-    updateClock() {
+    updateClock():void {
         var date = new Date();
         this.time[0] = this.bcd(date.getFullYear());
         this.time[1] = this.bcd(date.getMonth() + 1);
@@ -232,7 +232,7 @@ class GameBoyAdvanceRTC {
         this.time[6] = this.bcd(date.getSeconds());
     }
 
-    bcd(binary) {
+    bcd(binary:number):number {
         var counter = binary % 10;
         binary /= 10;
         counter += (binary % 10) << 4;

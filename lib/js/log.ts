@@ -19,7 +19,7 @@ class Logger {
     log(level:number, error:any):void {
     }
 
-    logStackTrace(stack:any[]) {
+    logStackTrace(stack:any[]):void {
         var overflow = stack.length - 32;
         this.ERROR('Stack trace follows:');
         if (overflow > 0) {
@@ -30,41 +30,41 @@ class Logger {
         }
     }
 
-    ERROR(error:any) {
+    ERROR(error:any):void {
         if (this.logLevel & LoggerLevel.ERROR) {
             this.log(LoggerLevel.ERROR, error);
         }
     }
 
-    WARN(warn:any) {
+    WARN(warn:any):void {
         if (this.logLevel & LoggerLevel.WARN) {
             this.log(LoggerLevel.WARN, warn);
         }
     }
 
-    STUB(func:any) {
+    STUB(func:any):void {
         if (this.logLevel & LoggerLevel.STUB) {
             this.log(LoggerLevel.STUB, func);
         }
     }
 
-    INFO(info:any) {
+    INFO(info:any):void {
         if (this.logLevel & LoggerLevel.INFO) {
             this.log(LoggerLevel.INFO, info);
         }
     }
 
-    DEBUG(info:any) {
+    DEBUG(info:any):void {
         if (this.logLevel & LoggerLevel.DEBUG) {
             this.log(LoggerLevel.DEBUG, info);
         }
     }
 
-    static ASSERT_UNREACHED(err:any) {
+    static ASSERT_UNREACHED(err:any):void {
         throw new Error("Should be unreached: " + err);
     }
 
-    static ASSERT(test:boolean, err:any) {
+    static ASSERT(test:boolean, err:any):void {
         if (!test) {
             throw new Error("Assertion failed: " + err);
         }

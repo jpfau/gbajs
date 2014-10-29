@@ -74,14 +74,14 @@ class GameBoyAdvanceInterruptHandler {
         this.gba = gba;
     }
 
-    enabledIRQs;
-    interruptFlags;
+    enabledIRQs:number;
+    interruptFlags:number;
     dma:DMA[];
-    timers;
-    nextEvent;
-    springIRQ;
+    timers:any[];
+    nextEvent:number;
+    springIRQ:boolean;
 
-    clear() {
+    clear():void {
         this.enable = false;
         this.enabledIRQs = 0;
         this.interruptFlags = 0;
@@ -128,7 +128,7 @@ class GameBoyAdvanceInterruptHandler {
         this.resetSP();
     }
 
-    freeze() {
+    freeze():any {
         return {
             'enable': this.enable,
             'enabledIRQs': this.enabledIRQs,
@@ -140,9 +140,9 @@ class GameBoyAdvanceInterruptHandler {
         };
     }
 
-    timersEnabled;
+    timersEnabled:number;
 
-    defrost(frost) {
+    defrost(frost:any):void {
         this.enable = frost.enable;
         this.enabledIRQs = frost.enabledIRQs;
         this.interruptFlags = frost.interruptFlags;
@@ -165,7 +165,7 @@ class GameBoyAdvanceInterruptHandler {
         this.springIRQ = frost.springIRQ;
     }
 
-    updateTimers() {
+    updateTimers():void {
         if (this.nextEvent > this.cpu.cycles) {
             return;
         }
@@ -321,7 +321,7 @@ class GameBoyAdvanceInterruptHandler {
         this.pollNextEvent();
     }
 
-    resetSP() {
+    resetSP():void {
         this.cpu.switchMode(Mode.SUPERVISOR);
         this.cpu.gprs[Register.SP] = 0x3007FE0;
         this.cpu.switchMode(Mode.IRQ);
@@ -330,11 +330,11 @@ class GameBoyAdvanceInterruptHandler {
         this.cpu.gprs[Register.SP] = 0x3007F00;
     }
 
-    swi32(opcode) {
+    swi32(opcode:number):void {
         this.swi(opcode >> 16);
     }
 
-    swi(opcode) {
+    swi(opcode:number):void {
         if (this.gba.mmu.bios.real) {
             this.cpu.raiseTrap();
             return;
@@ -370,7 +370,7 @@ class GameBoyAdvanceInterruptHandler {
                     }
                 }
                 if (regions & 0x1C) {
-                    this.video.renderPath.clearSubsets(this.gba.mmu, regions);
+                    this.video.renderPath.clearSubsets(regions);
                 }
                 if (regions & 0xE0) {
                     this.gba.logger.STUB('Unimplemented RegisterRamReset');
@@ -488,14 +488,14 @@ class GameBoyAdvanceInterruptHandler {
             case 0x0E:
                 // BgAffineSet
                 var i = this.cpu.gprs[2];
-                var ox, oy;
-                var cx, cy;
-                var sx, sy;
-                var theta;
+                var ox:number, oy:number;
+                var cx:number, cy:number;
+                var sx:number, sy:number;
+                var theta:number;
                 var offset = this.cpu.gprs[0];
                 var destination = this.cpu.gprs[1];
-                var a, b, c, d;
-                var rx, ry;
+                var a:number, b:number, c:number, d:number;
+                var rx:number, ry:number;
                 while (i--) {
                     // [ sx   0  0 ]   [ cos(theta)  -sin(theta)  0 ]   [ 1  0  cx - ox ]   [ A B rx ]
                     // [  0  sy  0 ] * [ sin(theta)   cos(theta)  0 ] * [ 0  1  cy - oy ] = [ C D ry ]
@@ -531,12 +531,12 @@ class GameBoyAdvanceInterruptHandler {
             case 0x0F:
                 // ObjAffineSet
                 var i = this.cpu.gprs[2];
-                var sx, sy;
-                var theta;
+                var sx:number, sy:number;
+                var theta:number;
                 var offset = this.cpu.gprs[0];
                 var destination = this.cpu.gprs[1];
                 var diff = this.cpu.gprs[3];
-                var a, b, c, d;
+                var a:number, b:number, c:number, d:number;
                 while (i--) {
                     // [ sx   0 ]   [ cos(theta)  -sin(theta) ]   [ A B ]
                     // [  0  sy ] * [ sin(theta)   cos(theta) ] = [ C D ]
@@ -589,7 +589,7 @@ class GameBoyAdvanceInterruptHandler {
         }
     }
 
-    masterEnable(value) {
+    masterEnable(value:boolean):void {
         this.enable = value;
 
         if (this.enable && this.enabledIRQs & this.interruptFlags) {
@@ -597,7 +597,7 @@ class GameBoyAdvanceInterruptHandler {
         }
     }
 
-    setInterruptsEnabled(value) {
+    setInterruptsEnabled(value:number):void {
         this.enabledIRQs = value;
 
         if (this.enabledIRQs & this.MASK_SIO) {
@@ -613,9 +613,9 @@ class GameBoyAdvanceInterruptHandler {
         }
     }
 
-    pollNextEvent() {
+    pollNextEvent():void {
         var nextEvent = this.video.nextEvent;
-        var test;
+        var test:number;
 
         if (this.audio.enabled) {
             test = this.audio.nextEvent;
@@ -676,8 +676,8 @@ class GameBoyAdvanceInterruptHandler {
         this.nextEvent = nextEvent;
     }
 
-    waitForIRQ() {
-        var timer;
+    waitForIRQ():boolean {
+        var timer:any;
         var irqPending = this.testIRQ() || this.video.hblankIRQ || this.video.vblankIRQ || this.video.vcounterIRQ;
         if (this.timersEnabled) {
             timer = this.timers[0];
@@ -708,7 +708,7 @@ class GameBoyAdvanceInterruptHandler {
         }
     }
 
-    testIRQ() {
+    testIRQ():boolean {
         if (this.enable && this.enabledIRQs & this.interruptFlags) {
             this.springIRQ = true;
             this.nextEvent = this.cpu.cycles;
@@ -717,7 +717,7 @@ class GameBoyAdvanceInterruptHandler {
         return false;
     }
 
-    raiseIRQ(irqType) {
+    raiseIRQ(irqType:number):void {
         this.interruptFlags |= 1 << irqType;
         this.io.registers[this.io.IF >> 1] = this.interruptFlags;
 
@@ -726,24 +726,24 @@ class GameBoyAdvanceInterruptHandler {
         }
     }
 
-    dismissIRQs(irqMask) {
+    dismissIRQs(irqMask:number):void {
         this.interruptFlags &= ~irqMask;
         this.io.registers[this.io.IF >> 1] = this.interruptFlags;
     }
 
-    dmaSetSourceAddress(dma, address) {
+    dmaSetSourceAddress(dma:number, address:number):void {
         this.dma[dma].source = address & 0xFFFFFFFE;
     }
 
-    dmaSetDestAddress(dma, address) {
+    dmaSetDestAddress(dma:number, address:number):void {
         this.dma[dma].dest = address & 0xFFFFFFFE;
     }
 
-    dmaSetWordCount(dma, count) {
+    dmaSetWordCount(dma:number, count:number):void {
         this.dma[dma].count = count ? count : (dma == 3 ? 0x10000 : 0x4000);
     }
 
-    dmaWriteControl(dma, control) {
+    dmaWriteControl(dma:number, control:number):void {
         var currentDma = this.dma[dma];
         var wasEnabled = currentDma.enable;
         currentDma.dstControl = (control & 0x0060) >> 5;
@@ -768,11 +768,11 @@ class GameBoyAdvanceInterruptHandler {
         }
     }
 
-    timerSetReload(timer, reload) {
-        this.timers[timer].reload = reload & 0xFFFF;
+    timerSetReload(timer:number, reload:boolean):void {
+        this.timers[timer].reload = reload;
     }
 
-    timerWriteControl(timer, control) {
+    timerWriteControl(timer:number, control:number):void {
         var currentTimer = this.timers[timer];
         var oldPrescale = currentTimer.prescaleBits;
         switch (control & 0x0003) {
@@ -818,7 +818,7 @@ class GameBoyAdvanceInterruptHandler {
         this.pollNextEvent();
     }
 
-    timerRead(timer) {
+    timerRead(timer:number):number {
         var currentTimer = this.timers[timer];
         if (currentTimer.enable && !currentTimer.countUp) {
             return currentTimer.oldReload + (this.cpu.cycles - currentTimer.lastEvent) >> currentTimer.prescaleBits;
@@ -827,7 +827,7 @@ class GameBoyAdvanceInterruptHandler {
         }
     }
 
-    halt() {
+    halt():void {
         if (!this.enable) {
             throw "Requested HALT when interrupts were disabled!";
         }
@@ -836,19 +836,19 @@ class GameBoyAdvanceInterruptHandler {
         }
     }
 
-    lz77(source, dest, unitsize) {
+    lz77(source:number, dest:number, unitsize:number):void {
         // TODO: move to a different file
         var remaining = (this.cpu.mmu.load32(source) & 0xFFFFFF00) >> 8;
         // We assume the signature byte (0x10) is correct
-        var blockheader;
+        var blockheader:number;
         var sPointer = source + 4;
         var dPointer = dest;
         var blocksRemaining = 0;
-        var block;
-        var disp;
-        var bytes;
+        var block:number;
+        var disp:number;
+        var bytes:number;
         var buffer = 0;
-        var loaded;
+        var loaded:number;
         while (remaining > 0) {
             if (blocksRemaining) {
                 if (blockheader & 0x80) {
@@ -895,7 +895,7 @@ class GameBoyAdvanceInterruptHandler {
         }
     }
 
-    huffman(source, dest) {
+    huffman(source:number, dest:number):void {
         source &= 0xFFFFFFFC;
         var header = this.cpu.mmu.load32(source);
         var remaining = header >> 8;
@@ -906,19 +906,19 @@ class GameBoyAdvanceInterruptHandler {
         var padding = (4 - remaining) & 0x3;
         remaining &= 0xFFFFFFFC;
         // We assume the signature byte (0x20) is correct
-        var tree = [];
+        var tree:any[] = [];
         var treesize = (this.cpu.mmu.loadU8(source + 4) << 1) + 1;
-        var block;
+        var block:number;
         var sPointer = source + 5 + treesize;
         var dPointer = dest & 0xFFFFFFFC;
-        var i;
+        var i:number;
         for (i = 0; i < treesize; ++i) {
             tree.push(this.cpu.mmu.loadU8(source + 5 + i));
         }
-        var node;
+        var node:any;
         var offset = 0;
-        var bitsRemaining;
-        var readBits;
+        var bitsRemaining:number;
+        var readBits:number;
         var bitsSeen = 0;
         node = tree[0];
         while (remaining > 0) {
@@ -976,13 +976,13 @@ class GameBoyAdvanceInterruptHandler {
         }
     }
 
-    rl(source, dest, unitsize) {
+    rl(source:number, dest:number, unitsize:number):void {
         source &= 0xFFFFFFFC;
         var remaining = (this.cpu.mmu.load32(source) & 0xFFFFFF00) >> 8;
         var padding = (4 - remaining) & 0x3;
         // We assume the signature byte (0x30) is correct
-        var blockheader;
-        var block;
+        var blockheader:number;
+        var block:number;
         var sPointer = source + 4;
         var dPointer = dest;
         var buffer = 0;

@@ -77,7 +77,7 @@ class ARMCore {
 
     cycles:number;
 
-    step;
+    step:{():void};
 
     constructor(gba:GameBoyAdvance) {
         this.gba = gba;
@@ -86,18 +86,15 @@ class ARMCore {
         this.generateConds();
     }
 
-    instruction;
-    instructionWidth;
-    loadInstruction = function (address) {
-    };
+    instruction:any;
+    instructionWidth:number;
+    loadInstruction:{(address:number):any};
     execMode:number;
-    mode;
+    mode:number;
 
     bankedRegisters:Int32Array[];
     bankedSPSRs:Int32Array;
-    page;
-
-    WARN;
+    page:Page;
 
     spsr:number;
     cpsr = {
@@ -109,7 +106,7 @@ class ARMCore {
         N: false
     };
 
-    resetCPU(startOffset:number) {
+    resetCPU(startOffset:number):void {
         for (var i = 0; i < Register.PC; ++i) {
             this.gprs[i] = 0;
         }
@@ -187,7 +184,7 @@ class ARMCore {
         };
     }
 
-    freeze() {
+    freeze():any {
         return {
             'gprs': [
                 this.gprs[0],
@@ -263,7 +260,7 @@ class ARMCore {
         };
     }
 
-    defrost(frost) {
+    defrost(frost:any):void {
         this.instruction = null;
 
         this.page = null;
@@ -337,7 +334,7 @@ class ARMCore {
     pageRegion:number;
     pageId:number;
 
-    fetchPage(address) {
+    fetchPage(address:number):void {
         var region = address >> this.mmu.BASE_OFFSET;
         var pageId = this.mmu.addressToPage(region, address & this.mmu.OFFSET_MASK);
         if (region == this.pageRegion) {
@@ -354,9 +351,9 @@ class ARMCore {
         this.page = this.mmu.accessPage(region, pageId);
     }
 
-    pageMask;
+    pageMask:number;
 
-    loadInstructionArm(address) {
+    loadInstructionArm(address:number):any {
         var next:any = null;
         this.fetchPage(address);
         var offset = (address & this.pageMask) >> 2;
@@ -374,7 +371,7 @@ class ARMCore {
         return next;
     }
 
-    loadInstructionThumb(address) {
+    loadInstructionThumb(address:number):any {
         var next:any = null;
         this.fetchPage(address);
         var offset = (address & this.pageMask) >> 1;
@@ -392,7 +389,7 @@ class ARMCore {
         return next;
     }
 
-    selectBank(mode) {
+    selectBank(mode:Mode):number {
         switch (mode) {
             case Mode.USER:
             case Mode.SYSTEM:
@@ -413,7 +410,7 @@ class ARMCore {
         }
     }
 
-    switchExecMode(newMode) {
+    switchExecMode(newMode:Mode):void {
         if (this.execMode != newMode) {
             this.execMode = newMode;
             if (newMode == Mode.ARM) {
@@ -427,7 +424,7 @@ class ARMCore {
 
     }
 
-    switchMode(newMode) {
+    switchMode(newMode:number) {
         if (newMode == this.mode) {
             // Not switching modes after all
             return;
@@ -471,7 +468,7 @@ class ARMCore {
 
     unpackCPSR(spsr:number) {
         this.switchMode(spsr & 0x0000001F);
-        this.switchExecMode(!!(spsr & 0x00000020));
+        this.switchExecMode(<number><any>!!(spsr & 0x00000020));
         this.cpsr.F = !!(spsr & 0x00000040);
         this.cpsr.I = !!(spsr & 0x00000080);
         this.cpsr.N = !!(spsr & 0x80000000);
@@ -513,7 +510,7 @@ class ARMCore {
         this.cpsr.I = true;
     }
 
-    badOp(instruction):any {
+    badOp(instruction:number):any {
         var func:any = function () {
             throw "Illegal instruction: 0x" + instruction.toString(16);
         };
@@ -522,9 +519,17 @@ class ARMCore {
         return func;
     }
 
-    conditionPassed;
+    badAddress(instruction:number):{(writeInitial?:boolean):number; writesPC:boolean} {
+        var func:any = function () {
+            throw "Unimplemented memory access: 0x" + instruction.toString(16);
+        };
+        func.writesPC = true;
+        return func;
+    }
 
-    generateConds() {
+    conditionPassed:boolean;
+
+    generateConds():void {
         var cpu = this;
         this.conds = [
             // EQ
@@ -592,7 +597,7 @@ class ARMCore {
     shifterOperand:number;
     shifterCarryOut:number;
 
-    barrelShiftImmediate(shiftType, immediate, rm):any {
+    barrelShiftImmediate(shiftType:number, immediate:number, rm:number):any {
         var cpu = this;
         var gprs = this.gprs;
         var shiftOp = this.badOp;
@@ -663,10 +668,12 @@ class ARMCore {
         return shiftOp;
     }
 
-    conds;
+    conds:Array<()=>boolean>;
 
-    compileArm(instruction) {
+    compileArm(instruction:number):any {
         var op = this.badOp(instruction);
+        var address:{(writeInitial?:boolean):number; writesPC:boolean} = this.badAddress(instruction);
+
         var i = instruction & 0x0E000000;
         var cpu = this;
         var gprs = this.gprs;
@@ -706,7 +713,7 @@ class ARMCore {
                 // Parse shifter operand
                 var shiftType = instruction & 0x00000060;
                 var rm = instruction & 0x0000000F;
-                var shiftOp = function (instruction):any {
+                var shiftOp = function ():void {
                     throw 'BUG: invalid barrel shifter';
                 };
                 if (instruction & 0x02000000) {
@@ -941,7 +948,6 @@ class ARMCore {
                         var w = instruction & 0x00200000;
                         var i = instruction & 0x00400000;
 
-                        var address;
                         if (i) {
                             var immediate = loOffset | hiOffset;
                             address = this.armCompiler.constructAddressingMode23Immediate(instruction, immediate, condOp);
@@ -983,9 +989,6 @@ class ARMCore {
                     var b = instruction & 0x00400000;
                     var i = instruction & 0x02000000;
 
-                    var address:any = function () {
-                        throw "Unimplemented memory access: 0x" + instruction.toString(16);
-                    };
                     if (~instruction & 0x01000000) {
                         // Clear the W bit if the P bit is clear--we don't support memory translation, so these turn into regular accesses
                         instruction &= 0xFFDFFFFF;
@@ -1036,7 +1039,6 @@ class ARMCore {
                     var rs = instruction & 0x0000FFFF;
                     var rn = (instruction & 0x000F0000) >> 16;
 
-                    var address;
                     var immediate = 0;
                     var offset = 0;
                     var overlap = false;
@@ -1071,9 +1073,9 @@ class ARMCore {
                         }
                     }
                     if (w) {
-                        address = this.armCompiler.constructAddressingMode4Writeback(immediate, offset, rn, overlap);
+                        address = <any>this.armCompiler.constructAddressingMode4Writeback(immediate, offset, rn, overlap);
                     } else {
-                        address = this.armCompiler.constructAddressingMode4(immediate, rn);
+                        address = <any>this.armCompiler.constructAddressingMode4(immediate, rn);
                     }
                     if (load) {
                         // LDM
@@ -1131,7 +1133,7 @@ class ARMCore {
         return op;
     }
 
-    compileThumb(instruction) {
+    compileThumb(instruction:number):any {
         var op = this.badOp(instruction & 0xFFFF);
         var cpu = this;
         var gprs = this.gprs;
@@ -1533,7 +1535,7 @@ class ARMCore {
                     }
                     break;
                 default:
-                    this.WARN("Undefined instruction: 0x" + instruction.toString(16));
+                    this.gba.logger.WARN("Undefined instruction: 0x" + instruction.toString(16));
             }
         } else {
             throw 'Bad opcode: 0x' + instruction.toString(16);

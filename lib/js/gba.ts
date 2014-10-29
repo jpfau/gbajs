@@ -12,13 +12,7 @@ class GameBoyAdvance {
 
     SYS_ID = 'com.endrift.gbajs';
 
-    rom:{
-        title: any;
-        code: any;
-        maker: any;
-        memory: any;
-        saveType: any;
-    };
+    rom:Cart;
 
     cpu:ARMCore;
     mmu:GameBoyAdvanceMMU;
@@ -57,7 +51,7 @@ class GameBoyAdvance {
         this.queue = null;
         this.reportFPS = null;
 
-        (<any>window).queueFrame = (f) => {
+        (<any>window).queueFrame = (f:any) => {
             this.queue = window.setTimeout(f, this.throttle);
         };
 
@@ -69,10 +63,10 @@ class GameBoyAdvance {
     }
 
     indirectCanvas:HTMLElement;
-    targetCanvas;
-    context;
+    targetCanvas:any;
+    context:CanvasRenderingContext2D;
 
-    setCanvas(canvas):void {
+    setCanvas(canvas:any):void {
         if (canvas.offsetWidth != 240 || canvas.offsetHeight != 160) {
             this.indirectCanvas = document.createElement("canvas");
             this.indirectCanvas.setAttribute("height", "160");
@@ -88,20 +82,21 @@ class GameBoyAdvance {
         }
     }
 
-    setCanvasDirect(canvas):void {
+    setCanvasDirect(canvas:any):void {
         this.context = canvas.getContext('2d');
         this.video.setBacking(this.context);
     }
 
-    setBios(bios, real = false):void {
+    setBios(bios:any, real = false):void {
         this.mmu.loadBios(bios, real);
     }
 
-    setRom(rom):boolean {
+    setRom(rom:any):boolean {
         this.reset();
 
-        this.rom = this.mmu.loadRom(rom, true);
-        if (!this.rom) {
+        try {
+            this.rom = this.mmu.loadRom(rom, true);
+        } catch (error) {
             return false;
         }
         this.retrieveSavedata();
@@ -132,10 +127,10 @@ class GameBoyAdvance {
         this.video.clear();
         this.sio.clear();
 
-        this.mmu.mmap(this.mmu.REGION_IO, this.io);
-        this.mmu.mmap(this.mmu.REGION_PALETTE_RAM, this.video.renderPath.palette);
-        this.mmu.mmap(this.mmu.REGION_VRAM, this.video.renderPath.vram);
-        this.mmu.mmap(this.mmu.REGION_OAM, this.video.renderPath.oam);
+        this.mmu.mmap(this.mmu.REGION_IO, <MemoryView><any>this.io);
+        this.mmu.mmap(this.mmu.REGION_PALETTE_RAM, <MemoryView><any>this.video.renderPath.palette);
+        this.mmu.mmap(this.mmu.REGION_VRAM, <MemoryView><any>this.video.renderPath.vram);
+        this.mmu.mmap(this.mmu.REGION_OAM, <MemoryView><any>this.video.renderPath.oam);
 
         this.cpu.resetCPU(0);
     }
@@ -183,10 +178,10 @@ class GameBoyAdvance {
         }
     }
 
-    interval;
+    interval:boolean;
     reportFPS:(fps:number) => void;
 
-    runStable() {
+    runStable():void {
         if (this.interval) {
             return; // Already running
         }
@@ -243,7 +238,7 @@ class GameBoyAdvance {
         (<any>window).queueFrame(runFunc);
     }
 
-    setSavedata(data):void {
+    setSavedata(data:any):void {
         this.mmu.loadSavedata(data);
     }
 
@@ -253,10 +248,6 @@ class GameBoyAdvance {
             this.setSavedata(e.target.result);
         };
         reader.readAsArrayBuffer(saveFile);
-    }
-
-    decodeSavedata(string:string) {
-        this.setSavedata(decodeBase64(string));
     }
 
     downloadSavedata():void {
@@ -287,9 +278,9 @@ class GameBoyAdvance {
     retrieveSavedata():boolean {
         try {
             var storage = window.localStorage;
-            var data = storage[this.SYS_ID + '.' + this.mmu.cart.code];
+            var data:string = storage[this.SYS_ID + '.' + this.mmu.cart.code];
             if (data) {
-                this.decodeSavedata(data);
+                this.setSavedata(decodeBase64(data));
                 return true;
             }
         } catch (e) {
@@ -298,18 +289,18 @@ class GameBoyAdvance {
         return false;
     }
 
-    freeze() {
+    freeze():any {
         return {
             cpu: this.cpu.freeze(),
             mmu: this.mmu.freeze(),
-            irq: this.irq.freeze(),
-            io: this.io.freeze(),
             audio: this.audio.freeze(),
-            video: this.video.freeze()
+            video: this.video.freeze(),
+            irq: this.irq.freeze(),
+            io: this.io.freeze()
         }
     }
 
-    defrost(frost):void {
+    defrost(frost:any):void {
         this.cpu.defrost(frost.cpu);
         this.mmu.defrost(frost.mmu);
         this.audio.defrost(frost.audio);

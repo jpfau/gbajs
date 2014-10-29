@@ -3,14 +3,14 @@
 importScripts('software.js');
 
 var video = new GameBoyAdvanceSoftwareRenderer();
-var proxyBacking = null;
+var proxyBacking:any = null;
 var currentFrame = 0;
 
-(<any>self).finishDraw = function (pixelData) {
+(<any>self).finishDraw = function (pixelData:any) {
     self.postMessage({ type: 'finish', backing: pixelData, frame: currentFrame }, undefined);
 };
 
-function receiveDirty(dirty) {
+function receiveDirty(dirty:any) {
     for (var type in dirty) {
         switch (type) {
             case 'DISPCNT':
@@ -116,7 +116,7 @@ function receiveDirty(dirty) {
     }
 }
 
-function receiveMemory(memory) {
+function receiveMemory(memory:any) {
     if (memory.palette) {
         video.palette.overwrite(new Uint16Array(memory.palette));
     }
@@ -132,22 +132,22 @@ function receiveMemory(memory) {
     }
 }
 
-var handlers = {
-    clear: function (data) {
-        video.clear(data);
+var handlers:any = {
+    clear: function (data:any) {
+        video.clear();
     },
 
-    scanline: function (data) {
+    scanline: function (data:any) {
         receiveDirty(data.dirty);
         video.drawScanline(data.y, proxyBacking);
     },
 
-    start: function (data) {
+    start: function (data:any) {
         proxyBacking = data.backing;
         video.setBacking(data.backing);
     },
 
-    finish: function (data) {
+    finish: function (data:any) {
         currentFrame = data.frame;
         var scanline = 0;
         for (var i = 0; i < data.scanlines.length; ++i) {
@@ -161,10 +161,10 @@ var handlers = {
         for (var y = scanline; y < 160; ++y) {
             video.drawScanline(y, proxyBacking);
         }
-        video.finishDraw(self);
+        video.finishDraw(<any>self); // Implemented above
     }
 };
 
-self.onmessage = function (message) {
+self.onmessage = function (message:any) {
     handlers[message.data['type']](message.data);
 };

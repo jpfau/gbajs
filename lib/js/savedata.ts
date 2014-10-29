@@ -2,24 +2,22 @@
 
 class SRAMSavedata extends DefaultMemoryView {
 
-    writePending;
-
-    constructor(size) {
+    constructor(size:number) {
         super(new ArrayBuffer(size));
         this.writePending = false;
     }
 
-    store8(offset:number, value) {
+    store8(offset:number, value:number):void {
         this.view.setInt8(offset, value);
         this.writePending = true;
     }
 
-    store16(offset:number, value) {
+    store16(offset:number, value:number):void {
         this.view.setInt16(offset, value, true);
         this.writePending = true;
     }
 
-    store32(offset:number, value) {
+    store32(offset:number, value:number):void {
         this.view.setInt32(offset, value, true);
         this.writePending = true;
     }
@@ -37,18 +35,17 @@ class FlashSavedata extends DefaultMemoryView {
 
     ID_PANASONIC = 0x1B32;
     ID_SANYO = 0x1362;
-    bank0;
-    id;
-    bank1;
-    bank;
-    idMode;
-    writePending;
-    first;
-    second;
-    command;
-    pendingCommand;
+    id:number;
+    bank0:DataView;
+    bank1:DataView;
+    bank:DataView;
+    idMode:boolean;
+    first:number;
+    second:number;
+    command:number;
+    pendingCommand:number;
 
-    constructor(size) {
+    constructor(size:number) {
         super(new ArrayBuffer(size));
 
         this.bank0 = new DataView(this.buffer, 0, 0x00010000);
@@ -71,7 +68,7 @@ class FlashSavedata extends DefaultMemoryView {
     }
 
 
-    load8(offset) {
+    load8(offset:number):number {
         if (this.idMode && offset < 2) {
             return (this.id >> (offset << 3)) & 0xFF;
         } else if (offset < 0x10000) {
@@ -81,23 +78,23 @@ class FlashSavedata extends DefaultMemoryView {
         }
     }
 
-    load16(offset) {
+    load16(offset:number):number {
         return (this.load8(offset) & 0xFF) | (this.load8(offset + 1) << 8);
     }
 
-    load32(offset) {
+    load32(offset:number):number {
         return (this.load8(offset) & 0xFF) | (this.load8(offset + 1) << 8) | (this.load8(offset + 2) << 16) | (this.load8(offset + 3) << 24);
     }
 
-    loadU8(offset) {
+    loadU8(offset:number):number {
         return this.load8(offset) & 0xFF;
     }
 
-    loadU16(offset) {
+    loadU16(offset:number):number {
         return (this.loadU8(offset) & 0xFF) | (this.loadU8(offset + 1) << 8);
     }
 
-    store8(offset:number, value) {
+    store8(offset:number, value:number):void {
         switch (this.command) {
             case 0:
                 if (offset == 0x5555) {
@@ -171,15 +168,15 @@ class FlashSavedata extends DefaultMemoryView {
         }
     }
 
-    store16(offset:number, value) {
+    store16(offset:number, value:number):void {
         throw new Error("Unaligned save to flash!");
     }
 
-    store32(offset:number, value) {
+    store32(offset:number, value:number):void {
         throw new Error("Unaligned save to flash!");
     }
 
-    replaceData(memory) {
+    replaceData(memory:any):void {
         var bank = this.view === this.bank1;
         super.replaceData(memory, 0);
 
@@ -205,7 +202,6 @@ class EEPROMSavedata extends DefaultMemoryView {
 
     realSize = 0;
     addressBits = 0;
-    writePending = false;
 
 
     COMMAND_NULL = 0;
@@ -214,9 +210,9 @@ class EEPROMSavedata extends DefaultMemoryView {
     COMMAND_READ_PENDING = 3;
     COMMAND_READ = 4;
 
-    dma;
+    dma:DMA;
 
-    constructor(size, mmu) {
+    constructor(size:number, mmu:GameBoyAdvanceMMU) {
         super(new ArrayBuffer(size));
 
         this.dma = mmu.gba.irq.dma[3];
@@ -227,7 +223,7 @@ class EEPROMSavedata extends DefaultMemoryView {
         throw new Error("Unsupported 8-bit access!");
     }
 
-    load16(offset:number) {
+    load16(offset:number):number {
         return this.loadU16(offset);
     }
 
@@ -235,7 +231,7 @@ class EEPROMSavedata extends DefaultMemoryView {
         throw new Error("Unsupported 8-bit access!");
     }
 
-    loadU16(offset:number) {
+    loadU16(offset:number):number {
         if (this.command != this.COMMAND_READ || !this.dma.enable) {
             return 1;
         }
@@ -255,11 +251,11 @@ class EEPROMSavedata extends DefaultMemoryView {
         throw new Error("Unsupported 32-bit access!");
     }
 
-    store8(offset:number, value) {
+    store8(offset:number, value:number):void {
         throw new Error("Unsupported 8-bit access!");
     }
 
-    store16(offset:number, value) {
+    store16(offset:number, value:number):void {
         switch (this.command) {
             // Read header
             case this.COMMAND_NULL:
@@ -319,11 +315,7 @@ class EEPROMSavedata extends DefaultMemoryView {
         }
     }
 
-    store32(offset:number, value) {
+    store32(offset:number, value:number):void {
         throw new Error("Unsupported 32-bit access!");
-    }
-
-    replaceData(memory) {
-        super.replaceData(memory, 0);
     }
 }

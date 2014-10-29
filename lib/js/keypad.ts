@@ -38,7 +38,7 @@ class GameBoyAdvanceKeypad {
     currentDown = 0x03FF;
     eatInput = false;
 
-    gamepads = [];
+    gamepads:any[] = [];
 
     gba:GameBoyAdvance;
 
@@ -46,7 +46,7 @@ class GameBoyAdvanceKeypad {
         this.gba = gba;
     }
 
-    keyboardHandler(e) {
+    keyboardHandler(e:KeyboardEvent):void {
         var toggle = 0;
         switch (e.keyCode) {
             case this.KEYCODE_START:
@@ -95,7 +95,7 @@ class GameBoyAdvanceKeypad {
         }
     }
 
-    gamepadHandler(gamepad) {
+    gamepadHandler(gamepad:any):void {
         var value = 0;
         if (gamepad.buttons[this.GAMEPAD_LEFT] > this.GAMEPAD_THRESHOLD) {
             value |= 1 << this.LEFT;
@@ -131,18 +131,18 @@ class GameBoyAdvanceKeypad {
         this.currentDown = ~value & 0x3FF;
     }
 
-    gamepadConnectHandler(gamepad) {
+    gamepadConnectHandler(gamepad:any):void {
         this.gamepads.push(gamepad);
     }
 
-    gamepadDisconnectHandler(gamepad) {
+    gamepadDisconnectHandler(gamepad:any):void {
         this.gamepads = this.gamepads.filter((other) => {
             return other != gamepad
         });
     }
 
-    pollGamepads() {
-        var navigatorList = [];
+    pollGamepads():void {
+        var navigatorList:any[] = [];
         if ((<any>navigator).webkitGetGamepads) {
             navigatorList = (<any>navigator).webkitGetGamepads();
         } else if ((<any>navigator).getGamepads) {
@@ -164,7 +164,7 @@ class GameBoyAdvanceKeypad {
 
     }
 
-    registerHandlers() {
+    registerHandlers():void {
         window.addEventListener("keydown", this.keyboardHandler.bind(this), true);
         window.addEventListener("keyup", this.keyboardHandler.bind(this), true);
 

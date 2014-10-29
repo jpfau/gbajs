@@ -2,111 +2,129 @@
 /// <reference path="savedata.ts"/>
 /// <reference path="gpio.ts"/>
 
+class Cart {
+    title:string;
+    code:string;
+    maker:string;
+    memory:any; // Unused?
+    saveType:string;
+
+    constructor(memory:any) {
+        this.memory = memory;
+    }
+}
+
 interface Page {
     thumb:any[]
     arm:any[]
     invalid:boolean
 }
 
-interface MemoryView {
+interface MemoryIO {
 
-    buffer;
-    icache;
-    ICACHE_PAGE_BITS;
-    PAGE_MASK;
+    load8(offset:number):number;
+
+    load16(offset:number):number;
+
+    loadU8(offset:number):number;
+
+    loadU16(offset:number):number;
+
+    load32(offset:number):number;
+
+    store8(offset:number, value:number):void;
+
+    store16(offset:number, value:number):void;
+
+    store32(offset:number, value:number):void;
+
+}
+
+interface MemoryView extends MemoryIO {
+
+    buffer:any;
+    icache:Page[];
+    ICACHE_PAGE_BITS:number;
+    PAGE_MASK:number;
     view:DataView;
-    mask;
-    mask8;
-    mask16;
-    mask32;
+    mask:number;
+    mask8:number;
+    mask16:number;
+    mask32:number;
+    writePending:boolean;
 
-    load8(offset);
+    invalidatePage(address:number):void;
 
-    load16(offset) ;
-
-    loadU8(offset) ;
-
-    loadU16(offset) ;
-
-    load32(offset);
-
-    store8(offset:number, value);
-
-    store16(offset:number, value);
-
-    store32(offset:number, value);
-
-    invalidatePage(address);
-
-    replaceData(memory, offset:number);
+    replaceData(memory:any, offset:number):void;
 }
 
 class DefaultMemoryView implements MemoryView {
 
-    buffer;
-    icache;
-    ICACHE_PAGE_BITS;
-    PAGE_MASK;
+    buffer:any;
+    icache:Page[];
+    ICACHE_PAGE_BITS:number;
+    PAGE_MASK:number;
     view:DataView;
-    mask;
-    mask8;
-    mask16;
-    mask32;
+    mask:number;
+    mask8:number;
+    mask16:number;
+    mask32:number;
+    writePending = false;
 
-    constructor(memory, offset = 0) {
+    constructor(memory:any, offset = 0) {
         this.buffer = memory;
         this.view = new DataView(this.buffer, offset);
         this.mask = memory.byteLength - 1;
         this.resetMask();
     }
 
-    resetMask() {
+    resetMask():void {
         this.mask8 = this.mask & 0xFFFFFFFF;
         this.mask16 = this.mask & 0xFFFFFFFE;
         this.mask32 = this.mask & 0xFFFFFFFC;
     }
 
-    load8(offset) {
+    load8(offset:number):number {
         return this.view.getInt8(offset & this.mask8);
     }
 
-    load16(offset) {
+    load16(offset:number):number {
         // Unaligned 16-bit loads are unpredictable...let's just pretend they work
         return this.view.getInt16(offset & this.mask, true);
     }
 
-    loadU8(offset) {
+    loadU8(offset:number):number {
         return this.view.getUint8(offset & this.mask8);
     }
 
-    loadU16(offset) {
+    loadU16(offset:number):number {
         // Unaligned 16-bit loads are unpredictable...let's just pretend they work
         return this.view.getUint16(offset & this.mask, true);
     }
 
-    load32(offset) {
+    load32(offset:number):number {
         // Unaligned 32-bit loads are "rotated" so they make some semblance of sense
         var rotate = (offset & 3) << 3;
         var mem = this.view.getInt32(offset & this.mask32, true);
         return (mem >>> rotate) | (mem << (32 - rotate));
     }
 
-    store8(offset:number, value) {
+    store8(offset:number, value:number):void {
         this.view.setInt8(offset & this.mask8, value);
     }
 
-    store16(offset:number, value) {
+    store16(offset:number, value:number):void {
         this.view.setInt16(offset & this.mask16, value, true);
     }
 
-    store32(offset:number, value) {
+    store32(offset:number, value:number):void {
         this.view.setInt32(offset & this.mask32, value, true);
     }
 
-    invalidatePage(address) {
+    invalidatePage(address:number):void {
     }
 
-    replaceData(memory, offset = 0) {
+    replaceData(memory:any, offset = 0):void {
         this.buffer = memory;
         this.view = new DataView(this.buffer, offset);
         if (this.icache) {
@@ -117,14 +135,14 @@ class DefaultMemoryView implements MemoryView {
 
 class MemoryBlock extends DefaultMemoryView {
 
-    constructor(size, cacheBits) {
+    constructor(size:number, cacheBits:number) {
         super(new ArrayBuffer(size));
         this.ICACHE_PAGE_BITS = cacheBits;
         this.PAGE_MASK = (2 << this.ICACHE_PAGE_BITS) - 1;
         this.icache = new Array(size >> (this.ICACHE_PAGE_BITS + 1));
     }
 
-    invalidatePage(address) {
+    invalidatePage(address:number):void {
         var page = this.icache[(address & this.mask) >> this.ICACHE_PAGE_BITS];
         if (page) {
             page.invalid = true;
@@ -134,10 +152,14 @@ class MemoryBlock extends DefaultMemoryView {
 
 class ROMView extends DefaultMemoryView {
 
-    mmu;
-    gpio;
+    /**
+     * Needed for GPIO
+     */
+    mmu:GameBoyAdvanceMMU;
+    private gpio:GameBoyAdvanceGPIO;
 
-    constructor(rom, offset = 0) {
+    constructor(mmu:GameBoyAdvanceMMU, rom:any, offset = 0) {
+        this.mmu = mmu;
         super(rom, offset);
         this.ICACHE_PAGE_BITS = 10;
         this.PAGE_MASK = (2 << this.ICACHE_PAGE_BITS) - 1;
@@ -147,10 +169,10 @@ class ROMView extends DefaultMemoryView {
         this.resetMask();
     }
 
-    store8(offset:number, value) {
+    store8(offset:number, value:number):void {
     }
 
-    store16(offset:number, value) {
+    store16(offset:number, value:number):void {
         if (offset < 0xCA && offset >= 0xC4) {
             if (!this.gpio) {
                 this.gpio = this.mmu.allocGPIO(this);
@@ -159,125 +181,128 @@ class ROMView extends DefaultMemoryView {
         }
     }
 
-    store32(offset:number, value) {
+    /**
+     * Unused?
+     * @param offset
+     * @param value
+     */
+    store32(offset:number, value:number):void {
         if (offset < 0xCA && offset >= 0xC4) {
             if (!this.gpio) {
                 this.gpio = this.mmu.allocGPIO(this);
             }
-            this.gpio.store32(offset, value);
+            (<any>this.gpio).store32(offset, value);
         }
     }
 }
 
 class BIOSView extends DefaultMemoryView {
 
-    PAGE_MASK;
     real:boolean;
 
-    constructor(rom, offset = 0) {
+    constructor(rom:any, offset = 0) {
         super(rom, offset);
         this.ICACHE_PAGE_BITS = 16;
         this.PAGE_MASK = (2 << this.ICACHE_PAGE_BITS) - 1;
         this.icache = new Array(1);
     }
 
-    load8(offset) {
+    load8(offset:number):number {
         if (offset >= this.buffer.byteLength) {
             return -1;
         }
         return this.view.getInt8(offset);
     }
 
-    load16(offset) {
+    load16(offset:number):number {
         if (offset >= this.buffer.byteLength) {
             return -1;
         }
         return this.view.getInt16(offset, true);
     }
 
-    loadU8(offset) {
+    loadU8(offset:number):number {
         if (offset >= this.buffer.byteLength) {
             return -1;
         }
         return this.view.getUint8(offset);
     }
 
-    loadU16(offset) {
+    loadU16(offset:number):number {
         if (offset >= this.buffer.byteLength) {
             return -1;
         }
         return this.view.getUint16(offset, true);
     }
 
-    load32(offset) {
+    load32(offset:number):number {
         if (offset >= this.buffer.byteLength) {
             return -1;
         }
         return this.view.getInt32(offset, true);
     }
 
-    store8(offset:number, value) {
+    store8(offset:number, value:number):void {
     }
 
-    store16(offset:number, value) {
+    store16(offset:number, value:number):void {
     }
 
-    store32(offset:number, value) {
+    store32(offset:number, value:number):void {
     }
 }
 
-class BadMemory {
+class BadMemory implements MemoryIO {
 
-    cpu;
-    mmu;
+    cpu:ARMCore;
+    mmu:GameBoyAdvanceMMU;
 
-    constructor(mmu, cpu) {
+    constructor(mmu:GameBoyAdvanceMMU, cpu:ARMCore) {
         this.cpu = cpu;
         this.mmu = mmu
     }
 
-    load8(offset) {
-        return this.mmu.load8(this.cpu.gprs[this.cpu.PC] - this.cpu.instructionWidth + (offset & 0x3));
+    load8(offset:number):number {
+        return this.mmu.load8(this.cpu.gprs[Register.PC] - this.cpu.instructionWidth + (offset & 0x3));
     }
 
-    load16(offset) {
-        return this.mmu.load16(this.cpu.gprs[this.cpu.PC] - this.cpu.instructionWidth + (offset & 0x2));
+    load16(offset:number):number {
+        return this.mmu.load16(this.cpu.gprs[Register.PC] - this.cpu.instructionWidth + (offset & 0x2));
     }
 
-    loadU8(offset) {
-        return this.mmu.loadU8(this.cpu.gprs[this.cpu.PC] - this.cpu.instructionWidth + (offset & 0x3));
+    loadU8(offset:number):number {
+        return this.mmu.loadU8(this.cpu.gprs[Register.PC] - this.cpu.instructionWidth + (offset & 0x3));
     }
 
-    loadU16(offset) {
-        return this.mmu.loadU16(this.cpu.gprs[this.cpu.PC] - this.cpu.instructionWidth + (offset & 0x2));
+    loadU16(offset:number):number {
+        return this.mmu.loadU16(this.cpu.gprs[Register.PC] - this.cpu.instructionWidth + (offset & 0x2));
     }
 
-    load32(offset) {
+    load32(offset:number):number {
         if (this.cpu.execMode == Mode.ARM) {
-            return this.mmu.load32(this.cpu.gprs[this.cpu.gprs.PC] - this.cpu.instructionWidth);
+            return this.mmu.load32(this.cpu.gprs[Register.PC] - this.cpu.instructionWidth);
         } else {
-            var halfword = this.mmu.loadU16(this.cpu.gprs[this.cpu.PC] - this.cpu.instructionWidth);
+            var halfword = this.mmu.loadU16(this.cpu.gprs[Register.PC] - this.cpu.instructionWidth);
             return halfword | (halfword << 16);
         }
     }
 
-    store8(offset:number, value) {
+    store8(offset:number, value:number):void {
     }
 
-    store16(offset:number, value) {
+    store16(offset:number, value:number):void {
     }
 
-    store32(offset:number, value) {
+    store32(offset:number, value:number):void {
     }
 
-    invalidatePage(address) {
+    invalidatePage(address:number):void {
     }
 }
 
+class GameBoyAdvanceMMU implements MemoryIO {
 
-class GameBoyAdvanceMMU {
-
-    REGION_BIOS = 0x0;
+    static REGION_BIOS = 0x0;
     REGION_WORKING_RAM = 0x2;
     REGION_WORKING_IRAM = 0x3;
     REGION_IO = 0x4;
@@ -289,32 +314,32 @@ class GameBoyAdvanceMMU {
     REGION_CART2 = 0xC;
     REGION_CART_SRAM = 0xE;
 
-    BASE_BIOS = 0x00000000;
-    BASE_WORKING_RAM = 0x02000000;
-    BASE_WORKING_IRAM = 0x03000000;
-    BASE_IO = 0x04000000;
-    BASE_PALETTE_RAM = 0x05000000;
-    BASE_VRAM = 0x06000000;
-    BASE_OAM = 0x07000000;
-    BASE_CART0 = 0x08000000;
-    BASE_CART1 = 0x0A000000;
-    BASE_CART2 = 0x0C000000;
-    BASE_CART_SRAM = 0x0E000000;
+    static BASE_BIOS = 0x00000000;
+    static BASE_WORKING_RAM = 0x02000000;
+    static BASE_WORKING_IRAM = 0x03000000;
+    static BASE_IO = 0x04000000;
+    static BASE_PALETTE_RAM = 0x05000000;
+    static BASE_VRAM = 0x06000000;
+    static BASE_OAM = 0x07000000;
+    static BASE_CART0 = 0x08000000;
+    static BASE_CART1 = 0x0A000000;
+    static BASE_CART2 = 0x0C000000;
+    static BASE_CART_SRAM = 0x0E000000;
 
     BASE_MASK = 0x0F000000;
     BASE_OFFSET = 24;
     OFFSET_MASK = 0x00FFFFFF;
 
-    SIZE_BIOS = 0x00004000;
+    static SIZE_BIOS = 0x00004000;
     SIZE_WORKING_RAM = 0x00040000;
     SIZE_WORKING_IRAM = 0x00008000;
     SIZE_IO = 0x00000400;
-    SIZE_PALETTE_RAM = 0x00000400;
-    SIZE_VRAM = 0x00018000;
-    SIZE_OAM = 0x00000400;
-    SIZE_CART0 = 0x02000000;
-    SIZE_CART1 = 0x02000000;
-    SIZE_CART2 = 0x02000000;
+    static SIZE_PALETTE_RAM = 0x00000400;
+    static SIZE_VRAM = 0x00018000;
+    static SIZE_OAM = 0x00000400;
+    static SIZE_CART0 = 0x02000000;
+    static SIZE_CART1 = 0x02000000;
+    static SIZE_CART2 = 0x02000000;
     SIZE_CART_SRAM = 0x00008000;
     SIZE_CART_FLASH512 = 0x00010000;
     SIZE_CART_FLASH1M = 0x00020000;
@@ -325,18 +350,18 @@ class GameBoyAdvanceMMU {
     DMA_TIMING_HBLANK = 2;
     DMA_TIMING_CUSTOM = 3;
 
-    DMA_INCREMENT = 0;
-    DMA_DECREMENT = 1;
-    DMA_FIXED = 2;
+    static DMA_INCREMENT = 0;
+    static DMA_DECREMENT = 1;
+    static DMA_FIXED = 2;
     DMA_INCREMENT_RELOAD = 3;
 
     DMA_OFFSET = [ 1, -1, 0, 1 ];
 
-    WAITSTATES;
-    WAITSTATES_32;
-    WAITSTATES_SEQ;
-    WAITSTATES_SEQ_32;
-    NULLWAIT;
+    WAITSTATES:number[];
+    WAITSTATES_32:number[];
+    WAITSTATES_SEQ:number[];
+    WAITSTATES_SEQ_32:number[];
+    NULLWAIT:number[];
 
     ROM_WS = [ 4, 3, 2, 8 ];
     ROM_WS_SEQ = [
@@ -373,38 +398,38 @@ class GameBoyAdvanceMMU {
     }
 
     memory:MemoryView[];
-    cart;
-    save;
+    cart:Cart;
+    save:MemoryView;
 
-    mmap(region, object) {
+    mmap(region:number, object:MemoryView):void {
         this.memory[region] = object;
     }
 
-    badMemory;
-    DMA_REGISTER;
+    badMemory:MemoryView;
+    DMA_REGISTER:number[];
 
-    clear() {
-        this.badMemory = new BadMemory(this, this.cpu);
+    clear():void {
+        var badMemory = this.badMemory = <MemoryView><any>new BadMemory(this, this.cpu);
         this.memory = [
             this.bios,
-            this.badMemory, // Unused
+            badMemory, // Unused
             new MemoryBlock(this.SIZE_WORKING_RAM, 9),
             new MemoryBlock(this.SIZE_WORKING_IRAM, 7),
             null, // This is owned by GameBoyAdvanceIO
             null, // This is owned by GameBoyAdvancePalette
             null, // This is owned by GameBoyAdvanceVRAM
             null, // This is owned by GameBoyAdvanceOAM
-            this.badMemory,
-            this.badMemory,
-            this.badMemory,
-            this.badMemory,
-            this.badMemory,
-            this.badMemory,
-            this.badMemory,
-            this.badMemory // Unused
+            badMemory,
+            badMemory,
+            badMemory,
+            badMemory,
+            badMemory,
+            badMemory,
+            badMemory,
+            badMemory // Unused
         ];
         for (var i = 16; i < 256; ++i) {
-            this.memory[i] = this.badMemory;
+            this.memory[i] = badMemory;
         }
 
         this.waitstates = this.WAITSTATES.slice(0);
@@ -425,38 +450,30 @@ class GameBoyAdvanceMMU {
         ];
     }
 
-    freeze() {
+    freeze():any {
         return {
             'ram': Serializer.prefix(this.memory[this.REGION_WORKING_RAM].buffer),
             'iram': Serializer.prefix(this.memory[this.REGION_WORKING_IRAM].buffer)
         };
     }
 
-    defrost(frost) {
+    defrost(frost:any):void {
         this.memory[this.REGION_WORKING_RAM].replaceData(frost.ram, 0);
         this.memory[this.REGION_WORKING_IRAM].replaceData(frost.iram, 0);
     }
 
-    loadBios(bios, real:boolean) {
+    loadBios(bios:any, real:boolean):void {
         this.bios = new BIOSView(bios);
         this.bios.real = real;
     }
 
-    loadRom(rom, process:boolean) {
-        var cart = {
-            title: null,
-            code: null,
-            maker: null,
-            memory: rom,
-            saveType: null
-        };
+    loadRom(rom:any, process:boolean):Cart {
+        var cart = new Cart(rom);
 
-        var lo = new ROMView(rom);
+        var lo = new ROMView(this, rom);
         if (lo.view.getUint8(0xB2) != 0x96) {
-            // Not a valid ROM
-            return null;
+            throw "Not a valid ROM";
         }
-        lo.mmu = this; // Needed for GPIO
         this.memory[this.REGION_CART0] = lo;
         this.memory[this.REGION_CART1] = lo;
         this.memory[this.REGION_CART2] = lo;
@@ -501,7 +518,7 @@ class GameBoyAdvanceMMU {
 
             // Find savedata type
             var state = '';
-            var next;
+            var next:string;
             var terminal = false;
             for (var i = 0xE4; i < rom.byteLength && !terminal; ++i) {
                 next = String.fromCharCode(lo.loadU8(i));
@@ -573,45 +590,45 @@ class GameBoyAdvanceMMU {
         return cart;
     }
 
-    loadSavedata(save) {
-        this.save.replaceData(save);
+    loadSavedata(save:any):void {
+        this.save.replaceData(save, 0);
     }
 
-    load8(offset) {
+    load8(offset:number):number {
         return this.memory[offset >>> this.BASE_OFFSET].load8(offset & 0x00FFFFFF);
     }
 
-    load16(offset) {
+    load16(offset:number):number {
         return this.memory[offset >>> this.BASE_OFFSET].load16(offset & 0x00FFFFFF);
     }
 
-    load32(offset) {
+    load32(offset:number):number {
         return this.memory[offset >>> this.BASE_OFFSET].load32(offset & 0x00FFFFFF);
     }
 
-    loadU8(offset) {
+    loadU8(offset:number):number {
         return this.memory[offset >>> this.BASE_OFFSET].loadU8(offset & 0x00FFFFFF);
     }
 
-    loadU16(offset) {
+    loadU16(offset:number):number {
         return this.memory[offset >>> this.BASE_OFFSET].loadU16(offset & 0x00FFFFFF);
     }
 
-    store8(offset:number, value) {
+    store8(offset:number, value:number):void {
         var maskedOffset = offset & 0x00FFFFFF;
         var memory = this.memory[offset >>> this.BASE_OFFSET];
         memory.store8(maskedOffset, value);
         memory.invalidatePage(maskedOffset);
     }
 
-    store16(offset:number, value) {
+    store16(offset:number, value:number):void {
         var maskedOffset = offset & 0x00FFFFFE;
         var memory = this.memory[offset >>> this.BASE_OFFSET];
         memory.store16(maskedOffset, value);
         memory.invalidatePage(maskedOffset);
     }
 
-    store32(offset:number, value) {
+    store32(offset:number, value:number):void {
         var maskedOffset = offset & 0x00FFFFFC;
         var memory = this.memory[offset >>> this.BASE_OFFSET];
         memory.store32(maskedOffset, value);
@@ -619,38 +636,38 @@ class GameBoyAdvanceMMU {
         memory.invalidatePage(maskedOffset + 2);
     }
 
-    waitstatesPrefetch;
-    waitstatesPrefetch32;
-    waitstates;
-    waitstates32;
-    waitstatesSeq;
-    waitstatesSeq32;
+    waitstatesPrefetch:number[];
+    waitstatesPrefetch32:number[];
+    waitstates:number[];
+    waitstates32:number[];
+    waitstatesSeq:number[];
+    waitstatesSeq32:number[];
 
-    waitPrefetch(memory) {
+    waitPrefetch(memory:number):void {
         this.cpu.cycles += 1 + this.waitstatesPrefetch[memory >>> this.BASE_OFFSET];
     }
 
-    waitPrefetch32(memory) {
+    waitPrefetch32(memory:number):void {
         this.cpu.cycles += 1 + this.waitstatesPrefetch32[memory >>> this.BASE_OFFSET];
     }
 
-    wait(memory) {
+    wait(memory:number):void {
         this.cpu.cycles += 1 + this.waitstates[memory >>> this.BASE_OFFSET];
     }
 
-    wait32(memory) {
+    wait32(memory:number):void {
         this.cpu.cycles += 1 + this.waitstates32[memory >>> this.BASE_OFFSET];
     }
 
-    waitSeq(memory) {
+    waitSeq(memory:number):void {
         this.cpu.cycles += 1 + this.waitstatesSeq[memory >>> this.BASE_OFFSET];
     }
 
-    waitSeq32(memory) {
+    waitSeq32(memory:number):void {
         this.cpu.cycles += 1 + this.waitstatesSeq32[memory >>> this.BASE_OFFSET];
     }
 
-    waitMul(rs:number) {
+    waitMul(rs:number):void {
         if (((rs & 0xFFFFFF00) == 0xFFFFFF00) || !(rs & 0xFFFFFF00)) {
             this.cpu.cycles += 1;
         } else if (((rs & 0xFFFF0000) == 0xFFFF0000) || !(rs & 0xFFFF0000)) {
@@ -662,16 +679,16 @@ class GameBoyAdvanceMMU {
         }
     }
 
-    waitMulti32(memory, seq) {
+    waitMulti32(memory:number, seq:number):void {
         this.cpu.cycles += 1 + this.waitstates32[memory >>> this.BASE_OFFSET];
         this.cpu.cycles += (1 + this.waitstatesSeq32[memory >>> this.BASE_OFFSET]) * (seq - 1);
     }
 
-    addressToPage(region, address) {
+    addressToPage(region:number, address:number):number {
         return address >> this.memory[region].ICACHE_PAGE_BITS;
     }
 
-    accessPage(region, pageId):Page {
+    accessPage(region:number, pageId:number):Page {
         var memory = this.memory[region];
         var page = memory.icache[pageId];
         if (!page || page.invalid) {
@@ -687,7 +704,7 @@ class GameBoyAdvanceMMU {
 
     dma:DMA;
 
-    scheduleDma(number, info) {
+    scheduleDma(number:number, info:DMA):void {
         switch (info.timing) {
             case this.DMA_TIMING_NOW:
                 this.serviceDma(number, info);
@@ -714,7 +731,7 @@ class GameBoyAdvanceMMU {
         }
     }
 
-    runHblankDmas() {
+    runHblankDmas():void {
         for (var i = 0; i < this.cpu.irq.dma.length; ++i) {
             this.dma = this.cpu.irq.dma[i];
             if (this.dma.enable && this.dma.timing == this.DMA_TIMING_HBLANK) {
@@ -723,7 +740,7 @@ class GameBoyAdvanceMMU {
         }
     }
 
-    runVblankDmas() {
+    runVblankDmas():void {
         for (var i = 0; i < this.cpu.irq.dma.length; ++i) {
             this.dma = this.cpu.irq.dma[i];
             if (this.dma.enable && this.dma.timing == this.DMA_TIMING_VBLANK) {
@@ -732,7 +749,7 @@ class GameBoyAdvanceMMU {
         }
     }
 
-    serviceDma(number, info) {
+    serviceDma(number:number, info:DMA):void {
         if (!info.enable) {
             // There was a DMA scheduled that got canceled
             return;
@@ -748,11 +765,11 @@ class GameBoyAdvanceMMU {
         var destRegion = info.nextDest >>> this.BASE_OFFSET;
         var sourceBlock = this.memory[sourceRegion];
         var destBlock = this.memory[destRegion];
-        var sourceView = null;
-        var destView = null;
+        var sourceView:DataView = null;
+        var destView:DataView = null;
         var sourceMask = 0xFFFFFFFF;
         var destMask = 0xFFFFFFFF;
-        var word;
+        var word:number;
 
         if (destBlock.ICACHE_PAGE_BITS) {
             var endPage = (dest + wordsRemaining * width) >> destBlock.ICACHE_PAGE_BITS;
@@ -858,7 +875,7 @@ class GameBoyAdvanceMMU {
         }
     }
 
-    adjustTimings(word) {
+    adjustTimings(word:number):void {
         var sram = word & 0x0003;
         var ws0 = (word & 0x000C) >> 2;
         var ws0seq = (word & 0x0010) >> 4;
@@ -908,15 +925,15 @@ class GameBoyAdvanceMMU {
         }
     }
 
-    saveNeedsFlush() {
+    saveNeedsFlush():boolean {
         return this.save.writePending;
     }
 
-    flushSave() {
+    flushSave():void {
         this.save.writePending = false;
     }
 
-    allocGPIO(rom) {
+    allocGPIO(rom:MemoryView):GameBoyAdvanceGPIO {
         return new GameBoyAdvanceGPIO(this.gba, rom);
     }
 }

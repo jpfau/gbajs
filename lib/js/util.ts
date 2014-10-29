@@ -33,11 +33,11 @@ function decodeBase64(string:string) {
     return buffer;
 }
 
-function encodeBase64(view) {
-    var data = [];
-    var b;
-    var wordstring = [];
-    var triplet;
+function encodeBase64(view:DataView):string {
+    var data:string[] = [];
+    var b:number;
+    var wordstring:string[] = [];
+    var triplet:string[];
     for (var i = 0; i < view.byteLength; ++i) {
         b = view.getUint8(i);
         wordstring.push(String.fromCharCode(b));
@@ -52,64 +52,100 @@ function encodeBase64(view) {
     return data.join('');
 }
 
-var Serializer = {
-    TAG_INT: 1,
-    TAG_STRING: 2,
-    TAG_STRUCT: 3,
-    TAG_BLOB: 4,
-    TAG_BOOLEAN: 5,
-    TYPE: 'application/octet-stream',
+module Serializer {
+    enum Tag {
+        INT = 1,
+        STRING = 2,
+        STRUCT = 3,
+        BLOB = 4,
+        BOOLEAN = 5
+    }
+    export var TYPE = 'application/octet-stream';
 
-    Pointer: () => {
-        this.index = 0;
-        this.top = 0;
-        this.stack = [];
-    },
+    export class Pointer {
+        index:number;
+        top:number;
+        stack:number[];
 
-    pack: function (value) {
+        constructor() {
+            this.index = 0;
+            this.top = 0;
+            this.stack = [];
+        }
+
+        advance(amount:number) {
+            var index = this.index;
+            this.index += amount;
+            return index;
+        }
+
+        mark() {
+            return this.index - this.top;
+        }
+
+        push() {
+            this.stack.push(this.top);
+            this.top = this.index;
+        }
+
+        pop() {
+            this.top = this.stack.pop();
+        }
+
+        readString(view:DataView):string {
+            var length = view.getUint32(this.advance(4), true);
+            var bytes:string[] = [];
+            for (var i = 0; i < length; ++i) {
+                bytes.push(String.fromCharCode(view.getUint8(this.advance(1))));
+            }
+            return bytes.join('');
+        }
+    }
+
+    export function pack(value:number) {
         var object = new DataView(new ArrayBuffer(4));
         object.setUint32(0, value, true);
         return object.buffer;
-    },
+    }
 
-    pack8: function (value) {
+    export function pack8(value:number) {
         var object = new DataView(new ArrayBuffer(1));
         object.setUint8(0, value);
         return object.buffer;
-    },
+    }
 
-    prefix: function (value) {
+    export function prefix(value:any) {
         return new Blob([Serializer.pack(value.size || value.length || value.byteLength), value], { type: Serializer.TYPE });
-    },
+    }
 
-    serialize: function (stream) {
-        var parts = [];
+    export function serialize(stream:any) {
+        var parts:any = []; // ArrayBuffer|Blob
         var size = 4;
         for (var i in stream) {
             if (stream.hasOwnProperty(i)) {
-                var tag;
+                var tag:Tag;
                 var head = Serializer.prefix(i);
-                var body;
+                var body:any; // ArrayBuffer|Blob
                 switch (typeof(stream[i])) {
                     case 'number':
-                        tag = Serializer.TAG_INT;
+                        tag = Tag.INT;
                         body = Serializer.pack(stream[i]);
                         break;
                     case 'string':
-                        tag = Serializer.TAG_STRING;
+                        tag = Tag.STRING;
                         body = Serializer.prefix(stream[i]);
                         break;
                     case 'object':
                         if (stream[i].type == Serializer.TYPE) {
-                            tag = Serializer.TAG_BLOB;
+                            tag = Tag.BLOB;
                             body = stream[i];
                         } else {
-                            tag = Serializer.TAG_STRUCT;
+                            tag = Tag.STRUCT;
                             body = Serializer.serialize(stream[i]);
                         }
                         break;
                     case 'boolean':
-                        tag = Serializer.TAG_BOOLEAN;
+                        tag = Tag.BOOLEAN;
                         body = Serializer.pack8(stream[i]);
                         break;
                     default:
@@ -124,39 +160,39 @@ var Serializer = {
         }
         parts.unshift(Serializer.pack(size));
         return new Blob(parts);
-    },
+    }
 
-    deserialize: function (blob, callback) {
+    export function deserialize(blob:Blob, callback:{(object:any):void}):void {
         var reader = new FileReader();
         reader.onload = function (data:any) {
             callback(Serializer.deserealizeStream(new DataView(data.target.result), new Serializer.Pointer));
         };
         reader.readAsArrayBuffer(blob);
-    },
+    }
 
-    deserealizeStream: function (view, pointer) {
+    export function deserealizeStream(view:DataView, pointer:Serializer.Pointer):any {
         pointer.push();
-        var object = {};
+        var object:any = {};
         var remaining = view.getUint32(pointer.advance(4), true);
         while (pointer.mark() < remaining) {
             var tag = view.getUint8(pointer.advance(1));
             var head = pointer.readString(view);
-            var body;
+            var body:any;
             switch (tag) {
-                case Serializer.TAG_INT:
+                case Tag.INT:
                     body = view.getUint32(pointer.advance(4), true);
                     break;
-                case Serializer.TAG_STRING:
+                case Tag.STRING:
                     body = pointer.readString(view);
                     break;
-                case Serializer.TAG_STRUCT:
+                case Tag.STRUCT:
                     body = Serializer.deserealizeStream(view, pointer);
                     break;
-                case Serializer.TAG_BLOB:
+                case Tag.BLOB:
                     var size = view.getUint32(pointer.advance(4), true);
-                    body = view.buffer.slice(pointer.advance(size), pointer.advance(0));
+                    body = (<any>view.buffer).slice(pointer.advance(size), pointer.advance(0));
                     break;
-                case Serializer.TAG_BOOLEAN:
+                case Tag.BOOLEAN:
                     body = !!view.getUint8(pointer.advance(1));
                     break;
             }
@@ -167,9 +203,9 @@ var Serializer = {
         }
         pointer.pop();
         return object;
-    },
+    }
 
-    serializePNG: function (blob, base, callback) {
+    export function serializePNG(blob:Blob, base:any, callback:{(data:string):void}) {
         var canvas = document.createElement('canvas');
         var context = canvas.getContext('2d');
         var pixels = base.getContext('2d').getImageData(0, 0, base.width, base.height);
@@ -217,9 +253,9 @@ var Serializer = {
         };
         reader.readAsArrayBuffer(blob);
         return canvas;
-    },
+    }
 
-    deserializePNG: function (blob, callback) {
+    export function deserializePNG(blob:Blob, callback:{(object:any):void}) {
         var reader = new FileReader();
         reader.onload = function (read:any) {
             var image = document.createElement('img');
@@ -230,7 +266,7 @@ var Serializer = {
             var context = canvas.getContext('2d');
             context.drawImage(image, 0, 0);
             var pixels = context.getImageData(0, 0, canvas.width, canvas.height);
-            var data = [];
+            var data:number[] = [];
             for (var y = 0; y < canvas.height; ++y) {
                 for (var x = 0; x < canvas.width; ++x) {
                     if (!pixels.data[(x + y * canvas.width) * 4 + 3]) {
@@ -255,32 +291,4 @@ var Serializer = {
         };
         reader.readAsDataURL(blob);
     }
-};
-
-Serializer.Pointer.prototype.advance = function (amount) {
-    var index = this.index;
-    this.index += amount;
-    return index;
-};
-
-Serializer.Pointer.prototype.mark = () => {
-    return this.index - this.top;
-};
-
-Serializer.Pointer.prototype.push = () => {
-    this.stack.push(this.top);
-    this.top = this.index;
-};
-
-Serializer.Pointer.prototype.pop = () => {
-    this.top = this.stack.pop();
-};
-
-Serializer.Pointer.prototype.readString = function (view) {
-    var length = view.getUint32(this.advance(4), true);
-    var bytes = [];
-    for (var i = 0; i < length; ++i) {
-        bytes.push(String.fromCharCode(view.getUint8(this.advance(1))));
-    }
-    return bytes.join('');
-};
+}

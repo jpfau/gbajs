@@ -32,7 +32,8 @@ module.exports = function (grunt) {
                     target: 'es5',
                     sourceMap: true,
                     declaration: true,
-                    comments: true
+                    comments: true,
+                    noImplicitAny: true
                 }
             }
         },
