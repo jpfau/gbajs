@@ -2,12 +2,13 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <title>GBA.js Debugger</title>
+    <script src="js/log.js"></script>
     <script src="js/util.js"></script>
     <script src="resources/console.js"></script>
     <link href="resources/console.css" rel="stylesheet">
     <script>
         window.onmessage = function (message) {
-            if (message.origin != document.domain && (message.origin != 'file://' || document.domain)) {
+            if (message.origin != location.origin && (message.origin != 'file://' || location.origin)) {
                 console.log('Failed XSS');
                 return;
             }
@@ -15,11 +16,11 @@
                 case 'connect':
                     master = message.source;
                     initialize(master.gba);
-                    master.postMessage('connected', document.domain || '*');
+                    master.postMessage('connected', location.origin || '*');
                     break;
                 case 'disconnect':
                     master = null;
-                    gba.DEBUG('Emulator disconnected');
+                    gba.logger.DEBUG('Emulator disconnected');
                     gbaCon = null;
                     gba = null;
                     window.close();
@@ -28,15 +29,15 @@
         };
 
         function setLogLevel(level, enabled) {
-            gba.logLevel &= ~level;
-            gba.logLevel |= enabled && level;
+            gba.logger.logLevel &= ~level;
+            gba.logger.logLevel |= enabled && level;
         }
         var gbaCon;
         function initialize(gba) {
             window.gba = gba;
-            gba.logLevel = LoggerLevel.ERROR | LoggerLevel.WARN | LoggerLevel.DEBUG;
+            gba.logger.logLevel = LoggerLevel.ERROR | LoggerLevel.WARN | LoggerLevel.DEBUG;
             gbaCon = new GameBoyAdvanceConsole(gba);
-            gba.DEBUG('Debugger initialized');
+            gba.logger.DEBUG('Debugger initialized');
         }
 
         function savestate() {
@@ -51,23 +52,23 @@
             try {
                 Serializer.deserializePNG(state, function (result) {
                     gba.defrost(result);
-                    gba.DEBUG('Loaded state');
+                    gba.logger.DEBUG('Loaded state');
                 });
             } catch (exception) {
-                gba.ERROR('Failed to load savestate', exception);
+                gba.logger.ERROR('Failed to load savestate', exception);
             }
         }
 
         window.onload = function () {
             if (window.opener) {
-                window.opener.postMessage('connect', document.domain || '*');
+                window.opener.postMessage('connect', location.origin || '*');
             }
         };
 
         window.onunload = function () {
             gba.doStep = gba.waitFrame;
             if (window.master) {
-                window.master.postMessage('disconnect', document.domain || '*');
+                window.master.postMessage('disconnect', location.origin || '*');
             }
         }
     </script>

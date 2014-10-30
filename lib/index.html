@@ -243,14 +243,14 @@ function setPixelated(pixelated) {
 
 function enableDebug() {
     window.onmessage = function (message) {
-        if (message.origin != document.domain && (message.origin != 'file://' || document.domain)) {
+        if (message.origin != location.origin && (message.origin != 'file://' || location.origin)) {
             console.log('Failed XSS');
             return;
         }
         switch (message.data) {
             case 'connect':
                 if (message.source == debug) {
-                    debug.postMessage('connect', document.domain || '*');
+                    debug.postMessage('connect', location.origin || '*');
                 }
                 break;
             case 'connected':
@@ -263,13 +263,13 @@ function enableDebug() {
     };
     window.onunload = function () {
         if (debug && debug.postMessage) {
-            debug.postMessage('disconnect', document.domain || '*');
+            debug.postMessage('disconnect', location.origin || '*');
         }
     };
     if (!debug || !debug.postMessage) {
         debug = window.open('debugger.html', 'debug');
     } else {
-        debug.postMessage('connect', document.domain || '*');
+        debug.postMessage('connect', location.origin || '*');
     }
 }
 
