@@ -736,6 +736,11 @@ class GameBoyAdvanceSoftwareBackdropRenderer {
     }
 }
 
+interface GameBoyAdvanceWindow {
+    enabled:boolean[]
+    special:number
+}
+
 class GameBoyAdvanceSoftwareRenderer {
 
     static LAYER_BG0 = 0;
@@ -789,7 +794,7 @@ class GameBoyAdvanceSoftwareRenderer {
     win0Bottom:number;
     win1Top:number;
     win1Bottom:number;
-    windows:any[];
+    windows:GameBoyAdvanceWindow[];
     target1:any[];
     target2:any[];
     blendMode:number;
@@ -1110,11 +1115,11 @@ class GameBoyAdvanceSoftwareRenderer {
 
     writeWindow(index:number, value:number) {
         var window = this.windows[index];
-        window.enabled[0] = value & 0x01;
-        window.enabled[1] = value & 0x02;
-        window.enabled[2] = value & 0x04;
-        window.enabled[3] = value & 0x08;
-        window.enabled[4] = value & 0x10;
+        window.enabled[0] = !!(value & 0x01);
+        window.enabled[1] = !!(value & 0x02);
+        window.enabled[2] = !!(value & 0x04);
+        window.enabled[3] = !!(value & 0x08);
+        window.enabled[4] = !!(value & 0x10);
         window.special = value & 0x20;
     }
 
@@ -1686,7 +1691,7 @@ class GameBoyAdvanceSoftwareRenderer {
                     }
                 }
 
-                this.setBlendEnabled(this.LAYER_BACKDROP, this.target1[this.LAYER_BACKDROP] && this.windows[2].special, this.blendMode);
+                this.setBlendEnabled(this.LAYER_BACKDROP, (!!this.target1[this.LAYER_BACKDROP] && !!this.windows[2].special), this.blendMode);
             }
             if (layer.bg) {
                 layer.sx += layer.dmx;
