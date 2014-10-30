@@ -1,17 +1,14 @@
 enum Register {
     /**
      * Stack pointer
-     * @type {number}
      */
     SP = 13,
     /**
      * Link register
-     * @type {number}
      */
     LR = 14,
     /**
      * Program counter
-     * @type {number}
      */
     PC = 15
 }
@@ -58,7 +55,6 @@ class ARMCore {
     thumbCompiler:ARMCoreThumb;
     /**
      * Registers
-     * @type {Int32Array}
      */
     gprs = new Int32Array(16);
 
