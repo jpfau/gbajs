@@ -1,3 +1,4 @@
+/// <reference path="js/video/proxy.ts"/>
 /// <reference path="js/video/software.ts"/>
 /// <reference path="js/video/worker.ts"/>
 
