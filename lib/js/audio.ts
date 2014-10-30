@@ -34,11 +34,7 @@ class GameBoyAdvanceAudio {
     FIFO_MAX = 0x200;
     PSG_MAX = 0x080;
 
-    gba:GameBoyAdvance;
-
-    get cpu() {
-        return this.gba.cpu;
-    }
+    private gba:GameBoyAdvance;
 
     fifoA:number[];
     fifoB:number[];
@@ -265,7 +261,7 @@ class GameBoyAdvanceAudio {
     }
 
     updateTimers():void {
-        var cycles = this.cpu.cycles;
+        var cycles = this.gba.cpu.cycles;
         if (!this.enabled || (cycles < this.nextEvent && cycles < this.nextSample)) {
             return;
         }
@@ -342,7 +338,7 @@ class GameBoyAdvanceAudio {
 
     writeEnable(value:boolean):void {
         this.enabled = !!value;
-        this.nextEvent = this.cpu.cycles;
+        this.nextEvent = this.gba.cpu.cycles;
         this.nextSample = this.nextEvent;
         this.updateTimers();
         this.gba.irq.pollNextEvent();
@@ -403,13 +399,13 @@ class GameBoyAdvanceAudio {
 
     resetSquareChannel(channel:any):void {
         if (channel.step) {
-            channel.nextStep = this.cpu.cycles + channel.step;
+            channel.nextStep = this.gba.cpu.cycles + channel.step;
         }
         if (channel.enabled && !channel.playing) {
-            channel.raise = this.cpu.cycles;
+            channel.raise = this.gba.cpu.cycles;
             channel.lower = channel.raise + channel.duty * channel.interval;
-            channel.end = this.cpu.cycles + channel.length;
-            this.nextEvent = this.cpu.cycles;
+            channel.end = this.gba.cpu.cycles + channel.length;
+            this.nextEvent = this.gba.cpu.cycles;
         }
         channel.playing = channel.enabled;
         this.updateTimers();
@@ -432,7 +428,7 @@ class GameBoyAdvanceAudio {
         channel.sweepIncrement = (value & 0x08) ? -1 : 1;
         channel.sweepInterval = ((value >> 4) & 0x7) * this.cpuFrequency / 128;
         channel.doSweep = !!channel.sweepInterval;
-        channel.nextSweep = this.cpu.cycles + channel.sweepInterval;
+        channel.nextSweep = this.gba.cpu.cycles + channel.sweepInterval;
         this.resetSquareChannel(channel);
     }
 
@@ -556,9 +552,9 @@ class GameBoyAdvanceAudio {
     }
 
     resetChannel3():void {
-        this.channel3Next = this.cpu.cycles;
+        this.channel3Next = this.gba.cpu.cycles;
         this.nextEvent = this.channel3Next;
-        this.channel3End = this.cpu.cycles + this.channel3Length;
+        this.channel3End = this.gba.cpu.cycles + this.channel3Length;
         this.playingChannel3 = this.channel3Write;
         this.updateTimers();
         this.gba.irq.pollNextEvent();
@@ -578,11 +574,11 @@ class GameBoyAdvanceAudio {
 
     setChannel4Enabled(enable:boolean):void {
         if (!this.enableChannel4 && enable) {
-            this.channel4.next = this.cpu.cycles;
-            this.channel4.end = this.cpu.cycles + this.channel4.length;
+            this.channel4.next = this.gba.cpu.cycles;
+            this.channel4.end = this.gba.cpu.cycles + this.channel4.length;
             this.enableChannel4 = true;
             this.playingChannel4 = true;
-            this.nextEvent = this.cpu.cycles;
+            this.nextEvent = this.gba.cpu.cycles;
             this.updateEnvelope(this.channel4);
             this.updateTimers();
             this.gba.irq.pollNextEvent();
@@ -629,10 +625,10 @@ class GameBoyAdvanceAudio {
         }
         this.channel4.volume = this.channel4.initialVolume;
         if (this.channel4.step) {
-            this.channel4.nextStep = this.cpu.cycles + this.channel4.step;
+            this.channel4.nextStep = this.gba.cpu.cycles + this.channel4.step;
         }
-        this.channel4.end = this.cpu.cycles + this.channel4.length;
-        this.channel4.next = this.cpu.cycles;
+        this.channel4.end = this.gba.cpu.cycles + this.channel4.length;
+        this.channel4.next = this.gba.cpu.cycles;
         this.nextEvent = this.channel4.next;
 
         this.playingChannel4 = this.enableChannel4;
@@ -715,12 +711,12 @@ class GameBoyAdvanceAudio {
 
     scheduleFIFODma(number:number, info:DMA):void {
         switch (info.dest) {
-            case GameBoyAdvanceMMU.BASE_IO | this.cpu.irq.io.FIFO_A_LO:
+            case GameBoyAdvanceMMU.BASE_IO | this.gba.io.FIFO_A_LO:
                 // FIXME: is this needed or a hack?
                 info.dstControl = 2;
                 this.dmaA = number;
                 break;
-            case GameBoyAdvanceMMU.BASE_IO | this.cpu.irq.io.FIFO_B_LO:
+            case GameBoyAdvanceMMU.BASE_IO | this.gba.io.FIFO_B_LO:
                 info.dstControl = 2;
                 this.dmaB = number;
                 break;

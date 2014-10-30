@@ -52,23 +52,7 @@ class GameBoyAdvanceInterruptHandler {
     MASK_KEYPAD = 0x1000;
     MASK_GAMEPAK = 0x2000;
 
-    gba:GameBoyAdvance;
-
-    get cpu() {
-        return this.gba.cpu
-    }
-
-    get io() {
-        return this.gba.io
-    }
-
-    get audio() {
-        return  this.gba.audio
-    }
-
-    get video() {
-        return this.gba.video
-    }
+    private gba:GameBoyAdvance;
 
     constructor(gba:GameBoyAdvance) {
         this.gba = gba;
@@ -166,44 +150,44 @@ class GameBoyAdvanceInterruptHandler {
     }
 
     updateTimers():void {
-        if (this.nextEvent > this.cpu.cycles) {
+        if (this.nextEvent > this.gba.cpu.cycles) {
             return;
         }
 
         if (this.springIRQ) {
-            this.cpu.raiseIRQ();
+            this.gba.cpu.raiseIRQ();
             this.springIRQ = false;
         }
 
-        this.video.updateTimers(this.cpu);
-        this.audio.updateTimers();
+        this.gba.video.updateTimers(this.gba.cpu);
+        this.gba.audio.updateTimers();
         if (this.timersEnabled) {
             var timer = this.timers[0];
             if (timer.enable) {
-                if (this.cpu.cycles >= timer.nextEvent) {
+                if (this.gba.cpu.cycles >= timer.nextEvent) {
                     timer.lastEvent = timer.nextEvent;
                     timer.nextEvent += timer.overflowInterval;
-                    this.io.registers[this.io.TM0CNT_LO >> 1] = timer.reload;
+                    this.gba.io.registers[this.gba.io.TM0CNT_LO >> 1] = timer.reload;
                     timer.oldReload = timer.reload;
 
                     if (timer.doIrq) {
                         this.raiseIRQ(this.IRQ_TIMER0);
                     }
 
-                    if (this.audio.enabled) {
-                        if (this.audio.enableChannelA && !this.audio.soundTimerA && this.audio.dmaA >= 0) {
-                            this.audio.sampleFifoA();
+                    if (this.gba.audio.enabled) {
+                        if (this.gba.audio.enableChannelA && !this.gba.audio.soundTimerA && this.gba.audio.dmaA >= 0) {
+                            this.gba.audio.sampleFifoA();
                         }
 
-                        if (this.audio.enableChannelB && !this.audio.soundTimerB && this.audio.dmaB >= 0) {
-                            this.audio.sampleFifoB();
+                        if (this.gba.audio.enableChannelB && !this.gba.audio.soundTimerB && this.gba.audio.dmaB >= 0) {
+                            this.gba.audio.sampleFifoB();
                         }
                     }
 
                     timer = this.timers[1];
                     if (timer.countUp) {
-                        if (++this.io.registers[this.io.TM1CNT_LO >> 1] == 0x10000) {
-                            timer.nextEvent = this.cpu.cycles;
+                        if (++this.gba.io.registers[this.gba.io.TM1CNT_LO >> 1] == 0x10000) {
+                            timer.nextEvent = this.gba.cpu.cycles;
                         }
                     }
                 }
@@ -211,11 +195,11 @@ class GameBoyAdvanceInterruptHandler {
 
             timer = this.timers[1];
             if (timer.enable) {
-                if (this.cpu.cycles >= timer.nextEvent) {
+                if (this.gba.cpu.cycles >= timer.nextEvent) {
                     timer.lastEvent = timer.nextEvent;
                     timer.nextEvent += timer.overflowInterval;
-                    if (!timer.countUp || this.io.registers[this.io.TM1CNT_LO >> 1] == 0x10000) {
-                        this.io.registers[this.io.TM1CNT_LO >> 1] = timer.reload;
+                    if (!timer.countUp || this.gba.io.registers[this.gba.io.TM1CNT_LO >> 1] == 0x10000) {
+                        this.gba.io.registers[this.gba.io.TM1CNT_LO >> 1] = timer.reload;
                     }
                     timer.oldReload = timer.reload;
 
@@ -227,20 +211,20 @@ class GameBoyAdvanceInterruptHandler {
                         timer.nextEvent = 0;
                     }
 
-                    if (this.audio.enabled) {
-                        if (this.audio.enableChannelA && this.audio.soundTimerA && this.audio.dmaA >= 0) {
-                            this.audio.sampleFifoA();
+                    if (this.gba.audio.enabled) {
+                        if (this.gba.audio.enableChannelA && this.gba.audio.soundTimerA && this.gba.audio.dmaA >= 0) {
+                            this.gba.audio.sampleFifoA();
                         }
 
-                        if (this.audio.enableChannelB && this.audio.soundTimerB && this.audio.dmaB >= 0) {
-                            this.audio.sampleFifoB();
+                        if (this.gba.audio.enableChannelB && this.gba.audio.soundTimerB && this.gba.audio.dmaB >= 0) {
+                            this.gba.audio.sampleFifoB();
                         }
                     }
 
                     timer = this.timers[2];
                     if (timer.countUp) {
-                        if (++this.io.registers[this.io.TM2CNT_LO >> 1] == 0x10000) {
-                            timer.nextEvent = this.cpu.cycles;
+                        if (++this.gba.io.registers[this.gba.io.TM2CNT_LO >> 1] == 0x10000) {
+                            timer.nextEvent = this.gba.cpu.cycles;
                         }
                     }
                 }
@@ -248,11 +232,11 @@ class GameBoyAdvanceInterruptHandler {
 
             timer = this.timers[2];
             if (timer.enable) {
-                if (this.cpu.cycles >= timer.nextEvent) {
+                if (this.gba.cpu.cycles >= timer.nextEvent) {
                     timer.lastEvent = timer.nextEvent;
                     timer.nextEvent += timer.overflowInterval;
-                    if (!timer.countUp || this.io.registers[this.io.TM2CNT_LO >> 1] == 0x10000) {
-                        this.io.registers[this.io.TM2CNT_LO >> 1] = timer.reload;
+                    if (!timer.countUp || this.gba.io.registers[this.gba.io.TM2CNT_LO >> 1] == 0x10000) {
+                        this.gba.io.registers[this.gba.io.TM2CNT_LO >> 1] = timer.reload;
                     }
                     timer.oldReload = timer.reload;
 
@@ -266,8 +250,8 @@ class GameBoyAdvanceInterruptHandler {
 
                     timer = this.timers[3];
                     if (timer.countUp) {
-                        if (++this.io.registers[this.io.TM3CNT_LO >> 1] == 0x10000) {
-                            timer.nextEvent = this.cpu.cycles;
+                        if (++this.gba.io.registers[this.gba.io.TM3CNT_LO >> 1] == 0x10000) {
+                            timer.nextEvent = this.gba.cpu.cycles;
                         }
                     }
                 }
@@ -275,11 +259,11 @@ class GameBoyAdvanceInterruptHandler {
 
             timer = this.timers[3];
             if (timer.enable) {
-                if (this.cpu.cycles >= timer.nextEvent) {
+                if (this.gba.cpu.cycles >= timer.nextEvent) {
                     timer.lastEvent = timer.nextEvent;
                     timer.nextEvent += timer.overflowInterval;
-                    if (!timer.countUp || this.io.registers[this.io.TM3CNT_LO >> 1] == 0x10000) {
-                        this.io.registers[this.io.TM3CNT_LO >> 1] = timer.reload;
+                    if (!timer.countUp || this.gba.io.registers[this.gba.io.TM3CNT_LO >> 1] == 0x10000) {
+                        this.gba.io.registers[this.gba.io.TM3CNT_LO >> 1] = timer.reload;
                     }
                     timer.oldReload = timer.reload;
 
@@ -295,25 +279,25 @@ class GameBoyAdvanceInterruptHandler {
         }
 
         var dma = this.dma[0];
-        if (dma.enable && dma.doIrq && dma.nextIRQ && this.cpu.cycles >= dma.nextIRQ) {
+        if (dma.enable && dma.doIrq && dma.nextIRQ && this.gba.cpu.cycles >= dma.nextIRQ) {
             dma.nextIRQ = 0;
             this.raiseIRQ(this.IRQ_DMA0);
         }
 
         dma = this.dma[1];
-        if (dma.enable && dma.doIrq && dma.nextIRQ && this.cpu.cycles >= dma.nextIRQ) {
+        if (dma.enable && dma.doIrq && dma.nextIRQ && this.gba.cpu.cycles >= dma.nextIRQ) {
             dma.nextIRQ = 0;
             this.raiseIRQ(this.IRQ_DMA1);
         }
 
         dma = this.dma[2];
-        if (dma.enable && dma.doIrq && dma.nextIRQ && this.cpu.cycles >= dma.nextIRQ) {
+        if (dma.enable && dma.doIrq && dma.nextIRQ && this.gba.cpu.cycles >= dma.nextIRQ) {
             dma.nextIRQ = 0;
             this.raiseIRQ(this.IRQ_DMA2);
         }
 
         dma = this.dma[3];
-        if (dma.enable && dma.doIrq && dma.nextIRQ && this.cpu.cycles >= dma.nextIRQ) {
+        if (dma.enable && dma.doIrq && dma.nextIRQ && this.gba.cpu.cycles >= dma.nextIRQ) {
             dma.nextIRQ = 0;
             this.raiseIRQ(this.IRQ_DMA3);
         }
@@ -322,12 +306,12 @@ class GameBoyAdvanceInterruptHandler {
     }
 
     resetSP():void {
-        this.cpu.switchMode(Mode.SUPERVISOR);
-        this.cpu.gprs[Register.SP] = 0x3007FE0;
-        this.cpu.switchMode(Mode.IRQ);
-        this.cpu.gprs[Register.SP] = 0x3007FA0;
-        this.cpu.switchMode(Mode.SYSTEM);
-        this.cpu.gprs[Register.SP] = 0x3007F00;
+        this.gba.cpu.switchMode(Mode.SUPERVISOR);
+        this.gba.cpu.gprs[Register.SP] = 0x3007FE0;
+        this.gba.cpu.switchMode(Mode.IRQ);
+        this.gba.cpu.gprs[Register.SP] = 0x3007FA0;
+        this.gba.cpu.switchMode(Mode.SYSTEM);
+        this.gba.cpu.gprs[Register.SP] = 0x3007F00;
     }
 
     swi32(opcode:number):void {
@@ -336,7 +320,7 @@ class GameBoyAdvanceInterruptHandler {
 
     swi(opcode:number):void {
         if (this.gba.mmu.bios.real) {
-            this.cpu.raiseTrap();
+            this.gba.cpu.raiseTrap();
             return;
         }
 
@@ -350,17 +334,17 @@ class GameBoyAdvanceInterruptHandler {
                 }
                 this.resetSP();
                 if (!flag) {
-                    this.cpu.gprs[Register.LR] = 0x08000000;
+                    this.gba.cpu.gprs[Register.LR] = 0x08000000;
                 } else {
-                    this.cpu.gprs[Register.LR] = 0x02000000;
+                    this.gba.cpu.gprs[Register.LR] = 0x02000000;
                 }
-                this.cpu.switchExecMode(Mode.ARM);
-                this.cpu.instruction.writesPC = true;
-                this.cpu.gprs[Register.PC] = this.cpu.gprs[Register.LR];
+                this.gba.cpu.switchExecMode(Mode.ARM);
+                this.gba.cpu.instruction.writesPC = true;
+                this.gba.cpu.gprs[Register.PC] = this.gba.cpu.gprs[Register.LR];
                 break;
             case 0x01:
                 // RegisterRamReset
-                var regions = this.cpu.gprs[0];
+                var regions = this.gba.cpu.gprs[0];
                 if (regions & 0x01) {
                     this.gba.mmu.memory[this.gba.mmu.REGION_WORKING_RAM] = new MemoryBlock(this.gba.mmu.SIZE_WORKING_RAM, 9);
                 }
@@ -370,7 +354,7 @@ class GameBoyAdvanceInterruptHandler {
                     }
                 }
                 if (regions & 0x1C) {
-                    this.video.renderPath.clearSubsets(regions);
+                    this.gba.video.renderPath.clearSubsets(regions);
                 }
                 if (regions & 0xE0) {
                     this.gba.logger.STUB('Unimplemented RegisterRamReset');
@@ -382,52 +366,52 @@ class GameBoyAdvanceInterruptHandler {
                 break;
             case 0x05:
                 // VBlankIntrWait
-                this.cpu.gprs[0] = 1;
-                this.cpu.gprs[1] = 1;
+                this.gba.cpu.gprs[0] = 1;
+                this.gba.cpu.gprs[1] = 1;
             // Fall through:
             case 0x04:
                 // IntrWait
                 if (!this.enable) {
-                    this.io.store16(this.io.IME, 1);
+                    this.gba.io.store16(this.gba.io.IME, 1);
                 }
-                if (!this.cpu.gprs[0] && this.interruptFlags & this.cpu.gprs[1]) {
+                if (!this.gba.cpu.gprs[0] && this.interruptFlags & this.gba.cpu.gprs[1]) {
                     return;
                 }
                 this.dismissIRQs(0xFFFFFFFF);
-                this.cpu.raiseTrap();
+                this.gba.cpu.raiseTrap();
                 break;
             case 0x06:
                 // Div
-                var result = (this.cpu.gprs[0] | 0) / (this.cpu.gprs[1] | 0);
-                var mod = (this.cpu.gprs[0] | 0) % (this.cpu.gprs[1] | 0);
-                this.cpu.gprs[0] = result | 0;
-                this.cpu.gprs[1] = mod | 0;
-                this.cpu.gprs[3] = Math.abs(result | 0);
+                var result = (this.gba.cpu.gprs[0] | 0) / (this.gba.cpu.gprs[1] | 0);
+                var mod = (this.gba.cpu.gprs[0] | 0) % (this.gba.cpu.gprs[1] | 0);
+                this.gba.cpu.gprs[0] = result | 0;
+                this.gba.cpu.gprs[1] = mod | 0;
+                this.gba.cpu.gprs[3] = Math.abs(result | 0);
                 break;
             case 0x07:
                 // DivArm
-                var result = (this.cpu.gprs[1] | 0) / (this.cpu.gprs[0] | 0);
-                var mod = (this.cpu.gprs[1] | 0) % (this.cpu.gprs[0] | 0);
-                this.cpu.gprs[0] = result | 0;
-                this.cpu.gprs[1] = mod | 0;
-                this.cpu.gprs[3] = Math.abs(result | 0);
+                var result = (this.gba.cpu.gprs[1] | 0) / (this.gba.cpu.gprs[0] | 0);
+                var mod = (this.gba.cpu.gprs[1] | 0) % (this.gba.cpu.gprs[0] | 0);
+                this.gba.cpu.gprs[0] = result | 0;
+                this.gba.cpu.gprs[1] = mod | 0;
+                this.gba.cpu.gprs[3] = Math.abs(result | 0);
                 break;
             case 0x08:
                 // Sqrt
-                var root = Math.sqrt(this.cpu.gprs[0]);
-                this.cpu.gprs[0] = root | 0; // Coerce down to int
+                var root = Math.sqrt(this.gba.cpu.gprs[0]);
+                this.gba.cpu.gprs[0] = root | 0; // Coerce down to int
                 break;
             case 0x0A:
                 // ArcTan2
-                var x = this.cpu.gprs[0] / 16384;
-                var y = this.cpu.gprs[1] / 16384;
-                this.cpu.gprs[0] = (Math.atan2(y, x) / (2 * Math.PI)) * 0x10000;
+                var x = this.gba.cpu.gprs[0] / 16384;
+                var y = this.gba.cpu.gprs[1] / 16384;
+                this.gba.cpu.gprs[0] = (Math.atan2(y, x) / (2 * Math.PI)) * 0x10000;
                 break;
             case 0x0B:
                 // CpuSet
-                var source = this.cpu.gprs[0];
-                var dest = this.cpu.gprs[1];
-                var mode = this.cpu.gprs[2];
+                var source = this.gba.cpu.gprs[0];
+                var dest = this.gba.cpu.gprs[1];
+                var mode = this.gba.cpu.gprs[2];
                 var count = mode & 0x000FFFFF;
                 var fill = mode & 0x01000000;
                 var wordsize = (mode & 0x04000000) ? 4 : 2;
@@ -435,16 +419,16 @@ class GameBoyAdvanceInterruptHandler {
                     if (wordsize == 4) {
                         source &= 0xFFFFFFFC;
                         dest &= 0xFFFFFFFC;
-                        var word = this.cpu.mmu.load32(source);
+                        var word = this.gba.mmu.load32(source);
                         for (var i = 0; i < count; ++i) {
-                            this.cpu.mmu.store32(dest + (i << 2), word);
+                            this.gba.mmu.store32(dest + (i << 2), word);
                         }
                     } else {
                         source &= 0xFFFFFFFE;
                         dest &= 0xFFFFFFFE;
-                        var word = this.cpu.mmu.load16(source);
+                        var word = this.gba.mmu.load16(source);
                         for (var i = 0; i < count; ++i) {
-                            this.cpu.mmu.store16(dest + (i << 1), word);
+                            this.gba.mmu.store16(dest + (i << 1), word);
                         }
                     }
                 } else {
@@ -452,48 +436,48 @@ class GameBoyAdvanceInterruptHandler {
                         source &= 0xFFFFFFFC;
                         dest &= 0xFFFFFFFC;
                         for (var i = 0; i < count; ++i) {
-                            var word = this.cpu.mmu.load32(source + (i << 2));
-                            this.cpu.mmu.store32(dest + (i << 2), word);
+                            var word = this.gba.mmu.load32(source + (i << 2));
+                            this.gba.mmu.store32(dest + (i << 2), word);
                         }
                     } else {
                         source &= 0xFFFFFFFE;
                         dest &= 0xFFFFFFFE;
                         for (var i = 0; i < count; ++i) {
-                            var word = this.cpu.mmu.load16(source + (i << 1));
-                            this.cpu.mmu.store16(dest + (i << 1), word);
+                            var word = this.gba.mmu.load16(source + (i << 1));
+                            this.gba.mmu.store16(dest + (i << 1), word);
                         }
                     }
                 }
                 return;
             case 0x0C:
                 // FastCpuSet
-                var source = this.cpu.gprs[0] & 0xFFFFFFFC;
-                var dest = this.cpu.gprs[1] & 0xFFFFFFFC;
-                var mode = this.cpu.gprs[2];
+                var source = this.gba.cpu.gprs[0] & 0xFFFFFFFC;
+                var dest = this.gba.cpu.gprs[1] & 0xFFFFFFFC;
+                var mode = this.gba.cpu.gprs[2];
                 var count = mode & 0x000FFFFF;
                 count = ((count + 7) >> 3) << 3;
                 var fill = mode & 0x01000000;
                 if (fill) {
-                    var word = this.cpu.mmu.load32(source);
+                    var word = this.gba.mmu.load32(source);
                     for (var i = 0; i < count; ++i) {
-                        this.cpu.mmu.store32(dest + (i << 2), word);
+                        this.gba.mmu.store32(dest + (i << 2), word);
                     }
                 } else {
                     for (var i = 0; i < count; ++i) {
-                        var word = this.cpu.mmu.load32(source + (i << 2));
-                        this.cpu.mmu.store32(dest + (i << 2), word);
+                        var word = this.gba.mmu.load32(source + (i << 2));
+                        this.gba.mmu.store32(dest + (i << 2), word);
                     }
                 }
                 return;
             case 0x0E:
                 // BgAffineSet
-                var i = this.cpu.gprs[2];
+                var i = this.gba.cpu.gprs[2];
                 var ox:number, oy:number;
                 var cx:number, cy:number;
                 var sx:number, sy:number;
                 var theta:number;
-                var offset = this.cpu.gprs[0];
-                var destination = this.cpu.gprs[1];
+                var offset = this.gba.cpu.gprs[0];
+                var destination = this.gba.cpu.gprs[1];
                 var a:number, b:number, c:number, d:number;
                 var rx:number, ry:number;
                 while (i--) {
@@ -530,12 +514,12 @@ class GameBoyAdvanceInterruptHandler {
                 break;
             case 0x0F:
                 // ObjAffineSet
-                var i = this.cpu.gprs[2];
+                var i = this.gba.cpu.gprs[2];
                 var sx:number, sy:number;
                 var theta:number;
-                var offset = this.cpu.gprs[0];
-                var destination = this.cpu.gprs[1];
-                var diff = this.cpu.gprs[3];
+                var offset = this.gba.cpu.gprs[0];
+                var destination = this.gba.cpu.gprs[1];
+                var diff = this.gba.cpu.gprs[3];
                 var a:number, b:number, c:number, d:number;
                 while (i--) {
                     // [ sx   0 ]   [ cos(theta)  -sin(theta) ]   [ A B ]
@@ -561,28 +545,28 @@ class GameBoyAdvanceInterruptHandler {
                 break;
             case 0x11:
                 // LZ77UnCompWram
-                this.lz77(this.cpu.gprs[0], this.cpu.gprs[1], 1);
+                this.lz77(this.gba.cpu.gprs[0], this.gba.cpu.gprs[1], 1);
                 break;
             case 0x12:
                 // LZ77UnCompVram
-                this.lz77(this.cpu.gprs[0], this.cpu.gprs[1], 2);
+                this.lz77(this.gba.cpu.gprs[0], this.gba.cpu.gprs[1], 2);
                 break;
             case 0x13:
                 // HuffUnComp
-                this.huffman(this.cpu.gprs[0], this.cpu.gprs[1]);
+                this.huffman(this.gba.cpu.gprs[0], this.gba.cpu.gprs[1]);
                 break;
             case 0x14:
                 // RlUnCompWram
-                this.rl(this.cpu.gprs[0], this.cpu.gprs[1], 1);
+                this.rl(this.gba.cpu.gprs[0], this.gba.cpu.gprs[1], 1);
                 break;
             case 0x15:
                 // RlUnCompVram
-                this.rl(this.cpu.gprs[0], this.cpu.gprs[1], 2);
+                this.rl(this.gba.cpu.gprs[0], this.gba.cpu.gprs[1], 2);
                 break;
             case 0x1F:
                 // MidiKey2Freq
-                var key = this.cpu.mmu.load32(this.cpu.gprs[0] + 4);
-                this.cpu.gprs[0] = key / Math.pow(2, (180 - this.cpu.gprs[1] - this.cpu.gprs[2] / 256) / 12) >>> 0;
+                var key = this.gba.mmu.load32(this.gba.cpu.gprs[0] + 4);
+                this.gba.cpu.gprs[0] = key / Math.pow(2, (180 - this.gba.cpu.gprs[1] - this.gba.cpu.gprs[2] / 256) / 12) >>> 0;
                 break;
             default:
                 throw "Unimplemented software interrupt: 0x" + opcode.toString(16);
@@ -593,7 +577,7 @@ class GameBoyAdvanceInterruptHandler {
         this.enable = value;
 
         if (this.enable && this.enabledIRQs & this.interruptFlags) {
-            this.cpu.raiseIRQ();
+            this.gba.cpu.raiseIRQ();
         }
     }
 
@@ -609,16 +593,16 @@ class GameBoyAdvanceInterruptHandler {
         }
 
         if (this.enable && this.enabledIRQs & this.interruptFlags) {
-            this.cpu.raiseIRQ();
+            this.gba.cpu.raiseIRQ();
         }
     }
 
     pollNextEvent():void {
-        var nextEvent = this.video.nextEvent;
+        var nextEvent = this.gba.video.nextEvent;
         var test:number;
 
-        if (this.audio.enabled) {
-            test = this.audio.nextEvent;
+        if (this.gba.audio.enabled) {
+            test = this.gba.audio.nextEvent;
             if (!nextEvent || test < nextEvent) {
                 nextEvent = test;
             }
@@ -672,13 +656,13 @@ class GameBoyAdvanceInterruptHandler {
             nextEvent = test;
         }
 
-        Logger.ASSERT(nextEvent >= this.cpu.cycles, "Next event is before present");
+        Logger.ASSERT(nextEvent >= this.gba.cpu.cycles, "Next event is before present");
         this.nextEvent = nextEvent;
     }
 
     waitForIRQ():boolean {
         var timer:any;
-        var irqPending = this.testIRQ() || this.video.hblankIRQ || this.video.vblankIRQ || this.video.vcounterIRQ;
+        var irqPending = this.testIRQ() || this.gba.video.hblankIRQ || this.gba.video.vblankIRQ || this.gba.video.vcounterIRQ;
         if (this.timersEnabled) {
             timer = this.timers[0];
             irqPending = irqPending || timer.doIrq;
@@ -699,7 +683,7 @@ class GameBoyAdvanceInterruptHandler {
             if (!this.nextEvent) {
                 return false;
             } else {
-                this.cpu.cycles = this.nextEvent;
+                this.gba.cpu.cycles = this.nextEvent;
                 this.updateTimers();
                 if (this.interruptFlags) {
                     return true;
@@ -711,7 +695,7 @@ class GameBoyAdvanceInterruptHandler {
     testIRQ():boolean {
         if (this.enable && this.enabledIRQs & this.interruptFlags) {
             this.springIRQ = true;
-            this.nextEvent = this.cpu.cycles;
+            this.nextEvent = this.gba.cpu.cycles;
             return true;
         }
         return false;
@@ -719,16 +703,16 @@ class GameBoyAdvanceInterruptHandler {
 
     raiseIRQ(irqType:number):void {
         this.interruptFlags |= 1 << irqType;
-        this.io.registers[this.io.IF >> 1] = this.interruptFlags;
+        this.gba.io.registers[this.gba.io.IF >> 1] = this.interruptFlags;
 
         if (this.enable && (this.enabledIRQs & 1 << irqType)) {
-            this.cpu.raiseIRQ();
+            this.gba.cpu.raiseIRQ();
         }
     }
 
     dismissIRQs(irqMask:number):void {
         this.interruptFlags &= ~irqMask;
-        this.io.registers[this.io.IF >> 1] = this.interruptFlags;
+        this.gba.io.registers[this.gba.io.IF >> 1] = this.interruptFlags;
     }
 
     dmaSetSourceAddress(dma:number, address:number):void {
@@ -764,7 +748,7 @@ class GameBoyAdvanceInterruptHandler {
             currentDma.nextSource = currentDma.source;
             currentDma.nextDest = currentDma.dest;
             currentDma.nextCount = currentDma.count;
-            this.cpu.mmu.scheduleDma(dma, currentDma);
+            this.gba.mmu.scheduleDma(dma, currentDma);
         }
     }
 
@@ -796,17 +780,17 @@ class GameBoyAdvanceInterruptHandler {
         currentTimer.enable = !!(((control & 0x0080) >> 7) << timer);
         if (!wasEnabled && currentTimer.enable) {
             if (!currentTimer.countUp) {
-                currentTimer.lastEvent = this.cpu.cycles;
-                currentTimer.nextEvent = this.cpu.cycles + currentTimer.overflowInterval;
+                currentTimer.lastEvent = this.gba.cpu.cycles;
+                currentTimer.nextEvent = this.gba.cpu.cycles + currentTimer.overflowInterval;
             } else {
                 currentTimer.nextEvent = 0;
             }
-            this.io.registers[(this.io.TM0CNT_LO + (timer << 2)) >> 1] = currentTimer.reload;
+            this.gba.io.registers[(this.gba.io.TM0CNT_LO + (timer << 2)) >> 1] = currentTimer.reload;
             currentTimer.oldReload = currentTimer.reload;
             ++this.timersEnabled;
         } else if (wasEnabled && !currentTimer.enable) {
             if (!currentTimer.countUp) {
-                this.io.registers[(this.io.TM0CNT_LO + (timer << 2)) >> 1] = currentTimer.oldReload + (this.cpu.cycles - currentTimer.lastEvent) >> oldPrescale;
+                this.gba.io.registers[(this.gba.io.TM0CNT_LO + (timer << 2)) >> 1] = currentTimer.oldReload + (this.gba.cpu.cycles - currentTimer.lastEvent) >> oldPrescale;
             }
             --this.timersEnabled;
         } else if (currentTimer.prescaleBits != oldPrescale && !currentTimer.countUp) {
@@ -821,9 +805,9 @@ class GameBoyAdvanceInterruptHandler {
     timerRead(timer:number):number {
         var currentTimer = this.timers[timer];
         if (currentTimer.enable && !currentTimer.countUp) {
-            return currentTimer.oldReload + (this.cpu.cycles - currentTimer.lastEvent) >> currentTimer.prescaleBits;
+            return currentTimer.oldReload + (this.gba.cpu.cycles - currentTimer.lastEvent) >> currentTimer.prescaleBits;
         } else {
-            return this.io.registers[(this.io.TM0CNT_LO + (timer << 2)) >> 1];
+            return this.gba.io.registers[(this.gba.io.TM0CNT_LO + (timer << 2)) >> 1];
         }
     }
 
@@ -838,7 +822,7 @@ class GameBoyAdvanceInterruptHandler {
 
     lz77(source:number, dest:number, unitsize:number):void {
         // TODO: move to a different file
-        var remaining = (this.cpu.mmu.load32(source) & 0xFFFFFF00) >> 8;
+        var remaining = (this.gba.mmu.load32(source) & 0xFFFFFF00) >> 8;
         // We assume the signature byte (0x10) is correct
         var blockheader:number;
         var sPointer = source + 4;
@@ -853,35 +837,35 @@ class GameBoyAdvanceInterruptHandler {
             if (blocksRemaining) {
                 if (blockheader & 0x80) {
                     // Compressed
-                    block = this.cpu.mmu.loadU8(sPointer) | (this.cpu.mmu.loadU8(sPointer + 1) << 8);
+                    block = this.gba.mmu.loadU8(sPointer) | (this.gba.mmu.loadU8(sPointer + 1) << 8);
                     sPointer += 2;
                     disp = dPointer - (((block & 0x000F) << 8) | ((block & 0xFF00) >> 8)) - 1;
                     bytes = ((block & 0x00F0) >> 4) + 3;
                     while (bytes-- && remaining) {
-                        loaded = this.cpu.mmu.loadU8(disp++);
+                        loaded = this.gba.mmu.loadU8(disp++);
                         if (unitsize == 2) {
                             buffer >>= 8;
                             buffer |= loaded << 8;
                             if (dPointer & 1) {
-                                this.cpu.mmu.store16(dPointer - 1, buffer);
+                                this.gba.mmu.store16(dPointer - 1, buffer);
                             }
                         } else {
-                            this.cpu.mmu.store8(dPointer, loaded);
+                            this.gba.mmu.store8(dPointer, loaded);
                         }
                         --remaining;
                         ++dPointer;
                     }
                 } else {
                     // Uncompressed
-                    loaded = this.cpu.mmu.loadU8(sPointer++);
+                    loaded = this.gba.mmu.loadU8(sPointer++);
                     if (unitsize == 2) {
                         buffer >>= 8;
                         buffer |= loaded << 8;
                         if (dPointer & 1) {
-                            this.cpu.mmu.store16(dPointer - 1, buffer);
+                            this.gba.mmu.store16(dPointer - 1, buffer);
                         }
                     } else {
-                        this.cpu.mmu.store8(dPointer, loaded);
+                        this.gba.mmu.store8(dPointer, loaded);
                     }
                     --remaining;
                     ++dPointer;
@@ -889,7 +873,7 @@ class GameBoyAdvanceInterruptHandler {
                 blockheader <<= 1;
                 --blocksRemaining;
             } else {
-                blockheader = this.cpu.mmu.loadU8(sPointer++);
+                blockheader = this.gba.mmu.loadU8(sPointer++);
                 blocksRemaining = 8;
             }
         }
@@ -897,7 +881,7 @@ class GameBoyAdvanceInterruptHandler {
 
     huffman(source:number, dest:number):void {
         source &= 0xFFFFFFFC;
-        var header = this.cpu.mmu.load32(source);
+        var header = this.gba.mmu.load32(source);
         var remaining = header >> 8;
         var bits = header & 0xF;
         if (32 % bits) {
@@ -907,13 +891,13 @@ class GameBoyAdvanceInterruptHandler {
         remaining &= 0xFFFFFFFC;
         // We assume the signature byte (0x20) is correct
         var tree:any[] = [];
-        var treesize = (this.cpu.mmu.loadU8(source + 4) << 1) + 1;
+        var treesize = (this.gba.mmu.loadU8(source + 4) << 1) + 1;
         var block:number;
         var sPointer = source + 5 + treesize;
         var dPointer = dest & 0xFFFFFFFC;
         var i:number;
         for (i = 0; i < treesize; ++i) {
-            tree.push(this.cpu.mmu.loadU8(source + 5 + i));
+            tree.push(this.gba.mmu.loadU8(source + 5 + i));
         }
         var node:any;
         var offset = 0;
@@ -922,7 +906,7 @@ class GameBoyAdvanceInterruptHandler {
         var bitsSeen = 0;
         node = tree[0];
         while (remaining > 0) {
-            var bitstream = this.cpu.mmu.load32(sPointer);
+            var bitstream = this.gba.mmu.load32(sPointer);
             sPointer += 4;
             for (bitsRemaining = 32; bitsRemaining > 0; --bitsRemaining, bitstream <<= 1) {
                 if (typeof (node) === 'number') {
@@ -963,7 +947,7 @@ class GameBoyAdvanceInterruptHandler {
                 node = tree[0];
                 if (bitsSeen == 32) {
                     bitsSeen = 0;
-                    this.cpu.mmu.store32(dPointer, block);
+                    this.gba.mmu.store32(dPointer, block);
                     dPointer += 4;
                     remaining -= 4;
                     block = 0;
@@ -972,13 +956,13 @@ class GameBoyAdvanceInterruptHandler {
 
         }
         if (padding) {
-            this.cpu.mmu.store32(dPointer, block);
+            this.gba.mmu.store32(dPointer, block);
         }
     }
 
     rl(source:number, dest:number, unitsize:number):void {
         source &= 0xFFFFFFFC;
-        var remaining = (this.cpu.mmu.load32(source) & 0xFFFFFF00) >> 8;
+        var remaining = (this.gba.mmu.load32(source) & 0xFFFFFF00) >> 8;
         var padding = (4 - remaining) & 0x3;
         // We assume the signature byte (0x30) is correct
         var blockheader:number;
@@ -987,22 +971,22 @@ class GameBoyAdvanceInterruptHandler {
         var dPointer = dest;
         var buffer = 0;
         while (remaining > 0) {
-            blockheader = this.cpu.mmu.loadU8(sPointer++);
+            blockheader = this.gba.mmu.loadU8(sPointer++);
             if (blockheader & 0x80) {
                 // Compressed
                 blockheader &= 0x7F;
                 blockheader += 3;
-                block = this.cpu.mmu.loadU8(sPointer++);
+                block = this.gba.mmu.loadU8(sPointer++);
                 while (blockheader-- && remaining) {
                     --remaining;
                     if (unitsize == 2) {
                         buffer >>= 8;
                         buffer |= block << 8;
                         if (dPointer & 1) {
-                            this.cpu.mmu.store16(dPointer - 1, buffer);
+                            this.gba.mmu.store16(dPointer - 1, buffer);
                         }
                     } else {
-                        this.cpu.mmu.store8(dPointer, block);
+                        this.gba.mmu.store8(dPointer, block);
                     }
                     ++dPointer;
                 }
@@ -1011,22 +995,22 @@ class GameBoyAdvanceInterruptHandler {
                 blockheader++;
                 while (blockheader-- && remaining) {
                     --remaining;
-                    block = this.cpu.mmu.loadU8(sPointer++);
+                    block = this.gba.mmu.loadU8(sPointer++);
                     if (unitsize == 2) {
                         buffer >>= 8;
                         buffer |= block << 8;
                         if (dPointer & 1) {
-                            this.cpu.mmu.store16(dPointer - 1, buffer);
+                            this.gba.mmu.store16(dPointer - 1, buffer);
                         }
                     } else {
-                        this.cpu.mmu.store8(dPointer, block);
+                        this.gba.mmu.store8(dPointer, block);
                     }
                     ++dPointer;
                 }
             }
         }
         while (padding--) {
-            this.cpu.mmu.store8(dPointer++, 0);
+            this.gba.mmu.store8(dPointer++, 0);
         }
     }
 }

@@ -8,7 +8,7 @@ class GameBoyAdvanceSIO {
 
     BAUD = [ 9600, 38400, 57600, 115200 ];
 
-    gba:GameBoyAdvance;
+    private gba:GameBoyAdvance;
 
     constructor(gba:GameBoyAdvance) {
         this.gba = gba;
@@ -107,7 +107,7 @@ class GameBoyAdvanceSIO {
                 value |= this.multiplayer.id << 4;
                 value |= this.multiplayer.error;
                 value |= this.multiplayer.busy;
-                value |= (this.multiplayer.irq) << 14;
+                value |= (<number><any>this.irq) << 14;
                 break;
             case this.SIO_UART:
                 this.gba.logger.STUB('UART unsupported');

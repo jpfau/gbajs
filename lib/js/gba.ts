@@ -290,7 +290,7 @@ class GameBoyAdvance {
         }
     }
 
-    defrost(frost:any):void {
+    defrost(frost:{cpu:any;mmu:any;audio:any;video:any;irq:any;io:any}):void {
         this.cpu.defrost(frost.cpu);
         this.mmu.defrost(frost.mmu);
         this.audio.defrost(frost.audio);

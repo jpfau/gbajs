@@ -62,15 +62,7 @@ class ARMCore {
      */
     gprs = new Int32Array(16);
 
-    gba:GameBoyAdvance;
-
-    get mmu() {
-        return this.gba.mmu;
-    }
-
-    get irq() {
-        return this.gba.irq;
-    }
+    private gba:GameBoyAdvance;
 
     cycles:number;
 
@@ -78,8 +70,8 @@ class ARMCore {
 
     constructor(gba:GameBoyAdvance) {
         this.gba = gba;
-        this.armCompiler = new ARMCoreArm(this);
-        this.thumbCompiler = new ARMCoreThumb(this);
+        this.armCompiler = new ARMCoreArm(gba, this);
+        this.thumbCompiler = new ARMCoreThumb(gba, this);
         this.generateConds();
     }
 
@@ -137,10 +129,10 @@ class ARMCore {
 
         this.instruction = null;
 
-        this.irq.clear();
+        this.gba.irq.clear();
 
         var gprs = this.gprs;
-        var mmu = this.mmu;
+        var mmu = this.gba.mmu;
         this.step = function () {
             var instruction = this.instruction || (this.instruction = this.loadInstruction(gprs[Register.PC] - this.instructionWidth));
             gprs[Register.PC] += this.instructionWidth;
@@ -177,7 +169,7 @@ class ARMCore {
                     this.instruction = null;
                 }
             }
-            this.irq.updateTimers();
+            this.gba.irq.updateTimers();
         };
     }
 
@@ -332,20 +324,20 @@ class ARMCore {
     pageId:number;
 
     fetchPage(address:number):void {
-        var region = address >> this.mmu.BASE_OFFSET;
-        var pageId = this.mmu.addressToPage(region, address & this.mmu.OFFSET_MASK);
+        var region = address >> this.gba.mmu.BASE_OFFSET;
+        var pageId = this.gba.mmu.addressToPage(region, address & this.gba.mmu.OFFSET_MASK);
         if (region == this.pageRegion) {
             if (pageId == this.pageId && !this.page.invalid) {
                 return;
             }
             this.pageId = pageId;
         } else {
-            this.pageMask = this.mmu.memory[region].PAGE_MASK;
+            this.pageMask = this.gba.mmu.memory[region].PAGE_MASK;
             this.pageRegion = region;
             this.pageId = pageId;
         }
 
-        this.page = this.mmu.accessPage(region, pageId);
+        this.page = this.gba.mmu.accessPage(region, pageId);
     }
 
     pageMask:number;
@@ -358,7 +350,7 @@ class ARMCore {
         if (next) {
             return next;
         }
-        var instruction = this.mmu.load32(address) >>> 0;
+        var instruction = this.gba.mmu.load32(address) >>> 0;
         next = this.compileArm(instruction);
         next.next = null;
         next.page = this.page;
@@ -376,7 +368,7 @@ class ARMCore {
         if (next) {
             return next;
         }
-        var instruction = this.mmu.load16(address);
+        var instruction = this.gba.mmu.load16(address);
         next = this.compileThumb(instruction);
         next.next = null;
         next.page = this.page;
@@ -473,7 +465,7 @@ class ARMCore {
         this.cpsr.C = !!(spsr & 0x20000000);
         this.cpsr.V = !!(spsr & 0x10000000);
 
-        this.irq.testIRQ();
+        this.gba.irq.testIRQ();
     }
 
     hasSPSR() {

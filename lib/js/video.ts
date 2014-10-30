@@ -18,11 +18,7 @@ class GameBoyAdvanceVideo {
     drawCallback:() => void;
     vblankCallback:() => void;
 
-    gba:GameBoyAdvance;
-
-    get cpu() {
-        return this.gba.cpu;
-    }
+    private gba:GameBoyAdvance;
 
     constructor(gba:GameBoyAdvance) {
         this.gba = gba;
@@ -143,9 +139,9 @@ class GameBoyAdvanceVideo {
                         this.inVblank = true;
                         this.renderPath.finishDraw(this);
                         this.nextVblankIRQ = this.nextEvent + this.TOTAL_LENGTH;
-                        this.cpu.mmu.runVblankDmas();
+                        this.gba.mmu.runVblankDmas();
                         if (this.vblankIRQ) {
-                            this.cpu.irq.raiseIRQ(this.cpu.irq.IRQ_VBLANK);
+                            this.gba.irq.raiseIRQ(this.gba.irq.IRQ_VBLANK);
                         }
                         this.vblankCallback();
                         break;
@@ -160,7 +156,7 @@ class GameBoyAdvanceVideo {
 
                 this.vcounter = <number><any>(this.vcount == this.vcountSetting);
                 if (this.vcounter && this.vcounterIRQ) {
-                    this.cpu.irq.raiseIRQ(this.cpu.irq.IRQ_VCOUNTER);
+                    this.gba.irq.raiseIRQ(this.gba.irq.IRQ_VCOUNTER);
                     this.nextVcounterIRQ += this.TOTAL_LENGTH;
                 }
 
@@ -176,10 +172,10 @@ class GameBoyAdvanceVideo {
                 this.nextHblankIRQ = this.nextHblank;
 
                 if (this.vcount < this.VERTICAL_PIXELS) {
-                    this.cpu.mmu.runHblankDmas();
+                    this.gba.mmu.runHblankDmas();
                 }
                 if (this.hblankIRQ) {
-                    this.cpu.irq.raiseIRQ(this.cpu.irq.IRQ_HBLANK);
+                    this.gba.irq.raiseIRQ(this.gba.irq.IRQ_HBLANK);
                 }
             }
         }

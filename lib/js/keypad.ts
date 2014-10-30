@@ -40,7 +40,7 @@ class GameBoyAdvanceKeypad {
 
     gamepads:any[] = [];
 
-    gba:GameBoyAdvance;
+    private gba:GameBoyAdvance;
 
     constructor(gba:GameBoyAdvance) {
         this.gba = gba;

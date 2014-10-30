@@ -1,5 +1,5 @@
 class GameBoyAdvanceGPIO {
-    gba:GameBoyAdvance;
+    private gba:GameBoyAdvance;
     rom:MemoryView;
     readWrite:number;
     direction:number;
@@ -12,7 +12,7 @@ class GameBoyAdvanceGPIO {
         this.readWrite = 0;
         this.direction = 0;
 
-        this.device = new GameBoyAdvanceRTC(this); // TODO: Support more devices
+        this.device = new GameBoyAdvanceRTC(gba, this); // TODO: Support more devices
     }
 
     store16(offset:number, value:number):void {
@@ -48,6 +48,7 @@ class GameBoyAdvanceGPIO {
 
 class GameBoyAdvanceRTC {
 
+    private gba:GameBoyAdvance;
     gpio:GameBoyAdvanceGPIO;
     pins:number;
     direction:number;
@@ -62,7 +63,8 @@ class GameBoyAdvanceRTC {
     time:number[];
     read = false;
 
-    constructor(gpio:GameBoyAdvanceGPIO) {
+    constructor(gba:GameBoyAdvance, gpio:GameBoyAdvanceGPIO) {
+        this.gba = gba;
         this.gpio = gpio;
 
         // PINOUT: SCK | SIO | CS | -
@@ -181,7 +183,7 @@ class GameBoyAdvanceRTC {
                             break;
                     }
                 } else {
-                    this.gpio.gba.logger.WARN('Invalid RTC command byte: ' + this.bits.toString(16));
+                    this.gba.logger.WARN('Invalid RTC command byte: ' + this.bits.toString(16));
                 }
                 break;
             case 4:

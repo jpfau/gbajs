@@ -371,11 +371,7 @@ class GameBoyAdvanceMMU implements MemoryIO {
 
     bios:BIOSView = null;
 
-    gba:GameBoyAdvance;
-
-    get cpu() {
-        return this.gba.cpu;
-    }
+    private gba:GameBoyAdvance;
 
     constructor(gba:GameBoyAdvance) {
         this.gba = gba;
@@ -405,7 +401,7 @@ class GameBoyAdvanceMMU implements MemoryIO {
     DMA_REGISTER:number[];
 
     clear():void {
-        var badMemory = this.badMemory = <MemoryView><any>new BadMemory(this, this.cpu);
+        var badMemory = this.badMemory = <MemoryView><any>new BadMemory(this, this.gba.cpu);
         this.memory = [
             this.bios,
             badMemory, // Unused
@@ -572,7 +568,7 @@ class GameBoyAdvanceMMU implements MemoryIO {
                         this.save = this.memory[this.REGION_CART_SRAM] = new SRAMSavedata(this.SIZE_CART_SRAM);
                         break;
                     case 'EEPROM_V':
-                        this.save = this.memory[this.REGION_CART2 + 1] = new EEPROMSavedata(this.SIZE_CART_EEPROM, this);
+                        this.save = this.memory[this.REGION_CART2 + 1] = new EEPROMSavedata(this.gba, this.SIZE_CART_EEPROM);
                         break;
                 }
             }
@@ -640,44 +636,44 @@ class GameBoyAdvanceMMU implements MemoryIO {
     waitstatesSeq32:number[];
 
     waitPrefetch(memory:number):void {
-        this.cpu.cycles += 1 + this.waitstatesPrefetch[memory >>> this.BASE_OFFSET];
+        this.gba.cpu.cycles += 1 + this.waitstatesPrefetch[memory >>> this.BASE_OFFSET];
     }
 
     waitPrefetch32(memory:number):void {
-        this.cpu.cycles += 1 + this.waitstatesPrefetch32[memory >>> this.BASE_OFFSET];
+        this.gba.cpu.cycles += 1 + this.waitstatesPrefetch32[memory >>> this.BASE_OFFSET];
     }
 
     wait(memory:number):void {
-        this.cpu.cycles += 1 + this.waitstates[memory >>> this.BASE_OFFSET];
+        this.gba.cpu.cycles += 1 + this.waitstates[memory >>> this.BASE_OFFSET];
     }
 
     wait32(memory:number):void {
-        this.cpu.cycles += 1 + this.waitstates32[memory >>> this.BASE_OFFSET];
+        this.gba.cpu.cycles += 1 + this.waitstates32[memory >>> this.BASE_OFFSET];
     }
 
     waitSeq(memory:number):void {
-        this.cpu.cycles += 1 + this.waitstatesSeq[memory >>> this.BASE_OFFSET];
+        this.gba.cpu.cycles += 1 + this.waitstatesSeq[memory >>> this.BASE_OFFSET];
     }
 
     waitSeq32(memory:number):void {
-        this.cpu.cycles += 1 + this.waitstatesSeq32[memory >>> this.BASE_OFFSET];
+        this.gba.cpu.cycles += 1 + this.waitstatesSeq32[memory >>> this.BASE_OFFSET];
     }
 
     waitMul(rs:number):void {
         if (((rs & 0xFFFFFF00) == 0xFFFFFF00) || !(rs & 0xFFFFFF00)) {
-            this.cpu.cycles += 1;
+            this.gba.cpu.cycles += 1;
         } else if (((rs & 0xFFFF0000) == 0xFFFF0000) || !(rs & 0xFFFF0000)) {
-            this.cpu.cycles += 2;
+            this.gba.cpu.cycles += 2;
         } else if (((rs & 0xFF000000) == 0xFF000000) || !(rs & 0xFF000000)) {
-            this.cpu.cycles += 3;
+            this.gba.cpu.cycles += 3;
         } else {
-            this.cpu.cycles += 4;
+            this.gba.cpu.cycles += 4;
         }
     }
 
     waitMulti32(memory:number, seq:number):void {
-        this.cpu.cycles += 1 + this.waitstates32[memory >>> this.BASE_OFFSET];
-        this.cpu.cycles += (1 + this.waitstatesSeq32[memory >>> this.BASE_OFFSET]) * (seq - 1);
+        this.gba.cpu.cycles += 1 + this.waitstates32[memory >>> this.BASE_OFFSET];
+        this.gba.cpu.cycles += (1 + this.waitstatesSeq32[memory >>> this.BASE_OFFSET]) * (seq - 1);
     }
 
     addressToPage(region:number, address:number):number {
@@ -718,18 +714,18 @@ class GameBoyAdvanceMMU implements MemoryIO {
                         break;
                     case 1:
                     case 2:
-                        this.cpu.irq.audio.scheduleFIFODma(number, info);
+                        this.gba.audio.scheduleFIFODma(number, info);
                         break;
                     case 3:
-                        this.cpu.irq.video.scheduleVCaptureDma(this.dma, info);
+                        this.gba.video.scheduleVCaptureDma(this.dma, info);
                         break;
                 }
         }
     }
 
     runHblankDmas():void {
-        for (var i = 0; i < this.cpu.irq.dma.length; ++i) {
-            this.dma = this.cpu.irq.dma[i];
+        for (var i = 0; i < this.gba.irq.dma.length; ++i) {
+            this.dma = this.gba.irq.dma[i];
             if (this.dma.enable && this.dma.timing == this.DMA_TIMING_HBLANK) {
                 this.serviceDma(i, this.dma);
             }
@@ -737,8 +733,8 @@ class GameBoyAdvanceMMU implements MemoryIO {
     }
 
     runVblankDmas():void {
-        for (var i = 0; i < this.cpu.irq.dma.length; ++i) {
-            this.dma = this.cpu.irq.dma[i];
+        for (var i = 0; i < this.gba.irq.dma.length; ++i) {
+            this.dma = this.gba.irq.dma[i];
             if (this.dma.enable && this.dma.timing == this.DMA_TIMING_VBLANK) {
                 this.serviceDma(i, this.dma);
             }
@@ -845,7 +841,7 @@ class GameBoyAdvanceMMU implements MemoryIO {
         }
 
         if (info.doIrq) {
-            info.nextIRQ = this.cpu.cycles + 2;
+            info.nextIRQ = this.gba.cpu.cycles + 2;
             info.nextIRQ += (width == 4 ? this.waitstates32[sourceRegion] + this.waitstates32[destRegion]
                 : this.waitstates[sourceRegion] + this.waitstates[destRegion]);
             info.nextIRQ += (info.count - 1) * (width == 4 ? this.waitstatesSeq32[sourceRegion] + this.waitstatesSeq32[destRegion]

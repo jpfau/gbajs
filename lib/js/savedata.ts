@@ -210,10 +210,10 @@ class EEPROMSavedata extends DefaultMemoryView {
 
     dma:DMA;
 
-    constructor(size:number, mmu:GameBoyAdvanceMMU) {
+    constructor(gba:GameBoyAdvance, size:number) {
         super(new ArrayBuffer(size));
 
-        this.dma = mmu.gba.irq.dma[3];
+        this.dma = gba.irq.dma[3];
     }
 
 

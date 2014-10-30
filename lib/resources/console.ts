@@ -1,7 +1,7 @@
 class GameBoyAdvanceConsole {
 
     cpu:ARMCore;
-    gba:GameBoyAdvance;
+    private gba:GameBoyAdvance;
     ul:HTMLElement;
     gprs:HTMLElement;
     memory:Memory;

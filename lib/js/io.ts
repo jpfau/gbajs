@@ -145,34 +145,14 @@ class GameBoyAdvanceIO implements MemoryIO {
     registers:Uint16Array;
     value:number;
 
-    gba:GameBoyAdvance;
-
-    get cpu() {
-        return this.gba.cpu;
-    }
-
-    get audio() {
-        return this.gba.audio;
-    }
-
-    get video() {
-        return this.gba.video;
-    }
-
-    get keypad() {
-        return this.gba.keypad;
-    }
-
-    get sio() {
-        return this.gba.sio;
-    }
+    private gba:GameBoyAdvance;
 
     constructor(gba:GameBoyAdvance) {
         this.gba = gba;
     }
 
     clear():void {
-        this.registers = new Uint16Array(this.cpu.mmu.SIZE_IO);
+        this.registers = new Uint16Array(this.gba.mmu.SIZE_IO);
 
         this.registers[this.DISPCNT >> 1] = this.DEFAULT_DISPCNT;
         this.registers[this.SOUNDBIAS >> 1] = this.DEFAULT_SOUNDBIAS;
@@ -266,9 +246,9 @@ class GameBoyAdvanceIO implements MemoryIO {
 
             // Video
             case this.DISPSTAT:
-                return this.registers[offset >> 1] | this.video.readDisplayStat();
+                return this.registers[offset >> 1] | this.gba.video.readDisplayStat();
             case this.VCOUNT:
-                return this.video.vcount;
+                return this.gba.video.vcount;
 
             // Sound
             case this.SOUND1CNT_HI:
@@ -290,21 +270,21 @@ class GameBoyAdvanceIO implements MemoryIO {
 
             // Timers
             case this.TM0CNT_LO:
-                return this.cpu.irq.timerRead(0);
+                return this.gba.irq.timerRead(0);
             case this.TM1CNT_LO:
-                return this.cpu.irq.timerRead(1);
+                return this.gba.irq.timerRead(1);
             case this.TM2CNT_LO:
-                return this.cpu.irq.timerRead(2);
+                return this.gba.irq.timerRead(2);
             case this.TM3CNT_LO:
-                return this.cpu.irq.timerRead(3);
+                return this.gba.irq.timerRead(3);
 
             // SIO
             case this.SIOCNT:
-                return this.sio.readSIOCNT();
+                return this.gba.sio.readSIOCNT();
 
             case this.KEYINPUT:
-                this.keypad.pollGamepads();
-                return this.keypad.currentDown;
+                this.gba.keypad.pollGamepads();
+                return this.gba.keypad.currentDown;
             case this.KEYCNT:
                 this.gba.logger.STUB('Unimplemented I/O register read: KEYCNT');
                 return 0;
@@ -373,7 +353,7 @@ class GameBoyAdvanceIO implements MemoryIO {
             case this.SIOMULTI1:
             case this.SIOMULTI2:
             case this.SIOMULTI3:
-                return this.sio.read((offset - this.SIOMULTI0) >> 1);
+                return this.gba.sio.read((offset - this.SIOMULTI0) >> 1);
 
             case this.SIODATA8:
                 this.gba.logger.STUB('Unimplemented SIO register read: 0x' + offset.toString(16));
@@ -460,186 +440,186 @@ class GameBoyAdvanceIO implements MemoryIO {
         switch (offset) {
             // Video
             case this.DISPCNT:
-                this.video.renderPath.writeDisplayControl(value);
+                this.gba.video.renderPath.writeDisplayControl(value);
                 break;
             case this.DISPSTAT:
-                value &= this.video.DISPSTAT_MASK;
-                this.video.writeDisplayStat(value);
+                value &= this.gba.video.DISPSTAT_MASK;
+                this.gba.video.writeDisplayStat(value);
                 break;
             case this.BG0CNT:
-                this.video.renderPath.writeBackgroundControl(0, value);
+                this.gba.video.renderPath.writeBackgroundControl(0, value);
                 break;
             case this.BG1CNT:
-                this.video.renderPath.writeBackgroundControl(1, value);
+                this.gba.video.renderPath.writeBackgroundControl(1, value);
                 break;
             case this.BG2CNT:
-                this.video.renderPath.writeBackgroundControl(2, value);
+                this.gba.video.renderPath.writeBackgroundControl(2, value);
                 break;
             case this.BG3CNT:
-                this.video.renderPath.writeBackgroundControl(3, value);
+                this.gba.video.renderPath.writeBackgroundControl(3, value);
                 break;
             case this.BG0HOFS:
-                this.video.renderPath.writeBackgroundHOffset(0, value);
+                this.gba.video.renderPath.writeBackgroundHOffset(0, value);
                 break;
             case this.BG0VOFS:
-                this.video.renderPath.writeBackgroundVOffset(0, value);
+                this.gba.video.renderPath.writeBackgroundVOffset(0, value);
                 break;
             case this.BG1HOFS:
-                this.video.renderPath.writeBackgroundHOffset(1, value);
+                this.gba.video.renderPath.writeBackgroundHOffset(1, value);
                 break;
             case this.BG1VOFS:
-                this.video.renderPath.writeBackgroundVOffset(1, value);
+                this.gba.video.renderPath.writeBackgroundVOffset(1, value);
                 break;
             case this.BG2HOFS:
-                this.video.renderPath.writeBackgroundHOffset(2, value);
+                this.gba.video.renderPath.writeBackgroundHOffset(2, value);
                 break;
             case this.BG2VOFS:
-                this.video.renderPath.writeBackgroundVOffset(2, value);
+                this.gba.video.renderPath.writeBackgroundVOffset(2, value);
                 break;
             case this.BG3HOFS:
-                this.video.renderPath.writeBackgroundHOffset(3, value);
+                this.gba.video.renderPath.writeBackgroundHOffset(3, value);
                 break;
             case this.BG3VOFS:
-                this.video.renderPath.writeBackgroundVOffset(3, value);
+                this.gba.video.renderPath.writeBackgroundVOffset(3, value);
                 break;
             case this.BG2X_LO:
-                this.video.renderPath.writeBackgroundRefX(2, (this.registers[(offset >> 1) | 1] << 16) | value);
+                this.gba.video.renderPath.writeBackgroundRefX(2, (this.registers[(offset >> 1) | 1] << 16) | value);
                 break;
             case this.BG2X_HI:
-                this.video.renderPath.writeBackgroundRefX(2, this.registers[(offset >> 1) ^ 1] | (value << 16));
+                this.gba.video.renderPath.writeBackgroundRefX(2, this.registers[(offset >> 1) ^ 1] | (value << 16));
                 break;
             case this.BG2Y_LO:
-                this.video.renderPath.writeBackgroundRefY(2, (this.registers[(offset >> 1) | 1] << 16) | value);
+                this.gba.video.renderPath.writeBackgroundRefY(2, (this.registers[(offset >> 1) | 1] << 16) | value);
                 break;
             case this.BG2Y_HI:
-                this.video.renderPath.writeBackgroundRefY(2, this.registers[(offset >> 1) ^ 1] | (value << 16));
+                this.gba.video.renderPath.writeBackgroundRefY(2, this.registers[(offset >> 1) ^ 1] | (value << 16));
                 break;
             case this.BG2PA:
-                this.video.renderPath.writeBackgroundParamA(2, value);
+                this.gba.video.renderPath.writeBackgroundParamA(2, value);
                 break;
             case this.BG2PB:
-                this.video.renderPath.writeBackgroundParamB(2, value);
+                this.gba.video.renderPath.writeBackgroundParamB(2, value);
                 break;
             case this.BG2PC:
-                this.video.renderPath.writeBackgroundParamC(2, value);
+                this.gba.video.renderPath.writeBackgroundParamC(2, value);
                 break;
             case this.BG2PD:
-                this.video.renderPath.writeBackgroundParamD(2, value);
+                this.gba.video.renderPath.writeBackgroundParamD(2, value);
                 break;
             case this.BG3X_LO:
-                this.video.renderPath.writeBackgroundRefX(3, (this.registers[(offset >> 1) | 1] << 16) | value);
+                this.gba.video.renderPath.writeBackgroundRefX(3, (this.registers[(offset >> 1) | 1] << 16) | value);
                 break;
             case this.BG3X_HI:
-                this.video.renderPath.writeBackgroundRefX(3, this.registers[(offset >> 1) ^ 1] | (value << 16));
+                this.gba.video.renderPath.writeBackgroundRefX(3, this.registers[(offset >> 1) ^ 1] | (value << 16));
                 break;
             case this.BG3Y_LO:
-                this.video.renderPath.writeBackgroundRefY(3, (this.registers[(offset >> 1) | 1] << 16) | value);
+                this.gba.video.renderPath.writeBackgroundRefY(3, (this.registers[(offset >> 1) | 1] << 16) | value);
                 break;
             case this.BG3Y_HI:
-                this.video.renderPath.writeBackgroundRefY(3, this.registers[(offset >> 1) ^ 1] | (value << 16));
+                this.gba.video.renderPath.writeBackgroundRefY(3, this.registers[(offset >> 1) ^ 1] | (value << 16));
                 break;
             case this.BG3PA:
-                this.video.renderPath.writeBackgroundParamA(3, value);
+                this.gba.video.renderPath.writeBackgroundParamA(3, value);
                 break;
             case this.BG3PB:
-                this.video.renderPath.writeBackgroundParamB(3, value);
+                this.gba.video.renderPath.writeBackgroundParamB(3, value);
                 break;
             case this.BG3PC:
-                this.video.renderPath.writeBackgroundParamC(3, value);
+                this.gba.video.renderPath.writeBackgroundParamC(3, value);
                 break;
             case this.BG3PD:
-                this.video.renderPath.writeBackgroundParamD(3, value);
+                this.gba.video.renderPath.writeBackgroundParamD(3, value);
                 break;
             case this.WIN0H:
-                this.video.renderPath.writeWin0H(value);
+                this.gba.video.renderPath.writeWin0H(value);
                 break;
             case this.WIN1H:
-                this.video.renderPath.writeWin1H(value);
+                this.gba.video.renderPath.writeWin1H(value);
                 break;
             case this.WIN0V:
-                this.video.renderPath.writeWin0V(value);
+                this.gba.video.renderPath.writeWin0V(value);
                 break;
             case this.WIN1V:
-                this.video.renderPath.writeWin1V(value);
+                this.gba.video.renderPath.writeWin1V(value);
                 break;
             case this.WININ:
                 value &= 0x3F3F;
-                this.video.renderPath.writeWinIn(value);
+                this.gba.video.renderPath.writeWinIn(value);
                 break;
             case this.WINOUT:
                 value &= 0x3F3F;
-                this.video.renderPath.writeWinOut(value);
+                this.gba.video.renderPath.writeWinOut(value);
                 break;
             case this.BLDCNT:
                 value &= 0x7FFF;
-                this.video.renderPath.writeBlendControl(value);
+                this.gba.video.renderPath.writeBlendControl(value);
                 break;
             case this.BLDALPHA:
                 value &= 0x1F1F;
-                this.video.renderPath.writeBlendAlpha(value);
+                this.gba.video.renderPath.writeBlendAlpha(value);
                 break;
             case this.BLDY:
                 value &= 0x001F;
-                this.video.renderPath.writeBlendY(value);
+                this.gba.video.renderPath.writeBlendY(value);
                 break;
             case this.MOSAIC:
-                this.video.renderPath.writeMosaic(value);
+                this.gba.video.renderPath.writeMosaic(value);
                 break;
 
             // Sound
             case this.SOUND1CNT_LO:
                 value &= 0x007F;
-                this.audio.writeSquareChannelSweep(0, value);
+                this.gba.audio.writeSquareChannelSweep(0, value);
                 break;
             case this.SOUND1CNT_HI:
-                this.audio.writeSquareChannelDLE(0, value);
+                this.gba.audio.writeSquareChannelDLE(0, value);
                 break;
             case this.SOUND1CNT_X:
                 value &= 0xC7FF;
-                this.audio.writeSquareChannelFC(0, value);
+                this.gba.audio.writeSquareChannelFC(0, value);
                 value &= ~0x8000;
                 break;
             case this.SOUND2CNT_LO:
-                this.audio.writeSquareChannelDLE(1, value);
+                this.gba.audio.writeSquareChannelDLE(1, value);
                 break;
             case this.SOUND2CNT_HI:
                 value &= 0xC7FF;
-                this.audio.writeSquareChannelFC(1, value);
+                this.gba.audio.writeSquareChannelFC(1, value);
                 value &= ~0x8000;
                 break;
             case this.SOUND3CNT_LO:
                 value &= 0x00E0;
-                this.audio.writeChannel3Lo(value);
+                this.gba.audio.writeChannel3Lo(value);
                 break;
             case this.SOUND3CNT_HI:
                 value &= 0xE0FF;
-                this.audio.writeChannel3Hi(value);
+                this.gba.audio.writeChannel3Hi(value);
                 break;
             case this.SOUND3CNT_X:
                 value &= 0xC7FF;
-                this.audio.writeChannel3X(value);
+                this.gba.audio.writeChannel3X(value);
                 value &= ~0x8000;
                 break;
             case this.SOUND4CNT_LO:
                 value &= 0xFF3F;
-                this.audio.writeChannel4LE(value);
+                this.gba.audio.writeChannel4LE(value);
                 break;
             case this.SOUND4CNT_HI:
                 value &= 0xC0FF;
-                this.audio.writeChannel4FC(value);
+                this.gba.audio.writeChannel4FC(value);
                 value &= ~0x8000;
                 break;
             case this.SOUNDCNT_LO:
                 value &= 0xFF77;
-                this.audio.writeSoundControlLo(value);
+                this.gba.audio.writeSoundControlLo(value);
                 break;
             case this.SOUNDCNT_HI:
                 value &= 0xFF0F;
-                this.audio.writeSoundControlHi(value);
+                this.gba.audio.writeSoundControlHi(value);
                 break;
             case this.SOUNDCNT_X:
                 value &= 0x0080;
-                this.audio.writeEnable(!!value);
+                this.gba.audio.writeEnable(!!value);
                 break;
             case this.WAVE_RAM0_LO:
             case this.WAVE_RAM0_HI:
@@ -649,7 +629,7 @@ class GameBoyAdvanceIO implements MemoryIO {
             case this.WAVE_RAM2_HI:
             case this.WAVE_RAM3_LO:
             case this.WAVE_RAM3_HI:
-                this.audio.writeWaveData(offset - this.WAVE_RAM0_LO, value, 2);
+                this.gba.audio.writeWaveData(offset - this.WAVE_RAM0_LO, value, 2);
                 break;
 
             // DMA
@@ -676,65 +656,65 @@ class GameBoyAdvanceIO implements MemoryIO {
                 return;
 
             case this.DMA0CNT_LO:
-                this.cpu.irq.dmaSetWordCount(0, value);
+                this.gba.irq.dmaSetWordCount(0, value);
                 break;
             case this.DMA0CNT_HI:
                 // The DMA registers need to set the values before writing the control, as writing the
                 // control can synchronously trigger a DMA transfer
                 this.registers[offset >> 1] = value & 0xFFE0;
-                this.cpu.irq.dmaWriteControl(0, value);
+                this.gba.irq.dmaWriteControl(0, value);
                 return;
             case this.DMA1CNT_LO:
-                this.cpu.irq.dmaSetWordCount(1, value);
+                this.gba.irq.dmaSetWordCount(1, value);
                 break;
             case this.DMA1CNT_HI:
                 this.registers[offset >> 1] = value & 0xFFE0;
-                this.cpu.irq.dmaWriteControl(1, value);
+                this.gba.irq.dmaWriteControl(1, value);
                 return;
             case this.DMA2CNT_LO:
-                this.cpu.irq.dmaSetWordCount(2, value);
+                this.gba.irq.dmaSetWordCount(2, value);
                 break;
             case this.DMA2CNT_HI:
                 this.registers[offset >> 1] = value & 0xFFE0;
-                this.cpu.irq.dmaWriteControl(2, value);
+                this.gba.irq.dmaWriteControl(2, value);
                 return;
             case this.DMA3CNT_LO:
-                this.cpu.irq.dmaSetWordCount(3, value);
+                this.gba.irq.dmaSetWordCount(3, value);
                 break;
             case this.DMA3CNT_HI:
                 this.registers[offset >> 1] = value & 0xFFE0;
-                this.cpu.irq.dmaWriteControl(3, value);
+                this.gba.irq.dmaWriteControl(3, value);
                 return;
 
             // Timers
             case this.TM0CNT_LO:
-                this.cpu.irq.timerSetReload(0, <boolean><any>(value & 0xFFFF));
+                this.gba.irq.timerSetReload(0, <boolean><any>(value & 0xFFFF));
                 return;
             case this.TM1CNT_LO:
-                this.cpu.irq.timerSetReload(1, <boolean><any>(value & 0xFFFF));
+                this.gba.irq.timerSetReload(1, <boolean><any>(value & 0xFFFF));
                 return;
             case this.TM2CNT_LO:
-                this.cpu.irq.timerSetReload(2, <boolean><any>(value & 0xFFFF));
+                this.gba.irq.timerSetReload(2, <boolean><any>(value & 0xFFFF));
                 return;
             case this.TM3CNT_LO:
-                this.cpu.irq.timerSetReload(3, <boolean><any>(value & 0xFFFF));
+                this.gba.irq.timerSetReload(3, <boolean><any>(value & 0xFFFF));
                 return;
 
             case this.TM0CNT_HI:
                 value &= 0x00C7;
-                this.cpu.irq.timerWriteControl(0, value);
+                this.gba.irq.timerWriteControl(0, value);
                 break;
             case this.TM1CNT_HI:
                 value &= 0x00C7;
-                this.cpu.irq.timerWriteControl(1, value);
+                this.gba.irq.timerWriteControl(1, value);
                 break;
             case this.TM2CNT_HI:
                 value &= 0x00C7;
-                this.cpu.irq.timerWriteControl(2, value);
+                this.gba.irq.timerWriteControl(2, value);
                 break;
             case this.TM3CNT_HI:
                 value &= 0x00C7;
-                this.cpu.irq.timerWriteControl(3, value);
+                this.gba.irq.timerWriteControl(3, value);
                 break;
 
             // SIO
@@ -746,12 +726,12 @@ class GameBoyAdvanceIO implements MemoryIO {
                 this.STUB_REG('SIO', offset);
                 break;
             case this.RCNT:
-                this.sio.setMode(((value >> 12) & 0xC) | ((this.registers[this.SIOCNT >> 1] >> 12) & 0x3));
-                this.sio.writeRCNT(value);
+                this.gba.sio.setMode(((value >> 12) & 0xC) | ((this.registers[this.SIOCNT >> 1] >> 12) & 0x3));
+                this.gba.sio.writeRCNT(value);
                 break;
             case this.SIOCNT:
-                this.sio.setMode(((value >> 12) & 0x3) | ((this.registers[this.RCNT >> 1] >> 12) & 0xC));
-                this.sio.writeSIOCNT(value);
+                this.gba.sio.setMode(((value >> 12) & 0x3) | ((this.registers[this.RCNT >> 1] >> 12) & 0xC));
+                this.gba.sio.writeSIOCNT(value);
                 return;
             case this.JOYCNT:
             case this.JOYSTAT:
@@ -761,18 +741,18 @@ class GameBoyAdvanceIO implements MemoryIO {
             // Misc
             case this.IE:
                 value &= 0x3FFF;
-                this.cpu.irq.setInterruptsEnabled(value);
+                this.gba.irq.setInterruptsEnabled(value);
                 break;
             case this.IF:
-                this.cpu.irq.dismissIRQs(value);
+                this.gba.irq.dismissIRQs(value);
                 return;
             case this.WAITCNT:
                 value &= 0xDFFF;
-                this.cpu.mmu.adjustTimings(value);
+                this.gba.mmu.adjustTimings(value);
                 break;
             case this.IME:
                 value &= 0x0001;
-                this.cpu.irq.masterEnable(<boolean><any>value);
+                this.gba.irq.masterEnable(<boolean><any>value);
                 break;
             default:
                 this.STUB_REG('I/O', offset);
@@ -784,49 +764,49 @@ class GameBoyAdvanceIO implements MemoryIO {
         switch (offset) {
             case this.BG2X_LO:
                 value &= 0x0FFFFFFF;
-                this.video.renderPath.writeBackgroundRefX(2, value);
+                this.gba.video.renderPath.writeBackgroundRefX(2, value);
                 break;
             case this.BG2Y_LO:
                 value &= 0x0FFFFFFF;
-                this.video.renderPath.writeBackgroundRefY(2, value);
+                this.gba.video.renderPath.writeBackgroundRefY(2, value);
                 break;
             case this.BG3X_LO:
                 value &= 0x0FFFFFFF;
-                this.video.renderPath.writeBackgroundRefX(3, value);
+                this.gba.video.renderPath.writeBackgroundRefX(3, value);
                 break;
             case this.BG3Y_LO:
                 value &= 0x0FFFFFFF;
-                this.video.renderPath.writeBackgroundRefY(3, value);
+                this.gba.video.renderPath.writeBackgroundRefY(3, value);
                 break;
             case this.DMA0SAD_LO:
-                this.cpu.irq.dmaSetSourceAddress(0, value);
+                this.gba.irq.dmaSetSourceAddress(0, value);
                 break;
             case this.DMA0DAD_LO:
-                this.cpu.irq.dmaSetDestAddress(0, value);
+                this.gba.irq.dmaSetDestAddress(0, value);
                 break;
             case this.DMA1SAD_LO:
-                this.cpu.irq.dmaSetSourceAddress(1, value);
+                this.gba.irq.dmaSetSourceAddress(1, value);
                 break;
             case this.DMA1DAD_LO:
-                this.cpu.irq.dmaSetDestAddress(1, value);
+                this.gba.irq.dmaSetDestAddress(1, value);
                 break;
             case this.DMA2SAD_LO:
-                this.cpu.irq.dmaSetSourceAddress(2, value);
+                this.gba.irq.dmaSetSourceAddress(2, value);
                 break;
             case this.DMA2DAD_LO:
-                this.cpu.irq.dmaSetDestAddress(2, value);
+                this.gba.irq.dmaSetDestAddress(2, value);
                 break;
             case this.DMA3SAD_LO:
-                this.cpu.irq.dmaSetSourceAddress(3, value);
+                this.gba.irq.dmaSetSourceAddress(3, value);
                 break;
             case this.DMA3DAD_LO:
-                this.cpu.irq.dmaSetDestAddress(3, value);
+                this.gba.irq.dmaSetDestAddress(3, value);
                 break;
             case this.FIFO_A_LO:
-                this.audio.appendToFifoA(value);
+                this.gba.audio.appendToFifoA(value);
                 return;
             case this.FIFO_B_LO:
-                this.audio.appendToFifoB(value);
+                this.gba.audio.appendToFifoB(value);
                 return;
 
             // High bits of this write should be ignored

@@ -1,8 +1,10 @@
 class ARMCoreThumb {
 
+    private gba:GameBoyAdvance;
     cpu:ARMCore;
 
-    constructor(cpu:ARMCore) {
+    constructor(gba:GameBoyAdvance, cpu:ARMCore) {
+        this.gba = gba;
         this.cpu = cpu;
     }
 
@@ -10,7 +12,7 @@ class ARMCoreThumb {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
-            cpu.mmu.waitPrefetch(gprs[Register.PC]);
+            this.gba.mmu.waitPrefetch(gprs[Register.PC]);
             var m = (gprs[rm] >>> 0) + <any>cpu.cpsr.C;
             var oldD = gprs[rd];
             var d = (oldD >>> 0) + m;
@@ -29,7 +31,7 @@ class ARMCoreThumb {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
-            cpu.mmu.waitPrefetch(gprs[Register.PC]);
+            this.gba.mmu.waitPrefetch(gprs[Register.PC]);
             var d = (gprs[rn] >>> 0) + immediate;
             cpu.cpsr.N = <any>(d >> 31);
             cpu.cpsr.Z = !(d & 0xFFFFFFFF);
@@ -43,7 +45,7 @@ class ARMCoreThumb {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
-            cpu.mmu.waitPrefetch(gprs[Register.PC]);
+            this.gba.mmu.waitPrefetch(gprs[Register.PC]);
             var d = (gprs[rn] >>> 0) + immediate;
             cpu.cpsr.N = <any>(d >> 31);
             cpu.cpsr.Z = !(d & 0xFFFFFFFF);
@@ -57,7 +59,7 @@ class ARMCoreThumb {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
-            cpu.mmu.waitPrefetch(gprs[Register.PC]);
+            this.gba.mmu.waitPrefetch(gprs[Register.PC]);
             var d = (gprs[rn] >>> 0) + (gprs[rm] >>> 0);
             cpu.cpsr.N = <any>(d >> 31);
             cpu.cpsr.Z = !(d & 0xFFFFFFFF);
@@ -71,7 +73,7 @@ class ARMCoreThumb {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
-            cpu.mmu.waitPrefetch(gprs[Register.PC]);
+            this.gba.mmu.waitPrefetch(gprs[Register.PC]);
             gprs[rd] += gprs[rm];
         };
     }
@@ -80,7 +82,7 @@ class ARMCoreThumb {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
-            cpu.mmu.waitPrefetch(gprs[Register.PC]);
+            this.gba.mmu.waitPrefetch(gprs[Register.PC]);
             gprs[rd] = (gprs[Register.PC] & 0xFFFFFFFC) + immediate;
         };
     }
@@ -89,7 +91,7 @@ class ARMCoreThumb {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
-            cpu.mmu.waitPrefetch(gprs[Register.PC]);
+            this.gba.mmu.waitPrefetch(gprs[Register.PC]);
             gprs[rd] = gprs[Register.SP] + immediate;
         };
     }
@@ -98,7 +100,7 @@ class ARMCoreThumb {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
-            cpu.mmu.waitPrefetch(gprs[Register.PC]);
+            this.gba.mmu.waitPrefetch(gprs[Register.PC]);
             gprs[Register.SP] += immediate;
         };
     }
@@ -107,7 +109,7 @@ class ARMCoreThumb {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
-            cpu.mmu.waitPrefetch(gprs[Register.PC]);
+            this.gba.mmu.waitPrefetch(gprs[Register.PC]);
             gprs[rd] &= gprs[rm];
             cpu.cpsr.N = <any>(gprs[rd] >> 31);
             cpu.cpsr.Z = !(gprs[rd] & 0xFFFFFFFF);
@@ -118,7 +120,7 @@ class ARMCoreThumb {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
-            cpu.mmu.waitPrefetch(gprs[Register.PC]);
+            this.gba.mmu.waitPrefetch(gprs[Register.PC]);
             if (immediate == 0) {
                 cpu.cpsr.C = <any>(gprs[rm] >> 31);
                 if (cpu.cpsr.C) {
@@ -139,7 +141,7 @@ class ARMCoreThumb {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
-            cpu.mmu.waitPrefetch(gprs[Register.PC]);
+            this.gba.mmu.waitPrefetch(gprs[Register.PC]);
             var rs = gprs[rm] & 0xFF;
             if (rs) {
                 if (rs < 32) {
@@ -163,7 +165,7 @@ class ARMCoreThumb {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
-            cpu.mmu.waitPrefetch(gprs[Register.PC]);
+            this.gba.mmu.waitPrefetch(gprs[Register.PC]);
             if (condOp()) {
                 gprs[Register.PC] += immediate;
             }
@@ -174,7 +176,7 @@ class ARMCoreThumb {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
-            cpu.mmu.waitPrefetch(gprs[Register.PC]);
+            this.gba.mmu.waitPrefetch(gprs[Register.PC]);
             gprs[Register.PC] += immediate;
         };
     }
@@ -183,7 +185,7 @@ class ARMCoreThumb {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
-            cpu.mmu.waitPrefetch(gprs[Register.PC]);
+            this.gba.mmu.waitPrefetch(gprs[Register.PC]);
             gprs[rd] &= ~gprs[rm];
             cpu.cpsr.N = <any>(gprs[rd] >> 31);
             cpu.cpsr.Z = !(gprs[rd] & 0xFFFFFFFF);
@@ -194,7 +196,7 @@ class ARMCoreThumb {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
-            cpu.mmu.waitPrefetch(gprs[Register.PC]);
+            this.gba.mmu.waitPrefetch(gprs[Register.PC]);
             gprs[Register.LR] = gprs[Register.PC] + immediate;
         }
     }
@@ -203,7 +205,7 @@ class ARMCoreThumb {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
-            cpu.mmu.waitPrefetch(gprs[Register.PC]);
+            this.gba.mmu.waitPrefetch(gprs[Register.PC]);
             var pc = gprs[Register.PC];
             gprs[Register.PC] = gprs[Register.LR] + (immediate << 1);
             gprs[Register.LR] = pc - 1;
@@ -214,7 +216,7 @@ class ARMCoreThumb {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
-            cpu.mmu.waitPrefetch(gprs[Register.PC]);
+            this.gba.mmu.waitPrefetch(gprs[Register.PC]);
             cpu.switchExecMode(gprs[rm] & 0x00000001);
             var misalign = 0;
             if (rm == 15) {
@@ -228,7 +230,7 @@ class ARMCoreThumb {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
-            cpu.mmu.waitPrefetch(gprs[Register.PC]);
+            this.gba.mmu.waitPrefetch(gprs[Register.PC]);
             var aluOut = (gprs[rd] >>> 0) + (gprs[rm] >>> 0);
             cpu.cpsr.N = <any>(aluOut >> 31);
             cpu.cpsr.Z = !(aluOut & 0xFFFFFFFF);
@@ -243,7 +245,7 @@ class ARMCoreThumb {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
-            cpu.mmu.waitPrefetch(gprs[Register.PC]);
+            this.gba.mmu.waitPrefetch(gprs[Register.PC]);
             var aluOut = gprs[rn] - immediate;
             cpu.cpsr.N = <any>(aluOut >> 31);
             cpu.cpsr.Z = !(aluOut & 0xFFFFFFFF);
@@ -256,7 +258,7 @@ class ARMCoreThumb {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
-            cpu.mmu.waitPrefetch(gprs[Register.PC]);
+            this.gba.mmu.waitPrefetch(gprs[Register.PC]);
             var d = gprs[rd];
             var m = gprs[rm];
             var aluOut = d - m;
@@ -273,7 +275,7 @@ class ARMCoreThumb {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
-            cpu.mmu.waitPrefetch(gprs[Register.PC]);
+            this.gba.mmu.waitPrefetch(gprs[Register.PC]);
             var aluOut = gprs[rd] - gprs[rm];
             cpu.cpsr.N = <any>(aluOut >> 31);
             cpu.cpsr.Z = !(aluOut & 0xFFFFFFFF);
@@ -286,7 +288,7 @@ class ARMCoreThumb {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
-            cpu.mmu.waitPrefetch(gprs[Register.PC]);
+            this.gba.mmu.waitPrefetch(gprs[Register.PC]);
             gprs[rd] ^= gprs[rm];
             cpu.cpsr.N = <any>(gprs[rd] >> 31);
             cpu.cpsr.Z = !(gprs[rd] & 0xFFFFFFFF);
@@ -297,18 +299,18 @@ class ARMCoreThumb {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
-            cpu.mmu.waitPrefetch(gprs[Register.PC]);
+            this.gba.mmu.waitPrefetch(gprs[Register.PC]);
             var address = gprs[rn];
             var total = 0;
             var m:number, i:number;
             for (m = 0x01, i = 0; i < 8; m <<= 1, ++i) {
                 if (rs & m) {
-                    gprs[i] = cpu.mmu.load32(address);
+                    gprs[i] = this.gba.mmu.load32(address);
                     address += 4;
                     ++total;
                 }
             }
-            cpu.mmu.waitMulti32(address, total);
+            this.gba.mmu.waitMulti32(address, total);
             if (!((1 << rn) & rs)) {
                 gprs[rn] = address;
             }
@@ -319,10 +321,10 @@ class ARMCoreThumb {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
-            cpu.mmu.waitPrefetch(gprs[Register.PC]);
+            this.gba.mmu.waitPrefetch(gprs[Register.PC]);
             var n = gprs[rn] + immediate;
-            gprs[rd] = cpu.mmu.load32(n);
-            cpu.mmu.wait32(n);
+            gprs[rd] = this.gba.mmu.load32(n);
+            this.gba.mmu.wait32(n);
             ++cpu.cycles;
         };
     }
@@ -331,9 +333,9 @@ class ARMCoreThumb {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
-            cpu.mmu.waitPrefetch(gprs[Register.PC]);
-            gprs[rd] = cpu.mmu.load32(gprs[rn] + gprs[rm]);
-            cpu.mmu.wait32(gprs[rn] + gprs[rm]);
+            this.gba.mmu.waitPrefetch(gprs[Register.PC]);
+            gprs[rd] = this.gba.mmu.load32(gprs[rn] + gprs[rm]);
+            this.gba.mmu.wait32(gprs[rn] + gprs[rm]);
             ++cpu.cycles;
         }
     }
@@ -342,9 +344,9 @@ class ARMCoreThumb {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
-            cpu.mmu.waitPrefetch(gprs[Register.PC]);
-            gprs[rd] = cpu.mmu.load32((gprs[Register.PC] & 0xFFFFFFFC) + immediate);
-            cpu.mmu.wait32(gprs[Register.PC]);
+            this.gba.mmu.waitPrefetch(gprs[Register.PC]);
+            gprs[rd] = this.gba.mmu.load32((gprs[Register.PC] & 0xFFFFFFFC) + immediate);
+            this.gba.mmu.wait32(gprs[Register.PC]);
             ++cpu.cycles;
         };
     }
@@ -353,9 +355,9 @@ class ARMCoreThumb {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
-            cpu.mmu.waitPrefetch(gprs[Register.PC]);
-            gprs[rd] = cpu.mmu.load32(gprs[Register.SP] + immediate);
-            cpu.mmu.wait32(gprs[Register.SP] + immediate);
+            this.gba.mmu.waitPrefetch(gprs[Register.PC]);
+            gprs[rd] = this.gba.mmu.load32(gprs[Register.SP] + immediate);
+            this.gba.mmu.wait32(gprs[Register.SP] + immediate);
             ++cpu.cycles;
         };
     }
@@ -365,9 +367,9 @@ class ARMCoreThumb {
         var gprs = cpu.gprs;
         return () => {
             var n = gprs[rn] + immediate;
-            cpu.mmu.waitPrefetch(gprs[Register.PC]);
-            gprs[rd] = cpu.mmu.loadU8(n);
-            cpu.mmu.wait(n);
+            this.gba.mmu.waitPrefetch(gprs[Register.PC]);
+            gprs[rd] = this.gba.mmu.loadU8(n);
+            this.gba.mmu.wait(n);
             ++cpu.cycles;
         };
     }
@@ -376,9 +378,9 @@ class ARMCoreThumb {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
-            cpu.mmu.waitPrefetch(gprs[Register.PC]);
-            gprs[rd] = cpu.mmu.loadU8(gprs[rn] + gprs[rm]);
-            cpu.mmu.wait(gprs[rn] + gprs[rm]);
+            this.gba.mmu.waitPrefetch(gprs[Register.PC]);
+            gprs[rd] = this.gba.mmu.loadU8(gprs[rn] + gprs[rm]);
+            this.gba.mmu.wait(gprs[rn] + gprs[rm]);
             ++cpu.cycles;
         };
     }
@@ -388,9 +390,9 @@ class ARMCoreThumb {
         var gprs = cpu.gprs;
         return () => {
             var n = gprs[rn] + immediate;
-            cpu.mmu.waitPrefetch(gprs[Register.PC]);
-            gprs[rd] = cpu.mmu.loadU16(n);
-            cpu.mmu.wait(n);
+            this.gba.mmu.waitPrefetch(gprs[Register.PC]);
+            gprs[rd] = this.gba.mmu.loadU16(n);
+            this.gba.mmu.wait(n);
             ++cpu.cycles;
         };
     }
@@ -399,9 +401,9 @@ class ARMCoreThumb {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
-            cpu.mmu.waitPrefetch(gprs[Register.PC]);
-            gprs[rd] = cpu.mmu.loadU16(gprs[rn] + gprs[rm]);
-            cpu.mmu.wait(gprs[rn] + gprs[rm]);
+            this.gba.mmu.waitPrefetch(gprs[Register.PC]);
+            gprs[rd] = this.gba.mmu.loadU16(gprs[rn] + gprs[rm]);
+            this.gba.mmu.wait(gprs[rn] + gprs[rm]);
             ++cpu.cycles;
         };
     }
@@ -410,9 +412,9 @@ class ARMCoreThumb {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
-            cpu.mmu.waitPrefetch(gprs[Register.PC]);
-            gprs[rd] = cpu.mmu.load8(gprs[rn] + gprs[rm]);
-            cpu.mmu.wait(gprs[rn] + gprs[rm]);
+            this.gba.mmu.waitPrefetch(gprs[Register.PC]);
+            gprs[rd] = this.gba.mmu.load8(gprs[rn] + gprs[rm]);
+            this.gba.mmu.wait(gprs[rn] + gprs[rm]);
             ++cpu.cycles;
         };
     }
@@ -421,9 +423,9 @@ class ARMCoreThumb {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
-            cpu.mmu.waitPrefetch(gprs[Register.PC]);
-            gprs[rd] = cpu.mmu.load16(gprs[rn] + gprs[rm]);
-            cpu.mmu.wait(gprs[rn] + gprs[rm]);
+            this.gba.mmu.waitPrefetch(gprs[Register.PC]);
+            gprs[rd] = this.gba.mmu.load16(gprs[rn] + gprs[rm]);
+            this.gba.mmu.wait(gprs[rn] + gprs[rm]);
             ++cpu.cycles;
         };
     }
@@ -432,7 +434,7 @@ class ARMCoreThumb {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
-            cpu.mmu.waitPrefetch(gprs[Register.PC]);
+            this.gba.mmu.waitPrefetch(gprs[Register.PC]);
             if (immediate == 0) {
                 gprs[rd] = gprs[rm];
             } else {
@@ -448,7 +450,7 @@ class ARMCoreThumb {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
-            cpu.mmu.waitPrefetch(gprs[Register.PC]);
+            this.gba.mmu.waitPrefetch(gprs[Register.PC]);
             var rs = gprs[rm] & 0xFF;
             if (rs) {
                 if (rs < 32) {
@@ -472,7 +474,7 @@ class ARMCoreThumb {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
-            cpu.mmu.waitPrefetch(gprs[Register.PC]);
+            this.gba.mmu.waitPrefetch(gprs[Register.PC]);
             if (immediate == 0) {
                 cpu.cpsr.C = <any>(gprs[rm] >> 31);
                 gprs[rd] = 0;
@@ -489,7 +491,7 @@ class ARMCoreThumb {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
-            cpu.mmu.waitPrefetch(gprs[Register.PC]);
+            this.gba.mmu.waitPrefetch(gprs[Register.PC]);
             var rs = gprs[rm] & 0xFF;
             if (rs) {
                 if (rs < 32) {
@@ -513,7 +515,7 @@ class ARMCoreThumb {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
-            cpu.mmu.waitPrefetch(gprs[Register.PC]);
+            this.gba.mmu.waitPrefetch(gprs[Register.PC]);
             gprs[rn] = immediate;
             cpu.cpsr.N = <any>(immediate >> 31);
             cpu.cpsr.Z = !(immediate & 0xFFFFFFFF);
@@ -524,7 +526,7 @@ class ARMCoreThumb {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
-            cpu.mmu.waitPrefetch(gprs[Register.PC]);
+            this.gba.mmu.waitPrefetch(gprs[Register.PC]);
             var d = gprs[rn];
             cpu.cpsr.N = <any>(d >> 31);
             cpu.cpsr.Z = !(d & 0xFFFFFFFF);
@@ -538,7 +540,7 @@ class ARMCoreThumb {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
-            cpu.mmu.waitPrefetch(gprs[Register.PC]);
+            this.gba.mmu.waitPrefetch(gprs[Register.PC]);
             gprs[rd] = gprs[rm];
         };
     }
@@ -547,8 +549,8 @@ class ARMCoreThumb {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
-            cpu.mmu.waitPrefetch(gprs[Register.PC]);
-            cpu.mmu.waitMul(gprs[rm]);
+            this.gba.mmu.waitPrefetch(gprs[Register.PC]);
+            this.gba.mmu.waitMul(gprs[rm]);
             if ((gprs[rm] & 0xFFFF0000) && (gprs[rd] & 0xFFFF0000)) {
                 // Our data type is a double--we'll lose bits if we do it all at once!
                 var hi = ((gprs[rd] & 0xFFFF0000) * gprs[rm]) & 0xFFFFFFFF;
@@ -566,7 +568,7 @@ class ARMCoreThumb {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
-            cpu.mmu.waitPrefetch(gprs[Register.PC]);
+            this.gba.mmu.waitPrefetch(gprs[Register.PC]);
             gprs[rd] = ~gprs[rm];
             cpu.cpsr.N = <any>(gprs[rd] >> 31);
             cpu.cpsr.Z = !(gprs[rd] & 0xFFFFFFFF);
@@ -577,7 +579,7 @@ class ARMCoreThumb {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
-            cpu.mmu.waitPrefetch(gprs[Register.PC]);
+            this.gba.mmu.waitPrefetch(gprs[Register.PC]);
             var d = -gprs[rm];
             cpu.cpsr.N = <any>(d >> 31);
             cpu.cpsr.Z = !(d & 0xFFFFFFFF);
@@ -591,7 +593,7 @@ class ARMCoreThumb {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
-            cpu.mmu.waitPrefetch(gprs[Register.PC]);
+            this.gba.mmu.waitPrefetch(gprs[Register.PC]);
             gprs[rd] |= gprs[rm];
             cpu.cpsr.N = <any>(gprs[rd] >> 31);
             cpu.cpsr.Z = !(gprs[rd] & 0xFFFFFFFF);
@@ -602,25 +604,25 @@ class ARMCoreThumb {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
-            cpu.mmu.waitPrefetch(gprs[Register.PC]);
+            this.gba.mmu.waitPrefetch(gprs[Register.PC]);
             ++cpu.cycles;
             var address = gprs[Register.SP];
             var total = 0;
             var m:number, i:number;
             for (m = 0x01, i = 0; i < 8; m <<= 1, ++i) {
                 if (rs & m) {
-                    cpu.mmu.waitSeq32(address);
-                    gprs[i] = cpu.mmu.load32(address);
+                    this.gba.mmu.waitSeq32(address);
+                    gprs[i] = this.gba.mmu.load32(address);
                     address += 4;
                     ++total;
                 }
             }
             if (r) {
-                gprs[Register.PC] = cpu.mmu.load32(address) & 0xFFFFFFFE;
+                gprs[Register.PC] = this.gba.mmu.load32(address) & 0xFFFFFFFE;
                 address += 4;
                 ++total;
             }
-            cpu.mmu.waitMulti32(address, total);
+            this.gba.mmu.waitMulti32(address, total);
             gprs[Register.SP] = address;
         };
     }
@@ -631,16 +633,16 @@ class ARMCoreThumb {
         return () => {
             var address = gprs[Register.SP] - 4;
             var total = 0;
-            cpu.mmu.waitPrefetch(gprs[Register.PC]);
+            this.gba.mmu.waitPrefetch(gprs[Register.PC]);
             if (r) {
-                cpu.mmu.store32(address, gprs[Register.LR]);
+                this.gba.mmu.store32(address, gprs[Register.LR]);
                 address -= 4;
                 ++total;
             }
             var m:number, i:number;
             for (m = 0x80, i = 7; m; m >>= 1, --i) {
                 if (rs & m) {
-                    cpu.mmu.store32(address, gprs[i]);
+                    this.gba.mmu.store32(address, gprs[i]);
                     address -= 4;
                     ++total;
                     break;
@@ -648,12 +650,12 @@ class ARMCoreThumb {
             }
             for (m >>= 1, --i; m; m >>= 1, --i) {
                 if (rs & m) {
-                    cpu.mmu.store32(address, gprs[i]);
+                    this.gba.mmu.store32(address, gprs[i]);
                     address -= 4;
                     ++total;
                 }
             }
-            cpu.mmu.waitMulti32(address, total);
+            this.gba.mmu.waitMulti32(address, total);
             gprs[Register.SP] = address + 4;
         };
     }
@@ -662,7 +664,7 @@ class ARMCoreThumb {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
-            cpu.mmu.waitPrefetch(gprs[Register.PC]);
+            this.gba.mmu.waitPrefetch(gprs[Register.PC]);
             var rs = gprs[rm] & 0xFF;
             if (rs) {
                 var r4 = rs & 0x1F;
@@ -682,7 +684,7 @@ class ARMCoreThumb {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
-            cpu.mmu.waitPrefetch(gprs[Register.PC]);
+            this.gba.mmu.waitPrefetch(gprs[Register.PC]);
             var m = (gprs[rm] >>> 0) + <any>!cpu.cpsr.C;
             var d = (gprs[rd] >>> 0) - m;
             cpu.cpsr.N = <any>(d >> 31);
@@ -697,13 +699,13 @@ class ARMCoreThumb {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
-            cpu.mmu.wait(gprs[Register.PC]);
+            this.gba.mmu.wait(gprs[Register.PC]);
             var address = gprs[rn];
             var total = 0;
             var m:number, i:number;
             for (m = 0x01, i = 0; i < 8; m <<= 1, ++i) {
                 if (rs & m) {
-                    cpu.mmu.store32(address, gprs[i]);
+                    this.gba.mmu.store32(address, gprs[i]);
                     address += 4;
                     ++total;
                     break;
@@ -711,12 +713,12 @@ class ARMCoreThumb {
             }
             for (m <<= 1, ++i; i < 8; m <<= 1, ++i) {
                 if (rs & m) {
-                    cpu.mmu.store32(address, gprs[i]);
+                    this.gba.mmu.store32(address, gprs[i]);
                     address += 4;
                     ++total;
                 }
             }
-            cpu.mmu.waitMulti32(address, total);
+            this.gba.mmu.waitMulti32(address, total);
             gprs[rn] = address;
         };
     }
@@ -726,9 +728,9 @@ class ARMCoreThumb {
         var gprs = cpu.gprs;
         return () => {
             var n = gprs[rn] + immediate;
-            cpu.mmu.store32(n, gprs[rd]);
-            cpu.mmu.wait(gprs[Register.PC]);
-            cpu.mmu.wait32(n);
+            this.gba.mmu.store32(n, gprs[rd]);
+            this.gba.mmu.wait(gprs[Register.PC]);
+            this.gba.mmu.wait32(n);
         };
     }
 
@@ -736,9 +738,9 @@ class ARMCoreThumb {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
-            cpu.mmu.store32(gprs[rn] + gprs[rm], gprs[rd]);
-            cpu.mmu.wait(gprs[Register.PC]);
-            cpu.mmu.wait32(gprs[rn] + gprs[rm]);
+            this.gba.mmu.store32(gprs[rn] + gprs[rm], gprs[rd]);
+            this.gba.mmu.wait(gprs[Register.PC]);
+            this.gba.mmu.wait32(gprs[rn] + gprs[rm]);
         };
     }
 
@@ -746,9 +748,9 @@ class ARMCoreThumb {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
-            cpu.mmu.store32(gprs[Register.SP] + immediate, gprs[rd]);
-            cpu.mmu.wait(gprs[Register.PC]);
-            cpu.mmu.wait32(gprs[Register.SP] + immediate);
+            this.gba.mmu.store32(gprs[Register.SP] + immediate, gprs[rd]);
+            this.gba.mmu.wait(gprs[Register.PC]);
+            this.gba.mmu.wait32(gprs[Register.SP] + immediate);
         };
     }
 
@@ -757,9 +759,9 @@ class ARMCoreThumb {
         var gprs = cpu.gprs;
         return () => {
             var n = gprs[rn] + immediate;
-            cpu.mmu.store8(n, gprs[rd]);
-            cpu.mmu.wait(gprs[Register.PC]);
-            cpu.mmu.wait(n);
+            this.gba.mmu.store8(n, gprs[rd]);
+            this.gba.mmu.wait(gprs[Register.PC]);
+            this.gba.mmu.wait(n);
         };
     }
 
@@ -767,9 +769,9 @@ class ARMCoreThumb {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
-            cpu.mmu.store8(gprs[rn] + gprs[rm], gprs[rd]);
-            cpu.mmu.wait(gprs[Register.PC]);
-            cpu.mmu.wait(gprs[rn] + gprs[rm]);
+            this.gba.mmu.store8(gprs[rn] + gprs[rm], gprs[rd]);
+            this.gba.mmu.wait(gprs[Register.PC]);
+            this.gba.mmu.wait(gprs[rn] + gprs[rm]);
         }
     }
 
@@ -778,9 +780,9 @@ class ARMCoreThumb {
         var gprs = cpu.gprs;
         return () => {
             var n = gprs[rn] + immediate;
-            cpu.mmu.store16(n, gprs[rd]);
-            cpu.mmu.wait(gprs[Register.PC]);
-            cpu.mmu.wait(n);
+            this.gba.mmu.store16(n, gprs[rd]);
+            this.gba.mmu.wait(gprs[Register.PC]);
+            this.gba.mmu.wait(n);
         };
     }
 
@@ -788,9 +790,9 @@ class ARMCoreThumb {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
-            cpu.mmu.store16(gprs[rn] + gprs[rm], gprs[rd]);
-            cpu.mmu.wait(gprs[Register.PC]);
-            cpu.mmu.wait(gprs[rn] + gprs[rm]);
+            this.gba.mmu.store16(gprs[rn] + gprs[rm], gprs[rd]);
+            this.gba.mmu.wait(gprs[Register.PC]);
+            this.gba.mmu.wait(gprs[rn] + gprs[rm]);
         }
     }
 
@@ -798,7 +800,7 @@ class ARMCoreThumb {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
-            cpu.mmu.waitPrefetch(gprs[Register.PC]);
+            this.gba.mmu.waitPrefetch(gprs[Register.PC]);
             var d = gprs[rn] - immediate;
             cpu.cpsr.N = <any>(d >> 31);
             cpu.cpsr.Z = !(d & 0xFFFFFFFF);
@@ -812,7 +814,7 @@ class ARMCoreThumb {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
-            cpu.mmu.waitPrefetch(gprs[Register.PC]);
+            this.gba.mmu.waitPrefetch(gprs[Register.PC]);
             var d = gprs[rn] - immediate;
             cpu.cpsr.N = <any>(d >> 31);
             cpu.cpsr.Z = !(d & 0xFFFFFFFF);
@@ -826,7 +828,7 @@ class ARMCoreThumb {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
-            cpu.mmu.waitPrefetch(gprs[Register.PC]);
+            this.gba.mmu.waitPrefetch(gprs[Register.PC]);
             var d = gprs[rn] - gprs[rm];
             cpu.cpsr.N = <any>(d >> 31);
             cpu.cpsr.Z = !(d & 0xFFFFFFFF);
@@ -841,8 +843,8 @@ class ARMCoreThumb {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
-            cpu.irq.swi(immediate);
-            cpu.mmu.waitPrefetch(gprs[Register.PC]);
+            this.gba.irq.swi(immediate);
+            this.gba.mmu.waitPrefetch(gprs[Register.PC]);
         }
     }
 
@@ -850,7 +852,7 @@ class ARMCoreThumb {
         var cpu = this.cpu;
         var gprs = cpu.gprs;
         return () => {
-            cpu.mmu.waitPrefetch(gprs[Register.PC]);
+            this.gba.mmu.waitPrefetch(gprs[Register.PC]);
             var aluOut = gprs[rd] & gprs[rm];
             cpu.cpsr.N = <any>(aluOut >> 31);
             cpu.cpsr.Z = !(aluOut & 0xFFFFFFFF);
