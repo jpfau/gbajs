@@ -428,10 +428,6 @@ class Memory {
     }
 }
 
-/**
- *
- * @constructor
- */
 class PaletteViewer {
 
     palette:GameBoyAdvancePalette;
