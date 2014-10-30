@@ -85,7 +85,7 @@ class GameBoyAdvanceConsole {
 
     stillRunning:boolean;
 
-    log(level:number, message:any):void {
+    log = (level:number, message:any):void => {
         switch (level) {
             case LoggerLevel.ERROR:
                 message = '[ERROR] ' + message;
@@ -110,7 +110,7 @@ class GameBoyAdvanceConsole {
         if (!this.stillRunning) {
             this.flushLog();
         }
-    }
+    };
 
     flushLog() {
         var doScroll = this.ul.scrollTop == this.ul.scrollHeight - this.ul.offsetHeight;

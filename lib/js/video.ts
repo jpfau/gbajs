@@ -15,8 +15,11 @@ class GameBoyAdvanceVideo {
 
     TOTAL_LENGTH = 280896;
 
-    drawCallback:() => void;
-    vblankCallback:() => void;
+    drawCallback():void {
+    }
+
+    vblankCallback():void {
+    }
 
     private gba:GameBoyAdvance;
 
