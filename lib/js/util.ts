@@ -218,7 +218,7 @@ module Serializer {
             }
         }
         var bytesInCanvas = transparent * 3 + (base.width * base.height - transparent);
-        for (var multiplier = 1; (bytesInCanvas * multiplier * multiplier) < blob.size; ++multiplier);
+        var multiplier = Math.max(Math.ceil(Math.sqrt(blob.size / bytesInCanvas)), 1);
         var edges = bytesInCanvas * multiplier * multiplier - blob.size;
         var padding = Math.ceil(edges / (base.width * multiplier));
         canvas.setAttribute('width', (base.width * multiplier).toString());
