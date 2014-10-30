@@ -1,5 +1,3 @@
-/// <reference path="util.ts"/>
-
 class GameBoyAdvanceSIO {
     SIO_NORMAL_8 = 0;
     SIO_NORMAL_32 = 1;

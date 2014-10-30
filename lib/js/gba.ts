@@ -1,13 +1,3 @@
-/// <reference path="core.ts"/>
-/// <reference path="mmu.ts"/>
-/// <reference path="irq.ts"/>
-/// <reference path="io.ts"/>
-/// <reference path="audio.ts"/>
-/// <reference path="video.ts"/>
-/// <reference path="keypad.ts"/>
-/// <reference path="sio.ts"/>
-/// <reference path="log.ts"/>
-
 class GameBoyAdvance {
 
     SYS_ID = 'com.endrift.gbajs';

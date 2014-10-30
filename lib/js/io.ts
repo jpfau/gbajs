@@ -1,5 +1,3 @@
-/// <reference path="util.ts"/>
-
 class GameBoyAdvanceIO implements MemoryIO {
     // Video
     DISPCNT = 0x000;

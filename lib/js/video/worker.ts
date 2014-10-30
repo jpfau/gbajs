@@ -1,5 +1,3 @@
-/// <reference path="software.ts"/>
-
 importScripts('software.js');
 
 var video = new GameBoyAdvanceSoftwareRenderer();

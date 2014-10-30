@@ -1,6 +1,3 @@
-/// <reference path="gba.ts"/>
-/// <reference path="video/software.ts"/>
-
 class GameBoyAdvanceVideo {
     renderPath = new GameBoyAdvanceSoftwareRenderer();
 

@@ -1,5 +1,3 @@
-/// <reference path="mmu.ts"/>
-
 class SRAMSavedata extends DefaultMemoryView {
 
     constructor(size:number) {

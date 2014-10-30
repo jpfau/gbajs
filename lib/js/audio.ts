@@ -1,5 +1,3 @@
-/// <reference path="core.ts"/>
-
 interface Channel4 {
     sample:number;
     lfsr: number;

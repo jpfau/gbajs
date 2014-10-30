@@ -1,5 +1,3 @@
-/// <reference path="../js/util.ts"/>
-
 class GameBoyAdvanceConsole {
 
     cpu:ARMCore;

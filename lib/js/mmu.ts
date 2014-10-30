@@ -1,7 +1,3 @@
-/// <reference path="util.ts"/>
-/// <reference path="savedata.ts"/>
-/// <reference path="gpio.ts"/>
-
 class Cart {
     title:string;
     code:string;

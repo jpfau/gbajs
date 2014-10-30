@@ -1,5 +1,3 @@
-/// <reference path="core.ts"/>
-
 class ARMCoreThumb {
 
     cpu:ARMCore;

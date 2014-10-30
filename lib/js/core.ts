@@ -1,6 +1,3 @@
-/// <reference path="arm.ts"/>
-/// <reference path="thumb.ts"/>
-
 enum Register {
     /**
      * Stack pointer

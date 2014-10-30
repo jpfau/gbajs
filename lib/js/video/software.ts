@@ -1,5 +1,3 @@
-/// <reference path="../video.ts"/>
-
 class MemoryAligned16 implements MemoryIO {
     buffer:Uint16Array;
 

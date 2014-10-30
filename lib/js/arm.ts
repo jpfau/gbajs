@@ -1,5 +1,3 @@
-/// <reference path="core.ts"/>
-
 class ARMCoreArm {
 
     cpu:ARMCore;
