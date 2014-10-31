@@ -2,11 +2,29 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <title>GBA.js Debugger</title>
-    <script src="js/log.js"></script>
     <script src="js/util.js"></script>
+    <script src="js/core.js"></script>
+    <script src="js/arm.js"></script>
+    <script src="js/thumb.js"></script>
+    <script src="js/mmu.js"></script>
+    <script src="js/io.js"></script>
+    <script src="js/audio.js"></script>
+    <script src="js/video.js"></script>
+    <script src="js/video/proxy.js"></script>
+    <script src="js/video/software.js"></script>
+    <script src="js/irq.js"></script>
+    <script src="js/keypad.js"></script>
+    <script src="js/sio.js"></script>
+    <script src="js/savedata.js"></script>
+    <script src="js/gpio.js"></script>
+    <script src="js/log.js"></script>
+    <script src="js/gba.js"></script>
+
+    <script src="resources/xhr.js"></script>
     <script src="resources/console.js"></script>
     <link href="resources/console.css" rel="stylesheet">
     <script>
+        var master = window;
         window.onmessage = function (message) {
             if (message.origin != location.origin && (message.origin != 'file://' || location.origin)) {
                 console.log('Failed XSS');
@@ -27,19 +45,27 @@
                     break;
             }
         };
+        function runTest(r) {
+            gba.setRom(r);
+            gba.logger.DEBUG('ROM loaded: ' + gba.rom.title + ' [' + gba.rom.code + '] (' + r.byteLength + ' bytes)');
+            gbaCon.memory.refreshAll();
+        }
 
+        function loadRomFromFile(romFile) {
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                runTest(e.target.result);
+            };
+            reader.readAsArrayBuffer(romFile);
+        }
         function setLogLevel(level, enabled) {
             gba.logger.logLevel &= ~level;
             gba.logger.logLevel |= enabled && level;
         }
-        var gbaCon;
-        function initialize(gba) {
-            window.gba = gba;
-            gba.logger.logLevel = LoggerLevel.ERROR | LoggerLevel.WARN | LoggerLevel.DEBUG;
-            gbaCon = new GameBoyAdvanceConsole(gba);
-            gba.logger.DEBUG('Debugger initialized');
-        }
 
+        function screenshot() {
+            window.open(gba.indirectCanvas.toDataURL('image/png'), 'screenshot');
+        }
         function savestate() {
             gbaCon.pause();
             var state = gba.freeze();
@@ -58,21 +84,40 @@
                 gba.logger.ERROR('Failed to load savestate', exception);
             }
         }
+        function initialize(gba) {
+            window.gba = gba;
+            gba.logger.logLevel = LoggerLevel.ERROR | LoggerLevel.WARN | LoggerLevel.DEBUG;
 
+            gbaCon = new GameBoyAdvanceConsole(gba);
+            gba.logger.DEBUG('Debugger initialized');
+            gba.logger.DEBUG('Logging begun!');
+            gba.logger.DEBUG('Loading BIOS...');
+            loadRom('resources/bios.bin', function (bios) {
+                gba.setBios(bios, false);
+                gba.logger.DEBUG('BIOS loaded!');
+                gbaCon.memory.refreshAll();
+            });
+        }
+
+        var gbaCon;
         window.onload = function () {
+            var canvas = document.getElementById('screen');
             if (window.opener) {
+                canvas.style.display = 'none';
+                document.getElementById('loading').style.display = 'none';
                 window.opener.postMessage('connect', location.origin || '*');
+            } else {
+                initialize(new GameBoyAdvance());
+                gba.setCanvas(canvas);
             }
         };
-
         window.onunload = function () {
             gba.doStep = gba.waitFrame;
-            if (window.master) {
-                window.master.postMessage('disconnect', location.origin || '*');
+            if (master !== window) {
+                master.postMessage('disconnect', location.origin || '*');
             }
         }
     </script>
-
 </head>
 <body>
 <section id="top">
@@ -89,6 +134,7 @@
     </section>
     <section id="main">
         <section id="display">
+            <canvas id="screen" width="240" height="160"></canvas>
             <select id="debugViewSelector" onchange="gbaCon.setView(gbaCon[this.options[this.selectedIndex].value])">
                 <option>None</option>
                 <option value="paletteView">Palette</option>
@@ -104,12 +150,17 @@
             <button onclick="gbaCon.run()">Run quickly</button>
             <button onclick="gbaCon.pause()">Pause</button>
         </section>
+        <section id="loading">
+            Load ROM:
+            <input type="file" id="uploadRom" onchange="loadRomFromFile(this.files[0])">
+        </section>
         <section id="saving">
             <button onclick="document.getElementById('uploadSave').click()">Load savedata</button>
             <input type="file" id="uploadSave" onchange="gba.loadSavedataFromFile(this.files[0])"
                    style="display: none;">
             <button onclick="gba.downloadSavedata()">Download savedata</button>
             <button onclick="gba.storeSavedata()">Store savedata</button>
+            <button onclick="screenshot()">Take screenshot</button>
             <button onclick="savestate()">Freeze</button>
             <input type="file" id="uploadSavestate" onchange="loadSavestate(this.files[0])" style="display: none;">
             <button onclick="document.getElementById('uploadSavestate').click()">Defrost</button>
