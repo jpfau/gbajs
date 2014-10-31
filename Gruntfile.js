@@ -1,33 +1,57 @@
 module.exports = function (grunt) {
-    grunt.loadNpmTasks('grunt-contrib-copy');
-    grunt.loadNpmTasks('grunt-typescript');
+    grunt.loadNpmTasks('grunt-concurrent');
     grunt.loadNpmTasks('grunt-contrib-watch');
+    grunt.loadNpmTasks('grunt-sync');
+    grunt.loadNpmTasks('grunt-typescript');
     grunt.loadNpmTasks('grunt-contrib-connect');
     grunt.loadNpmTasks('grunt-open');
- 
+
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
-        connect: {
-            server: {
+        concurrent: {
+            all: {
+                tasks: ['concurrent:watch', 'concurrent:serve'],
                 options: {
-                    port: 8080,
-                    base: 'out/'
+                    logConcurrentOutput: true
+                }
+            },
+            watch: {
+                tasks: ['watch', 'typescript'],
+                options: {
+                    logConcurrentOutput: true
+                }
+            },
+            serve: {
+                tasks: ['connect', 'open'],
+                options: {
+                    logConcurrentOutput: true
                 }
             }
         },
-        copy: {
+        watch: {
+            options: { livereload: true },
+            files: 'lib/**',
+            tasks: ['sync']
+        },
+        sync: {
             main: {
                 files: [
-                    {expand: true, cwd: 'lib', src: ['**'], dest: 'out/'}
-                ]
+                    {
+                        cwd: 'lib',
+                        src: ['**'],
+                        dest: 'out'
+                    }
+                ],
+                verbose: true
             }
         },
         typescript: {
             base: {
-                src: ['lib/**/*.ts'],
+                src: ['out/build.d.ts'],
                 dest: 'out',
                 options: {
-                    basePath: 'lib',
+                    watch: true,
+                    basePath: 'out',
                     module: 'amd',
                     target: 'es5',
                     sourceMap: true,
@@ -37,9 +61,15 @@ module.exports = function (grunt) {
                 }
             }
         },
-        watch: {
-            files: 'lib/**/*.ts',
-            tasks: ['typescript']
+        connect: {
+            server: {
+                options: {
+//                    livereload: true,
+                    port: 8080,
+                    base: 'out',
+                    keepalive: true
+                }
+            }
         },
         open: {
             dev: {
@@ -47,7 +77,9 @@ module.exports = function (grunt) {
             }
         }
     });
- 
-    grunt.registerTask('default', ['typescript', 'copy', 'connect', 'open', 'watch']);
- 
+
+    grunt.registerTask('build', ['concurrent:watch']);
+    grunt.registerTask('serve', ['concurrent:serve']);
+    grunt.registerTask('default', ['concurrent:all']);
+
 };
