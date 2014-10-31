@@ -33,7 +33,7 @@ class GameBoyAdvanceConsole {
 
     updateGPRs() {
         for (var i = 0; i < 16; ++i) {
-            this.gprs.children[i].textContent = hex(this.cpu.gprs[i]);
+            this.gprs.querySelector('#r'+i).textContent = hex(this.cpu.gprs[i], undefined, false);
         }
     }
 

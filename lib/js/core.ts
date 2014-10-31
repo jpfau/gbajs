@@ -97,9 +97,7 @@ class ARMCore {
         }
         this.gprs[Register.PC] = startOffset + this.WORD_SIZE_ARM;
 
-        this.loadInstruction = this.loadInstructionArm;
-        this.execMode = Mode.ARM;
-        this.instructionWidth = this.WORD_SIZE_ARM;
+        this.switchExecMode(Mode.ARM);
 
         this.mode = Mode.SYSTEM;
 
