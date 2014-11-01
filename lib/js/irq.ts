@@ -1,4 +1,5 @@
-interface DMA {
+module GameBoyAdvance {
+export interface DMA {
     source:number
     dest:number
     count:number
@@ -16,7 +17,7 @@ interface DMA {
     nextIRQ:number
 }
 
-class GameBoyAdvanceInterruptHandler {
+export class InterruptHandler {
 
     static FREQUENCY = 0x1000000;
 
@@ -52,10 +53,7 @@ class GameBoyAdvanceInterruptHandler {
     static MASK_KEYPAD = 0x1000;
     static MASK_GAMEPAK = 0x2000;
 
-    private gba:GameBoyAdvance;
-
-    constructor(gba:GameBoyAdvance) {
-        this.gba = gba;
+    constructor(private gba:Main) {
     }
 
     enabledIRQs:number;
@@ -167,11 +165,11 @@ class GameBoyAdvanceInterruptHandler {
                 if (this.gba.cpu.cycles >= timer.nextEvent) {
                     timer.lastEvent = timer.nextEvent;
                     timer.nextEvent += timer.overflowInterval;
-                    this.gba.io.registers[GameBoyAdvanceIO.TM0CNT_LO >> 1] = timer.reload;
+                    this.gba.io.registers[IO.TM0CNT_LO >> 1] = timer.reload;
                     timer.oldReload = timer.reload;
 
                     if (timer.doIrq) {
-                        this.raiseIRQ(GameBoyAdvanceInterruptHandler.IRQ_TIMER0);
+                        this.raiseIRQ(InterruptHandler.IRQ_TIMER0);
                     }
 
                     if (this.gba.audio.enabled) {
@@ -186,7 +184,7 @@ class GameBoyAdvanceInterruptHandler {
 
                     timer = this.timers[1];
                     if (timer.countUp) {
-                        if (++this.gba.io.registers[GameBoyAdvanceIO.TM1CNT_LO >> 1] == 0x10000) {
+                        if (++this.gba.io.registers[IO.TM1CNT_LO >> 1] == 0x10000) {
                             timer.nextEvent = this.gba.cpu.cycles;
                         }
                     }
@@ -198,13 +196,13 @@ class GameBoyAdvanceInterruptHandler {
                 if (this.gba.cpu.cycles >= timer.nextEvent) {
                     timer.lastEvent = timer.nextEvent;
                     timer.nextEvent += timer.overflowInterval;
-                    if (!timer.countUp || this.gba.io.registers[GameBoyAdvanceIO.TM1CNT_LO >> 1] == 0x10000) {
-                        this.gba.io.registers[GameBoyAdvanceIO.TM1CNT_LO >> 1] = timer.reload;
+                    if (!timer.countUp || this.gba.io.registers[IO.TM1CNT_LO >> 1] == 0x10000) {
+                        this.gba.io.registers[IO.TM1CNT_LO >> 1] = timer.reload;
                     }
                     timer.oldReload = timer.reload;
 
                     if (timer.doIrq) {
-                        this.raiseIRQ(GameBoyAdvanceInterruptHandler.IRQ_TIMER1);
+                        this.raiseIRQ(InterruptHandler.IRQ_TIMER1);
                     }
 
                     if (timer.countUp) {
@@ -223,7 +221,7 @@ class GameBoyAdvanceInterruptHandler {
 
                     timer = this.timers[2];
                     if (timer.countUp) {
-                        if (++this.gba.io.registers[GameBoyAdvanceIO.TM2CNT_LO >> 1] == 0x10000) {
+                        if (++this.gba.io.registers[IO.TM2CNT_LO >> 1] == 0x10000) {
                             timer.nextEvent = this.gba.cpu.cycles;
                         }
                     }
@@ -235,13 +233,13 @@ class GameBoyAdvanceInterruptHandler {
                 if (this.gba.cpu.cycles >= timer.nextEvent) {
                     timer.lastEvent = timer.nextEvent;
                     timer.nextEvent += timer.overflowInterval;
-                    if (!timer.countUp || this.gba.io.registers[GameBoyAdvanceIO.TM2CNT_LO >> 1] == 0x10000) {
-                        this.gba.io.registers[GameBoyAdvanceIO.TM2CNT_LO >> 1] = timer.reload;
+                    if (!timer.countUp || this.gba.io.registers[IO.TM2CNT_LO >> 1] == 0x10000) {
+                        this.gba.io.registers[IO.TM2CNT_LO >> 1] = timer.reload;
                     }
                     timer.oldReload = timer.reload;
 
                     if (timer.doIrq) {
-                        this.raiseIRQ(GameBoyAdvanceInterruptHandler.IRQ_TIMER2);
+                        this.raiseIRQ(InterruptHandler.IRQ_TIMER2);
                     }
 
                     if (timer.countUp) {
@@ -250,7 +248,7 @@ class GameBoyAdvanceInterruptHandler {
 
                     timer = this.timers[3];
                     if (timer.countUp) {
-                        if (++this.gba.io.registers[GameBoyAdvanceIO.TM3CNT_LO >> 1] == 0x10000) {
+                        if (++this.gba.io.registers[IO.TM3CNT_LO >> 1] == 0x10000) {
                             timer.nextEvent = this.gba.cpu.cycles;
                         }
                     }
@@ -262,13 +260,13 @@ class GameBoyAdvanceInterruptHandler {
                 if (this.gba.cpu.cycles >= timer.nextEvent) {
                     timer.lastEvent = timer.nextEvent;
                     timer.nextEvent += timer.overflowInterval;
-                    if (!timer.countUp || this.gba.io.registers[GameBoyAdvanceIO.TM3CNT_LO >> 1] == 0x10000) {
-                        this.gba.io.registers[GameBoyAdvanceIO.TM3CNT_LO >> 1] = timer.reload;
+                    if (!timer.countUp || this.gba.io.registers[IO.TM3CNT_LO >> 1] == 0x10000) {
+                        this.gba.io.registers[IO.TM3CNT_LO >> 1] = timer.reload;
                     }
                     timer.oldReload = timer.reload;
 
                     if (timer.doIrq) {
-                        this.raiseIRQ(GameBoyAdvanceInterruptHandler.IRQ_TIMER3);
+                        this.raiseIRQ(InterruptHandler.IRQ_TIMER3);
                     }
 
                     if (timer.countUp) {
@@ -281,25 +279,25 @@ class GameBoyAdvanceInterruptHandler {
         var dma = this.dma[0];
         if (dma.enable && dma.doIrq && dma.nextIRQ && this.gba.cpu.cycles >= dma.nextIRQ) {
             dma.nextIRQ = 0;
-            this.raiseIRQ(GameBoyAdvanceInterruptHandler.IRQ_DMA0);
+            this.raiseIRQ(InterruptHandler.IRQ_DMA0);
         }
 
         dma = this.dma[1];
         if (dma.enable && dma.doIrq && dma.nextIRQ && this.gba.cpu.cycles >= dma.nextIRQ) {
             dma.nextIRQ = 0;
-            this.raiseIRQ(GameBoyAdvanceInterruptHandler.IRQ_DMA1);
+            this.raiseIRQ(InterruptHandler.IRQ_DMA1);
         }
 
         dma = this.dma[2];
         if (dma.enable && dma.doIrq && dma.nextIRQ && this.gba.cpu.cycles >= dma.nextIRQ) {
             dma.nextIRQ = 0;
-            this.raiseIRQ(GameBoyAdvanceInterruptHandler.IRQ_DMA2);
+            this.raiseIRQ(InterruptHandler.IRQ_DMA2);
         }
 
         dma = this.dma[3];
         if (dma.enable && dma.doIrq && dma.nextIRQ && this.gba.cpu.cycles >= dma.nextIRQ) {
             dma.nextIRQ = 0;
-            this.raiseIRQ(GameBoyAdvanceInterruptHandler.IRQ_DMA3);
+            this.raiseIRQ(InterruptHandler.IRQ_DMA3);
         }
 
         this.pollNextEvent();
@@ -327,7 +325,7 @@ class GameBoyAdvanceInterruptHandler {
         switch (opcode) {
             case 0x00:
                 // SoftReset
-                var mem = this.gba.mmu.memory[GameBoyAdvanceMMU.REGION_WORKING_IRAM];
+                var mem = this.gba.mmu.memory[MMU.REGION_WORKING_IRAM];
                 var flag = mem.loadU8(0x7FFA);
                 for (var i = 0x7E00; i < 0x8000; i += 4) {
                     mem.store32(i, 0);
@@ -346,11 +344,11 @@ class GameBoyAdvanceInterruptHandler {
                 // RegisterRamReset
                 var regions = this.gba.cpu.gprs[0];
                 if (regions & 0x01) {
-                    this.gba.mmu.memory[GameBoyAdvanceMMU.REGION_WORKING_RAM] = new MemoryBlock(GameBoyAdvanceMMU.SIZE_WORKING_RAM, 9);
+                    this.gba.mmu.memory[MMU.REGION_WORKING_RAM] = new MemoryBlock(MMU.SIZE_WORKING_RAM, 9);
                 }
                 if (regions & 0x02) {
-                    for (var i = 0; i < GameBoyAdvanceMMU.SIZE_WORKING_IRAM - 0x200; i += 4) {
-                        this.gba.mmu.memory[GameBoyAdvanceMMU.REGION_WORKING_IRAM].store32(i, 0);
+                    for (var i = 0; i < MMU.SIZE_WORKING_IRAM - 0x200; i += 4) {
+                        this.gba.mmu.memory[MMU.REGION_WORKING_IRAM].store32(i, 0);
                     }
                 }
                 if (regions & 0x1C) {
@@ -372,7 +370,7 @@ class GameBoyAdvanceInterruptHandler {
             case 0x04:
                 // IntrWait
                 if (!this.enable) {
-                    this.gba.io.store16(GameBoyAdvanceIO.IME, 1);
+                    this.gba.io.store16(IO.IME, 1);
                 }
                 if (!this.gba.cpu.gprs[0] && this.interruptFlags & this.gba.cpu.gprs[1]) {
                     return;
@@ -584,11 +582,11 @@ class GameBoyAdvanceInterruptHandler {
     setInterruptsEnabled(value:number):void {
         this.enabledIRQs = value;
 
-        if (this.enabledIRQs & GameBoyAdvanceInterruptHandler.MASK_SIO) {
+        if (this.enabledIRQs & InterruptHandler.MASK_SIO) {
             this.gba.logger.STUB('Serial I/O interrupts not implemented');
         }
 
-        if (this.enabledIRQs & GameBoyAdvanceInterruptHandler.MASK_KEYPAD) {
+        if (this.enabledIRQs & InterruptHandler.MASK_KEYPAD) {
             this.gba.logger.STUB('Keypad interrupts not implemented');
         }
 
@@ -703,7 +701,7 @@ class GameBoyAdvanceInterruptHandler {
 
     raiseIRQ(irqType:number):void {
         this.interruptFlags |= 1 << irqType;
-        this.gba.io.registers[GameBoyAdvanceIO.IF >> 1] = this.interruptFlags;
+        this.gba.io.registers[IO.IF >> 1] = this.interruptFlags;
 
         if (this.enable && (this.enabledIRQs & 1 << irqType)) {
             this.gba.cpu.raiseIRQ();
@@ -712,7 +710,7 @@ class GameBoyAdvanceInterruptHandler {
 
     dismissIRQs(irqMask:number):void {
         this.interruptFlags &= ~irqMask;
-        this.gba.io.registers[GameBoyAdvanceIO.IF >> 1] = this.interruptFlags;
+        this.gba.io.registers[IO.IF >> 1] = this.interruptFlags;
     }
 
     dmaSetSourceAddress(dma:number, address:number):void {
@@ -785,12 +783,12 @@ class GameBoyAdvanceInterruptHandler {
             } else {
                 currentTimer.nextEvent = 0;
             }
-            this.gba.io.registers[(GameBoyAdvanceIO.TM0CNT_LO + (timer << 2)) >> 1] = currentTimer.reload;
+            this.gba.io.registers[(IO.TM0CNT_LO + (timer << 2)) >> 1] = currentTimer.reload;
             currentTimer.oldReload = currentTimer.reload;
             ++this.timersEnabled;
         } else if (wasEnabled && !currentTimer.enable) {
             if (!currentTimer.countUp) {
-                this.gba.io.registers[(GameBoyAdvanceIO.TM0CNT_LO + (timer << 2)) >> 1] = currentTimer.oldReload + (this.gba.cpu.cycles - currentTimer.lastEvent) >> oldPrescale;
+                this.gba.io.registers[(IO.TM0CNT_LO + (timer << 2)) >> 1] = currentTimer.oldReload + (this.gba.cpu.cycles - currentTimer.lastEvent) >> oldPrescale;
             }
             --this.timersEnabled;
         } else if (currentTimer.prescaleBits != oldPrescale && !currentTimer.countUp) {
@@ -807,7 +805,7 @@ class GameBoyAdvanceInterruptHandler {
         if (currentTimer.enable && !currentTimer.countUp) {
             return currentTimer.oldReload + (this.gba.cpu.cycles - currentTimer.lastEvent) >> currentTimer.prescaleBits;
         } else {
-            return this.gba.io.registers[(GameBoyAdvanceIO.TM0CNT_LO + (timer << 2)) >> 1];
+            return this.gba.io.registers[(IO.TM0CNT_LO + (timer << 2)) >> 1];
         }
     }
 
@@ -1013,4 +1011,5 @@ class GameBoyAdvanceInterruptHandler {
             this.gba.mmu.store8(dPointer++, 0);
         }
     }
+}
 }

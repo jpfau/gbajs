@@ -1,11 +1,7 @@
-class ARMCoreThumb {
+module GameBoyAdvance {
+export class ARMCoreThumb {
 
-    private gba:GameBoyAdvance;
-    cpu:ARMCore;
-
-    constructor(gba:GameBoyAdvance, cpu:ARMCore) {
-        this.gba = gba;
-        this.cpu = cpu;
+    constructor(private gba:Main, private cpu:ARMCore) {
     }
 
     constructADC(rd:number, rm:number) {
@@ -858,4 +854,5 @@ class ARMCoreThumb {
             cpu.cpsr.Z = !(aluOut & 0xFFFFFFFF);
         };
     }
+}
 }

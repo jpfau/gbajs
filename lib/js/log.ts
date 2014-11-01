@@ -1,20 +1,7 @@
-enum LoggerLevel {
-
-    ERROR = 1,
-    WARN = 2,
-    STUB = 4,
-    INFO = 8,
-    DEBUG = 16
-
-}
-
 class Logger {
 
-    constructor(level = ~0) {
-        this.logLevel = level;
+    constructor(public logLevel = ~0) {
     }
-
-    logLevel:number;
 
     log(level:number, error:any):void {
     }
@@ -31,32 +18,32 @@ class Logger {
     }
 
     ERROR(error:any):void {
-        if (this.logLevel & LoggerLevel.ERROR) {
-            this.log(LoggerLevel.ERROR, error);
+        if (this.logLevel & Logger.Level.ERROR) {
+            this.log(Logger.Level.ERROR, error);
         }
     }
 
     WARN(warn:any):void {
-        if (this.logLevel & LoggerLevel.WARN) {
-            this.log(LoggerLevel.WARN, warn);
+        if (this.logLevel & Logger.Level.WARN) {
+            this.log(Logger.Level.WARN, warn);
         }
     }
 
     STUB(func:any):void {
-        if (this.logLevel & LoggerLevel.STUB) {
-            this.log(LoggerLevel.STUB, func);
+        if (this.logLevel & Logger.Level.STUB) {
+            this.log(Logger.Level.STUB, func);
         }
     }
 
     INFO(info:any):void {
-        if (this.logLevel & LoggerLevel.INFO) {
-            this.log(LoggerLevel.INFO, info);
+        if (this.logLevel & Logger.Level.INFO) {
+            this.log(Logger.Level.INFO, info);
         }
     }
 
     DEBUG(info:any):void {
-        if (this.logLevel & LoggerLevel.DEBUG) {
-            this.log(LoggerLevel.DEBUG, info);
+        if (this.logLevel & Logger.Level.DEBUG) {
+            this.log(Logger.Level.DEBUG, info);
         }
     }
 
@@ -68,5 +55,17 @@ class Logger {
         if (!test) {
             throw new Error("Assertion failed: " + err);
         }
+    }
+}
+
+module Logger {
+    export enum Level {
+
+        ERROR = 1,
+        WARN = 2,
+        STUB = 4,
+        INFO = 8,
+        DEBUG = 16
+
     }
 }

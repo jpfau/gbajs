@@ -1,4 +1,5 @@
-interface Channel4 {
+module GameBoyAdvance {
+export interface Channel4 {
     sample:number;
     lfsr: number;
     width: number;
@@ -14,13 +15,13 @@ interface Channel4 {
     next?: number;
 }
 
-interface JSAudio {
+export interface JSAudio {
     connect(destination:any):void;
     disconnect(destination:any):void;
     onaudioprocess(audioProcessingEvent:any):void;
 }
 
-class GameBoyAdvanceAudio {
+export class Audio {
     context:any;
     jsAudio:JSAudio;
     bufferSize:number;
@@ -33,8 +34,6 @@ class GameBoyAdvanceAudio {
     static SOUND_MAX = 0x400;
     static FIFO_MAX = 0x200;
     static PSG_MAX = 0x080;
-
-    private gba:GameBoyAdvance;
 
     fifoA:number[];
     fifoB:number[];
@@ -103,8 +102,7 @@ class GameBoyAdvanceAudio {
     masterVolumeLeft:number;
     masterVolumeRight:number;
 
-    constructor(gba:GameBoyAdvance) {
-        this.gba = gba;
+    constructor(private gba:Main) {
         var AudioContext = (<any>window).AudioContext || (<any>window).webkitAudioContext;
         if (AudioContext) {
             this.context = new AudioContext();
@@ -202,7 +200,7 @@ class GameBoyAdvanceAudio {
         this.channel3Pointer = 0;
         this.channel3Sample = 0;
 
-        this.cpuFrequency = GameBoyAdvanceInterruptHandler.FREQUENCY;
+        this.cpuFrequency = InterruptHandler.FREQUENCY;
 
         this.channel4 = {
             sample: 0,
@@ -711,12 +709,12 @@ class GameBoyAdvanceAudio {
 
     scheduleFIFODma(number:number, info:DMA):void {
         switch (info.dest) {
-            case GameBoyAdvanceMMU.BASE_IO | GameBoyAdvanceIO.FIFO_A_LO:
+            case MMU.BASE_IO | IO.FIFO_A_LO:
                 // FIXME: is this needed or a hack?
                 info.dstControl = 2;
                 this.dmaA = number;
                 break;
-            case GameBoyAdvanceMMU.BASE_IO | GameBoyAdvanceIO.FIFO_B_LO:
+            case MMU.BASE_IO | IO.FIFO_B_LO:
                 info.dstControl = 2;
                 this.dmaB = number;
                 break;
@@ -734,7 +732,7 @@ class GameBoyAdvanceAudio {
 
         channel = this.squareChannels[0];
         if (channel.playing) {
-            sample = channel.sample * this.soundRatio * GameBoyAdvanceAudio.PSG_MAX;
+            sample = channel.sample * this.soundRatio * Audio.PSG_MAX;
             if (this.enabledLeft & 0x1) {
                 sampleLeft += sample;
             }
@@ -745,7 +743,7 @@ class GameBoyAdvanceAudio {
 
         channel = this.squareChannels[1];
         if (channel.playing) {
-            sample = channel.sample * this.soundRatio * GameBoyAdvanceAudio.PSG_MAX;
+            sample = channel.sample * this.soundRatio * Audio.PSG_MAX;
             if (this.enabledLeft & 0x2) {
                 sampleLeft += sample;
             }
@@ -755,7 +753,7 @@ class GameBoyAdvanceAudio {
         }
 
         if (this.playingChannel3) {
-            sample = this.channel3Sample * this.soundRatio * this.channel3Volume * GameBoyAdvanceAudio.PSG_MAX;
+            sample = this.channel3Sample * this.soundRatio * this.channel3Volume * Audio.PSG_MAX;
             if (this.enabledLeft & 0x4) {
                 sampleLeft += sample;
             }
@@ -765,7 +763,7 @@ class GameBoyAdvanceAudio {
         }
 
         if (this.playingChannel4) {
-            sample = this.channel4.sample * this.soundRatio * GameBoyAdvanceAudio.PSG_MAX;
+            sample = this.channel4.sample * this.soundRatio * Audio.PSG_MAX;
             if (this.enabledLeft & 0x8) {
                 sampleLeft += sample;
             }
@@ -775,7 +773,7 @@ class GameBoyAdvanceAudio {
         }
 
         if (this.enableChannelA) {
-            sample = this.fifoASample * GameBoyAdvanceAudio.FIFO_MAX * this.ratioChannelA;
+            sample = this.fifoASample * Audio.FIFO_MAX * this.ratioChannelA;
             if (this.enableLeftChannelA) {
                 sampleLeft += sample;
             }
@@ -785,7 +783,7 @@ class GameBoyAdvanceAudio {
         }
 
         if (this.enableChannelB) {
-            sample = this.fifoBSample * GameBoyAdvanceAudio.FIFO_MAX * this.ratioChannelB;
+            sample = this.fifoBSample * Audio.FIFO_MAX * this.ratioChannelB;
             if (this.enableLeftChannelB) {
                 sampleLeft += sample;
             }
@@ -795,9 +793,9 @@ class GameBoyAdvanceAudio {
         }
 
         var samplePointer = this.samplePointer;
-        sampleLeft *= this.masterVolume / GameBoyAdvanceAudio.SOUND_MAX;
+        sampleLeft *= this.masterVolume / Audio.SOUND_MAX;
         sampleLeft = Math.max(Math.min(sampleLeft, 1), -1);
-        sampleRight *= this.masterVolume / GameBoyAdvanceAudio.SOUND_MAX;
+        sampleRight *= this.masterVolume / Audio.SOUND_MAX;
         sampleRight = Math.max(Math.min(sampleRight, 1), -1);
         if (this.buffers) {
             this.buffers[0][samplePointer] = sampleLeft;
@@ -836,4 +834,5 @@ class GameBoyAdvanceAudio {
             }
         }
     }
+}
 }

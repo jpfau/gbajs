@@ -1,4 +1,5 @@
-class SRAMSavedata extends DefaultMemoryView {
+module GameBoyAdvance {
+export class SRAMSavedata extends DefaultMemoryView {
 
     constructor(size:number) {
         super(new ArrayBuffer(size));
@@ -21,7 +22,7 @@ class SRAMSavedata extends DefaultMemoryView {
     }
 }
 
-class FlashSavedata extends DefaultMemoryView {
+export class FlashSavedata extends DefaultMemoryView {
 
     static COMMAND_WIPE = 0x10;
     static COMMAND_ERASE_SECTOR = 0x30;
@@ -189,7 +190,7 @@ class FlashSavedata extends DefaultMemoryView {
 
 }
 
-class EEPROMSavedata extends DefaultMemoryView {
+export class EEPROMSavedata extends DefaultMemoryView {
 
     writeAddress = 0;
     readBitsRemaining = 0;
@@ -210,7 +211,7 @@ class EEPROMSavedata extends DefaultMemoryView {
 
     dma:DMA;
 
-    constructor(gba:GameBoyAdvance, size:number) {
+    constructor(gba:Main, size:number) {
         super(new ArrayBuffer(size));
 
         this.dma = gba.irq.dma[3];
@@ -316,4 +317,5 @@ class EEPROMSavedata extends DefaultMemoryView {
     store32(offset:number, value:number):void {
         throw new Error("Unsupported 32-bit access!");
     }
+}
 }

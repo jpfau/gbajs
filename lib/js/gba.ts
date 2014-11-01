@@ -1,19 +1,20 @@
-class GameBoyAdvance {
+module GameBoyAdvance {
+export class Main {
 
     static SYS_ID = 'com.endrift.gbajs';
 
     rom:Cart;
 
     cpu:ARMCore;
-    mmu:GameBoyAdvanceMMU;
-    irq:GameBoyAdvanceInterruptHandler;
-    io:GameBoyAdvanceIO;
-    audio:GameBoyAdvanceAudio;
-    video:GameBoyAdvanceVideo;
-    keypad:GameBoyAdvanceKeypad;
-    sio:GameBoyAdvanceSIO;
+    mmu:MMU;
+    irq:InterruptHandler;
+    io:IO;
+    audio:Audio;
+    video:Video;
+    keypad:Keypad;
+    sio:SIO;
 
-    logger = new Logger(LoggerLevel.ERROR | LoggerLevel.WARN);
+    logger = new Logger(Logger.Level.ERROR | Logger.Level.WARN);
 
     doStep:() => void;
     /**
@@ -23,13 +24,13 @@ class GameBoyAdvance {
 
     constructor() {
         this.cpu = new ARMCore(this);
-        this.mmu = new GameBoyAdvanceMMU(this);
-        this.irq = new GameBoyAdvanceInterruptHandler(this);
-        this.io = new GameBoyAdvanceIO(this);
-        this.audio = new GameBoyAdvanceAudio(this);
-        this.video = new GameBoyAdvanceVideo(this);
-        this.keypad = new GameBoyAdvanceKeypad(this);
-        this.sio = new GameBoyAdvanceSIO(this);
+        this.mmu = new MMU(this);
+        this.irq = new InterruptHandler(this);
+        this.io = new IO(this);
+        this.audio = new Audio(this);
+        this.video = new Video(this);
+        this.keypad = new Keypad(this);
+        this.sio = new SIO(this);
 
         this.keypad.registerHandlers();
         this.doStep = this.waitFrame;
@@ -115,10 +116,10 @@ class GameBoyAdvance {
         this.video.clear();
         this.sio.clear();
 
-        this.mmu.mmap(GameBoyAdvanceMMU.REGION_IO, <MemoryView><any>this.io);
-        this.mmu.mmap(GameBoyAdvanceMMU.REGION_PALETTE_RAM, <MemoryView><any>this.video.renderPath.palette);
-        this.mmu.mmap(GameBoyAdvanceMMU.REGION_VRAM, <MemoryView><any>this.video.renderPath.vram);
-        this.mmu.mmap(GameBoyAdvanceMMU.REGION_OAM, <MemoryView><any>this.video.renderPath.oam);
+        this.mmu.mmap(MMU.REGION_IO, <MemoryView><any>this.io);
+        this.mmu.mmap(MMU.REGION_PALETTE_RAM, <MemoryView><any>this.video.renderPath.palette);
+        this.mmu.mmap(MMU.REGION_VRAM, <MemoryView><any>this.video.renderPath.vram);
+        this.mmu.mmap(MMU.REGION_OAM, <MemoryView><any>this.video.renderPath.oam);
 
         this.cpu.resetCPU(0);
     }
@@ -257,7 +258,7 @@ class GameBoyAdvance {
         var sram = this.mmu.save;
         try {
             var storage = window.localStorage;
-            storage[GameBoyAdvance.SYS_ID + '.' + this.mmu.cart.code] = encodeBase64(sram.view);
+            storage[Main.SYS_ID + '.' + this.mmu.cart.code] = encodeBase64(sram.view);
         } catch (e) {
             this.logger.WARN('Could not store savedata! ' + e);
         }
@@ -266,7 +267,7 @@ class GameBoyAdvance {
     retrieveSavedata():boolean {
         try {
             var storage = window.localStorage;
-            var data:string = storage[GameBoyAdvance.SYS_ID + '.' + this.mmu.cart.code];
+            var data:string = storage[Main.SYS_ID + '.' + this.mmu.cart.code];
             if (data) {
                 this.setSavedata(decodeBase64(data));
                 return true;
@@ -297,4 +298,5 @@ class GameBoyAdvance {
         this.io.defrost(frost.io);
     }
 
+}
 }

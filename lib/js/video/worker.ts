@@ -1,6 +1,6 @@
 importScripts('software.js');
 
-var video = new GameBoyAdvanceSoftwareRenderer();
+var video = new GameBoyAdvance.SoftwareRenderer();
 var proxyBacking:any = null;
 var currentFrame = 0;
 

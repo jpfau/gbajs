@@ -1,15 +1,12 @@
-class ARMCoreArm {
-
-    private gba:GameBoyAdvance;
-    cpu:ARMCore;
+module GameBoyAdvance {
+export class ARMCoreArm {
 
     addressingMode23Immediate:any[];
     addressingMode23Register:any[];
     addressingMode2RegisterShifted:any[];
 
-    constructor(gba:GameBoyAdvance, cpu:ARMCore) {
-        this.gba = gba;
-        this.cpu = cpu;
+    constructor(private gba:Main, private cpu:ARMCore) {
+        var cpu = this.cpu;
 
         this.addressingMode23Immediate = [
             // 000x0
@@ -1576,4 +1573,5 @@ class ARMCoreArm {
         }
     }
 
+}
 }

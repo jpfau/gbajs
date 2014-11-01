@@ -1,4 +1,5 @@
-class GameBoyAdvanceIO implements MemoryIO {
+module GameBoyAdvance {
+export class IO implements MemoryIO {
     // Video
     static DISPCNT = 0x000;
     static GREENSWP = 0x002;
@@ -145,22 +146,19 @@ class GameBoyAdvanceIO implements MemoryIO {
     registers:Uint16Array;
     value:number;
 
-    private gba:GameBoyAdvance;
-
-    constructor(gba:GameBoyAdvance) {
-        this.gba = gba;
+    constructor(private gba:Main) {
     }
 
     clear():void {
-        this.registers = new Uint16Array(GameBoyAdvanceMMU.SIZE_IO);
+        this.registers = new Uint16Array(MMU.SIZE_IO);
 
-        this.registers[GameBoyAdvanceIO.DISPCNT >> 1] = GameBoyAdvanceIO.DEFAULT_DISPCNT;
-        this.registers[GameBoyAdvanceIO.SOUNDBIAS >> 1] = GameBoyAdvanceIO.DEFAULT_SOUNDBIAS;
-        this.registers[GameBoyAdvanceIO.BG2PA >> 1] = GameBoyAdvanceIO.DEFAULT_BGPA;
-        this.registers[GameBoyAdvanceIO.BG2PD >> 1] = GameBoyAdvanceIO.DEFAULT_BGPD;
-        this.registers[GameBoyAdvanceIO.BG3PA >> 1] = GameBoyAdvanceIO.DEFAULT_BGPA;
-        this.registers[GameBoyAdvanceIO.BG3PD >> 1] = GameBoyAdvanceIO.DEFAULT_BGPD;
-        this.registers[GameBoyAdvanceIO.RCNT >> 1] = GameBoyAdvanceIO.DEFAULT_RCNT;
+        this.registers[IO.DISPCNT >> 1] = IO.DEFAULT_DISPCNT;
+        this.registers[IO.SOUNDBIAS >> 1] = IO.DEFAULT_SOUNDBIAS;
+        this.registers[IO.BG2PA >> 1] = IO.DEFAULT_BGPA;
+        this.registers[IO.BG2PD >> 1] = IO.DEFAULT_BGPD;
+        this.registers[IO.BG3PA >> 1] = IO.DEFAULT_BGPA;
+        this.registers[IO.BG3PD >> 1] = IO.DEFAULT_BGPD;
+        this.registers[IO.RCNT >> 1] = IO.DEFAULT_RCNT;
     }
 
     freeze():any {
@@ -172,7 +170,7 @@ class GameBoyAdvanceIO implements MemoryIO {
     defrost(frost:any):void {
         this.registers = new Uint16Array(frost.registers);
         // Video registers don't serialize themselves
-        for (var i = 0; i <= GameBoyAdvanceIO.BLDY; i += 2) {
+        for (var i = 0; i <= IO.BLDY; i += 2) {
             this.store16(this.registers[i >> 1], 0);
         }
     }
@@ -188,15 +186,15 @@ class GameBoyAdvanceIO implements MemoryIO {
     load32(offset:number):number {
         offset &= 0xFFFFFFFC;
         switch (offset) {
-            case GameBoyAdvanceIO.DMA0CNT_LO:
-            case GameBoyAdvanceIO.DMA1CNT_LO:
-            case GameBoyAdvanceIO.DMA2CNT_LO:
-            case GameBoyAdvanceIO.DMA3CNT_LO:
+            case IO.DMA0CNT_LO:
+            case IO.DMA1CNT_LO:
+            case IO.DMA2CNT_LO:
+            case IO.DMA3CNT_LO:
                 return this.loadU16(offset | 2) << 16;
-            case GameBoyAdvanceIO.IME:
+            case IO.IME:
                 return this.loadU16(offset) & 0xFFFF;
-            case GameBoyAdvanceIO.JOY_RECV:
-            case GameBoyAdvanceIO.JOY_TRANS:
+            case IO.JOY_RECV:
+            case IO.JOY_TRANS:
                 this.gba.logger.STUB('Unimplemented JOY register read: 0x' + offset.toString(16));
                 return 0;
         }
@@ -212,154 +210,154 @@ class GameBoyAdvanceIO implements MemoryIO {
 
     loadU16(offset:number):number {
         switch (offset) {
-            case GameBoyAdvanceIO.DISPCNT:
-            case GameBoyAdvanceIO.BG0CNT:
-            case GameBoyAdvanceIO.BG1CNT:
-            case GameBoyAdvanceIO.BG2CNT:
-            case GameBoyAdvanceIO.BG3CNT:
-            case GameBoyAdvanceIO.WININ:
-            case GameBoyAdvanceIO.WINOUT:
-            case GameBoyAdvanceIO.SOUND1CNT_LO:
-            case GameBoyAdvanceIO.SOUND3CNT_LO:
-            case GameBoyAdvanceIO.SOUNDCNT_LO:
-            case GameBoyAdvanceIO.SOUNDCNT_HI:
-            case GameBoyAdvanceIO.SOUNDBIAS:
-            case GameBoyAdvanceIO.BLDCNT:
-            case GameBoyAdvanceIO.BLDALPHA:
+            case IO.DISPCNT:
+            case IO.BG0CNT:
+            case IO.BG1CNT:
+            case IO.BG2CNT:
+            case IO.BG3CNT:
+            case IO.WININ:
+            case IO.WINOUT:
+            case IO.SOUND1CNT_LO:
+            case IO.SOUND3CNT_LO:
+            case IO.SOUNDCNT_LO:
+            case IO.SOUNDCNT_HI:
+            case IO.SOUNDBIAS:
+            case IO.BLDCNT:
+            case IO.BLDALPHA:
 
-            case GameBoyAdvanceIO.TM0CNT_HI:
-            case GameBoyAdvanceIO.TM1CNT_HI:
-            case GameBoyAdvanceIO.TM2CNT_HI:
-            case GameBoyAdvanceIO.TM3CNT_HI:
-            case GameBoyAdvanceIO.DMA0CNT_HI:
-            case GameBoyAdvanceIO.DMA1CNT_HI:
-            case GameBoyAdvanceIO.DMA2CNT_HI:
-            case GameBoyAdvanceIO.DMA3CNT_HI:
-            case GameBoyAdvanceIO.RCNT:
-            case GameBoyAdvanceIO.WAITCNT:
-            case GameBoyAdvanceIO.IE:
-            case GameBoyAdvanceIO.IF:
-            case GameBoyAdvanceIO.IME:
-            case GameBoyAdvanceIO.POSTFLG:
+            case IO.TM0CNT_HI:
+            case IO.TM1CNT_HI:
+            case IO.TM2CNT_HI:
+            case IO.TM3CNT_HI:
+            case IO.DMA0CNT_HI:
+            case IO.DMA1CNT_HI:
+            case IO.DMA2CNT_HI:
+            case IO.DMA3CNT_HI:
+            case IO.RCNT:
+            case IO.WAITCNT:
+            case IO.IE:
+            case IO.IF:
+            case IO.IME:
+            case IO.POSTFLG:
                 // Handled transparently by the written registers
                 break;
 
             // Video
-            case GameBoyAdvanceIO.DISPSTAT:
+            case IO.DISPSTAT:
                 return this.registers[offset >> 1] | this.gba.video.readDisplayStat();
-            case GameBoyAdvanceIO.VCOUNT:
+            case IO.VCOUNT:
                 return this.gba.video.vcount;
 
             // Sound
-            case GameBoyAdvanceIO.SOUND1CNT_HI:
-            case GameBoyAdvanceIO.SOUND2CNT_LO:
+            case IO.SOUND1CNT_HI:
+            case IO.SOUND2CNT_LO:
                 return this.registers[offset >> 1] & 0xFFC0;
-            case GameBoyAdvanceIO.SOUND1CNT_X:
-            case GameBoyAdvanceIO.SOUND2CNT_HI:
-            case GameBoyAdvanceIO.SOUND3CNT_X:
+            case IO.SOUND1CNT_X:
+            case IO.SOUND2CNT_HI:
+            case IO.SOUND3CNT_X:
                 return this.registers[offset >> 1] & 0x4000;
-            case GameBoyAdvanceIO.SOUND3CNT_HI:
+            case IO.SOUND3CNT_HI:
                 return this.registers[offset >> 1] & 0xE000;
-            case GameBoyAdvanceIO.SOUND4CNT_LO:
+            case IO.SOUND4CNT_LO:
                 return this.registers[offset >> 1] & 0xFF00;
-            case GameBoyAdvanceIO.SOUND4CNT_HI:
+            case IO.SOUND4CNT_HI:
                 return this.registers[offset >> 1] & 0x40FF;
-            case GameBoyAdvanceIO.SOUNDCNT_X:
+            case IO.SOUNDCNT_X:
                 this.gba.logger.STUB('Unimplemented sound register read: SOUNDCNT_X');
                 return this.registers[offset >> 1] | 0x0000;
 
             // Timers
-            case GameBoyAdvanceIO.TM0CNT_LO:
+            case IO.TM0CNT_LO:
                 return this.gba.irq.timerRead(0);
-            case GameBoyAdvanceIO.TM1CNT_LO:
+            case IO.TM1CNT_LO:
                 return this.gba.irq.timerRead(1);
-            case GameBoyAdvanceIO.TM2CNT_LO:
+            case IO.TM2CNT_LO:
                 return this.gba.irq.timerRead(2);
-            case GameBoyAdvanceIO.TM3CNT_LO:
+            case IO.TM3CNT_LO:
                 return this.gba.irq.timerRead(3);
 
             // SIO
-            case GameBoyAdvanceIO.SIOCNT:
+            case IO.SIOCNT:
                 return this.gba.sio.readSIOCNT();
 
-            case GameBoyAdvanceIO.KEYINPUT:
+            case IO.KEYINPUT:
                 this.gba.keypad.pollGamepads();
                 return this.gba.keypad.currentDown;
-            case GameBoyAdvanceIO.KEYCNT:
+            case IO.KEYCNT:
                 this.gba.logger.STUB('Unimplemented I/O register read: KEYCNT');
                 return 0;
 
-            case GameBoyAdvanceIO.BG0HOFS:
-            case GameBoyAdvanceIO.BG0VOFS:
-            case GameBoyAdvanceIO.BG1HOFS:
-            case GameBoyAdvanceIO.BG1VOFS:
-            case GameBoyAdvanceIO.BG2HOFS:
-            case GameBoyAdvanceIO.BG2VOFS:
-            case GameBoyAdvanceIO.BG3HOFS:
-            case GameBoyAdvanceIO.BG3VOFS:
-            case GameBoyAdvanceIO.BG2PA:
-            case GameBoyAdvanceIO.BG2PB:
-            case GameBoyAdvanceIO.BG2PC:
-            case GameBoyAdvanceIO.BG2PD:
-            case GameBoyAdvanceIO.BG3PA:
-            case GameBoyAdvanceIO.BG3PB:
-            case GameBoyAdvanceIO.BG3PC:
-            case GameBoyAdvanceIO.BG3PD:
-            case GameBoyAdvanceIO.BG2X_LO:
-            case GameBoyAdvanceIO.BG2X_HI:
-            case GameBoyAdvanceIO.BG2Y_LO:
-            case GameBoyAdvanceIO.BG2Y_HI:
-            case GameBoyAdvanceIO.BG3X_LO:
-            case GameBoyAdvanceIO.BG3X_HI:
-            case GameBoyAdvanceIO.BG3Y_LO:
-            case GameBoyAdvanceIO.BG3Y_HI:
-            case GameBoyAdvanceIO.WIN0H:
-            case GameBoyAdvanceIO.WIN1H:
-            case GameBoyAdvanceIO.WIN0V:
-            case GameBoyAdvanceIO.WIN1V:
-            case GameBoyAdvanceIO.BLDY:
-            case GameBoyAdvanceIO.DMA0SAD_LO:
-            case GameBoyAdvanceIO.DMA0SAD_HI:
-            case GameBoyAdvanceIO.DMA0DAD_LO:
-            case GameBoyAdvanceIO.DMA0DAD_HI:
-            case GameBoyAdvanceIO.DMA0CNT_LO:
-            case GameBoyAdvanceIO.DMA1SAD_LO:
-            case GameBoyAdvanceIO.DMA1SAD_HI:
-            case GameBoyAdvanceIO.DMA1DAD_LO:
-            case GameBoyAdvanceIO.DMA1DAD_HI:
-            case GameBoyAdvanceIO.DMA1CNT_LO:
-            case GameBoyAdvanceIO.DMA2SAD_LO:
-            case GameBoyAdvanceIO.DMA2SAD_HI:
-            case GameBoyAdvanceIO.DMA2DAD_LO:
-            case GameBoyAdvanceIO.DMA2DAD_HI:
-            case GameBoyAdvanceIO.DMA2CNT_LO:
-            case GameBoyAdvanceIO.DMA3SAD_LO:
-            case GameBoyAdvanceIO.DMA3SAD_HI:
-            case GameBoyAdvanceIO.DMA3DAD_LO:
-            case GameBoyAdvanceIO.DMA3DAD_HI:
-            case GameBoyAdvanceIO.DMA3CNT_LO:
-            case GameBoyAdvanceIO.FIFO_A_LO:
-            case GameBoyAdvanceIO.FIFO_A_HI:
-            case GameBoyAdvanceIO.FIFO_B_LO:
-            case GameBoyAdvanceIO.FIFO_B_HI:
+            case IO.BG0HOFS:
+            case IO.BG0VOFS:
+            case IO.BG1HOFS:
+            case IO.BG1VOFS:
+            case IO.BG2HOFS:
+            case IO.BG2VOFS:
+            case IO.BG3HOFS:
+            case IO.BG3VOFS:
+            case IO.BG2PA:
+            case IO.BG2PB:
+            case IO.BG2PC:
+            case IO.BG2PD:
+            case IO.BG3PA:
+            case IO.BG3PB:
+            case IO.BG3PC:
+            case IO.BG3PD:
+            case IO.BG2X_LO:
+            case IO.BG2X_HI:
+            case IO.BG2Y_LO:
+            case IO.BG2Y_HI:
+            case IO.BG3X_LO:
+            case IO.BG3X_HI:
+            case IO.BG3Y_LO:
+            case IO.BG3Y_HI:
+            case IO.WIN0H:
+            case IO.WIN1H:
+            case IO.WIN0V:
+            case IO.WIN1V:
+            case IO.BLDY:
+            case IO.DMA0SAD_LO:
+            case IO.DMA0SAD_HI:
+            case IO.DMA0DAD_LO:
+            case IO.DMA0DAD_HI:
+            case IO.DMA0CNT_LO:
+            case IO.DMA1SAD_LO:
+            case IO.DMA1SAD_HI:
+            case IO.DMA1DAD_LO:
+            case IO.DMA1DAD_HI:
+            case IO.DMA1CNT_LO:
+            case IO.DMA2SAD_LO:
+            case IO.DMA2SAD_HI:
+            case IO.DMA2DAD_LO:
+            case IO.DMA2DAD_HI:
+            case IO.DMA2CNT_LO:
+            case IO.DMA3SAD_LO:
+            case IO.DMA3SAD_HI:
+            case IO.DMA3DAD_LO:
+            case IO.DMA3DAD_HI:
+            case IO.DMA3CNT_LO:
+            case IO.FIFO_A_LO:
+            case IO.FIFO_A_HI:
+            case IO.FIFO_B_LO:
+            case IO.FIFO_B_HI:
                 this.gba.logger.WARN('Read for write-only register: 0x' + offset.toString(16));
                 return this.gba.mmu.badMemory.loadU16(0);
 
-            case GameBoyAdvanceIO.MOSAIC:
+            case IO.MOSAIC:
                 this.gba.logger.WARN('Read for write-only register: 0x' + offset.toString(16));
                 return 0;
 
-            case GameBoyAdvanceIO.SIOMULTI0:
-            case GameBoyAdvanceIO.SIOMULTI1:
-            case GameBoyAdvanceIO.SIOMULTI2:
-            case GameBoyAdvanceIO.SIOMULTI3:
-                return this.gba.sio.read((offset - GameBoyAdvanceIO.SIOMULTI0) >> 1);
+            case IO.SIOMULTI0:
+            case IO.SIOMULTI1:
+            case IO.SIOMULTI2:
+            case IO.SIOMULTI3:
+                return this.gba.sio.read((offset - IO.SIOMULTI0) >> 1);
 
-            case GameBoyAdvanceIO.SIODATA8:
+            case IO.SIODATA8:
                 this.gba.logger.STUB('Unimplemented SIO register read: 0x' + offset.toString(16));
                 return 0;
-            case GameBoyAdvanceIO.JOYCNT:
-            case GameBoyAdvanceIO.JOYSTAT:
+            case IO.JOYCNT:
+            case IO.JOYSTAT:
                 this.gba.logger.STUB('Unimplemented JOY register read: 0x' + offset.toString(16));
                 return 0;
 
@@ -372,48 +370,48 @@ class GameBoyAdvanceIO implements MemoryIO {
 
     store8(offset:number, value:number):void {
         switch (offset) {
-            case GameBoyAdvanceIO.WININ:
+            case IO.WININ:
                 this.value & 0x3F;
                 break;
-            case GameBoyAdvanceIO.WININ | 1:
+            case IO.WININ | 1:
                 this.value & 0x3F;
                 break;
-            case GameBoyAdvanceIO.WINOUT:
+            case IO.WINOUT:
                 this.value & 0x3F;
                 break;
-            case GameBoyAdvanceIO.WINOUT | 1:
+            case IO.WINOUT | 1:
                 this.value & 0x3F;
                 break;
-            case GameBoyAdvanceIO.SOUND1CNT_LO:
-            case GameBoyAdvanceIO.SOUND1CNT_LO | 1:
-            case GameBoyAdvanceIO.SOUND1CNT_HI:
-            case GameBoyAdvanceIO.SOUND1CNT_HI | 1:
-            case GameBoyAdvanceIO.SOUND1CNT_X:
-            case GameBoyAdvanceIO.SOUND1CNT_X | 1:
-            case GameBoyAdvanceIO.SOUND2CNT_LO:
-            case GameBoyAdvanceIO.SOUND2CNT_LO | 1:
-            case GameBoyAdvanceIO.SOUND2CNT_HI:
-            case GameBoyAdvanceIO.SOUND2CNT_HI | 1:
-            case GameBoyAdvanceIO.SOUND3CNT_LO:
-            case GameBoyAdvanceIO.SOUND3CNT_LO | 1:
-            case GameBoyAdvanceIO.SOUND3CNT_HI:
-            case GameBoyAdvanceIO.SOUND3CNT_HI | 1:
-            case GameBoyAdvanceIO.SOUND3CNT_X:
-            case GameBoyAdvanceIO.SOUND3CNT_X | 1:
-            case GameBoyAdvanceIO.SOUND4CNT_LO:
-            case GameBoyAdvanceIO.SOUND4CNT_LO | 1:
-            case GameBoyAdvanceIO.SOUND4CNT_HI:
-            case GameBoyAdvanceIO.SOUND4CNT_HI | 1:
-            case GameBoyAdvanceIO.SOUNDCNT_LO:
-            case GameBoyAdvanceIO.SOUNDCNT_LO | 1:
-            case GameBoyAdvanceIO.SOUNDCNT_X:
-            case GameBoyAdvanceIO.IF:
-            case GameBoyAdvanceIO.IME:
+            case IO.SOUND1CNT_LO:
+            case IO.SOUND1CNT_LO | 1:
+            case IO.SOUND1CNT_HI:
+            case IO.SOUND1CNT_HI | 1:
+            case IO.SOUND1CNT_X:
+            case IO.SOUND1CNT_X | 1:
+            case IO.SOUND2CNT_LO:
+            case IO.SOUND2CNT_LO | 1:
+            case IO.SOUND2CNT_HI:
+            case IO.SOUND2CNT_HI | 1:
+            case IO.SOUND3CNT_LO:
+            case IO.SOUND3CNT_LO | 1:
+            case IO.SOUND3CNT_HI:
+            case IO.SOUND3CNT_HI | 1:
+            case IO.SOUND3CNT_X:
+            case IO.SOUND3CNT_X | 1:
+            case IO.SOUND4CNT_LO:
+            case IO.SOUND4CNT_LO | 1:
+            case IO.SOUND4CNT_HI:
+            case IO.SOUND4CNT_HI | 1:
+            case IO.SOUNDCNT_LO:
+            case IO.SOUNDCNT_LO | 1:
+            case IO.SOUNDCNT_X:
+            case IO.IF:
+            case IO.IME:
                 break;
-            case GameBoyAdvanceIO.SOUNDBIAS | 1:
+            case IO.SOUNDBIAS | 1:
                 this.STUB_REG('sound', offset);
                 break;
-            case GameBoyAdvanceIO.HALTCNT:
+            case IO.HALTCNT:
                 value &= 0x80;
                 if (!value) {
                     this.gba.irq.halt();
@@ -439,318 +437,318 @@ class GameBoyAdvanceIO implements MemoryIO {
     store16(offset:number, value:number):void {
         switch (offset) {
             // Video
-            case GameBoyAdvanceIO.DISPCNT:
+            case IO.DISPCNT:
                 this.gba.video.renderPath.writeDisplayControl(value);
                 break;
-            case GameBoyAdvanceIO.DISPSTAT:
-                value &= GameBoyAdvanceVideo.DISPSTAT_MASK;
+            case IO.DISPSTAT:
+                value &= Video.DISPSTAT_MASK;
                 this.gba.video.writeDisplayStat(value);
                 break;
-            case GameBoyAdvanceIO.BG0CNT:
+            case IO.BG0CNT:
                 this.gba.video.renderPath.writeBackgroundControl(0, value);
                 break;
-            case GameBoyAdvanceIO.BG1CNT:
+            case IO.BG1CNT:
                 this.gba.video.renderPath.writeBackgroundControl(1, value);
                 break;
-            case GameBoyAdvanceIO.BG2CNT:
+            case IO.BG2CNT:
                 this.gba.video.renderPath.writeBackgroundControl(2, value);
                 break;
-            case GameBoyAdvanceIO.BG3CNT:
+            case IO.BG3CNT:
                 this.gba.video.renderPath.writeBackgroundControl(3, value);
                 break;
-            case GameBoyAdvanceIO.BG0HOFS:
+            case IO.BG0HOFS:
                 this.gba.video.renderPath.writeBackgroundHOffset(0, value);
                 break;
-            case GameBoyAdvanceIO.BG0VOFS:
+            case IO.BG0VOFS:
                 this.gba.video.renderPath.writeBackgroundVOffset(0, value);
                 break;
-            case GameBoyAdvanceIO.BG1HOFS:
+            case IO.BG1HOFS:
                 this.gba.video.renderPath.writeBackgroundHOffset(1, value);
                 break;
-            case GameBoyAdvanceIO.BG1VOFS:
+            case IO.BG1VOFS:
                 this.gba.video.renderPath.writeBackgroundVOffset(1, value);
                 break;
-            case GameBoyAdvanceIO.BG2HOFS:
+            case IO.BG2HOFS:
                 this.gba.video.renderPath.writeBackgroundHOffset(2, value);
                 break;
-            case GameBoyAdvanceIO.BG2VOFS:
+            case IO.BG2VOFS:
                 this.gba.video.renderPath.writeBackgroundVOffset(2, value);
                 break;
-            case GameBoyAdvanceIO.BG3HOFS:
+            case IO.BG3HOFS:
                 this.gba.video.renderPath.writeBackgroundHOffset(3, value);
                 break;
-            case GameBoyAdvanceIO.BG3VOFS:
+            case IO.BG3VOFS:
                 this.gba.video.renderPath.writeBackgroundVOffset(3, value);
                 break;
-            case GameBoyAdvanceIO.BG2X_LO:
+            case IO.BG2X_LO:
                 this.gba.video.renderPath.writeBackgroundRefX(2, (this.registers[(offset >> 1) | 1] << 16) | value);
                 break;
-            case GameBoyAdvanceIO.BG2X_HI:
+            case IO.BG2X_HI:
                 this.gba.video.renderPath.writeBackgroundRefX(2, this.registers[(offset >> 1) ^ 1] | (value << 16));
                 break;
-            case GameBoyAdvanceIO.BG2Y_LO:
+            case IO.BG2Y_LO:
                 this.gba.video.renderPath.writeBackgroundRefY(2, (this.registers[(offset >> 1) | 1] << 16) | value);
                 break;
-            case GameBoyAdvanceIO.BG2Y_HI:
+            case IO.BG2Y_HI:
                 this.gba.video.renderPath.writeBackgroundRefY(2, this.registers[(offset >> 1) ^ 1] | (value << 16));
                 break;
-            case GameBoyAdvanceIO.BG2PA:
+            case IO.BG2PA:
                 this.gba.video.renderPath.writeBackgroundParamA(2, value);
                 break;
-            case GameBoyAdvanceIO.BG2PB:
+            case IO.BG2PB:
                 this.gba.video.renderPath.writeBackgroundParamB(2, value);
                 break;
-            case GameBoyAdvanceIO.BG2PC:
+            case IO.BG2PC:
                 this.gba.video.renderPath.writeBackgroundParamC(2, value);
                 break;
-            case GameBoyAdvanceIO.BG2PD:
+            case IO.BG2PD:
                 this.gba.video.renderPath.writeBackgroundParamD(2, value);
                 break;
-            case GameBoyAdvanceIO.BG3X_LO:
+            case IO.BG3X_LO:
                 this.gba.video.renderPath.writeBackgroundRefX(3, (this.registers[(offset >> 1) | 1] << 16) | value);
                 break;
-            case GameBoyAdvanceIO.BG3X_HI:
+            case IO.BG3X_HI:
                 this.gba.video.renderPath.writeBackgroundRefX(3, this.registers[(offset >> 1) ^ 1] | (value << 16));
                 break;
-            case GameBoyAdvanceIO.BG3Y_LO:
+            case IO.BG3Y_LO:
                 this.gba.video.renderPath.writeBackgroundRefY(3, (this.registers[(offset >> 1) | 1] << 16) | value);
                 break;
-            case GameBoyAdvanceIO.BG3Y_HI:
+            case IO.BG3Y_HI:
                 this.gba.video.renderPath.writeBackgroundRefY(3, this.registers[(offset >> 1) ^ 1] | (value << 16));
                 break;
-            case GameBoyAdvanceIO.BG3PA:
+            case IO.BG3PA:
                 this.gba.video.renderPath.writeBackgroundParamA(3, value);
                 break;
-            case GameBoyAdvanceIO.BG3PB:
+            case IO.BG3PB:
                 this.gba.video.renderPath.writeBackgroundParamB(3, value);
                 break;
-            case GameBoyAdvanceIO.BG3PC:
+            case IO.BG3PC:
                 this.gba.video.renderPath.writeBackgroundParamC(3, value);
                 break;
-            case GameBoyAdvanceIO.BG3PD:
+            case IO.BG3PD:
                 this.gba.video.renderPath.writeBackgroundParamD(3, value);
                 break;
-            case GameBoyAdvanceIO.WIN0H:
+            case IO.WIN0H:
                 this.gba.video.renderPath.writeWin0H(value);
                 break;
-            case GameBoyAdvanceIO.WIN1H:
+            case IO.WIN1H:
                 this.gba.video.renderPath.writeWin1H(value);
                 break;
-            case GameBoyAdvanceIO.WIN0V:
+            case IO.WIN0V:
                 this.gba.video.renderPath.writeWin0V(value);
                 break;
-            case GameBoyAdvanceIO.WIN1V:
+            case IO.WIN1V:
                 this.gba.video.renderPath.writeWin1V(value);
                 break;
-            case GameBoyAdvanceIO.WININ:
+            case IO.WININ:
                 value &= 0x3F3F;
                 this.gba.video.renderPath.writeWinIn(value);
                 break;
-            case GameBoyAdvanceIO.WINOUT:
+            case IO.WINOUT:
                 value &= 0x3F3F;
                 this.gba.video.renderPath.writeWinOut(value);
                 break;
-            case GameBoyAdvanceIO.BLDCNT:
+            case IO.BLDCNT:
                 value &= 0x7FFF;
                 this.gba.video.renderPath.writeBlendControl(value);
                 break;
-            case GameBoyAdvanceIO.BLDALPHA:
+            case IO.BLDALPHA:
                 value &= 0x1F1F;
                 this.gba.video.renderPath.writeBlendAlpha(value);
                 break;
-            case GameBoyAdvanceIO.BLDY:
+            case IO.BLDY:
                 value &= 0x001F;
                 this.gba.video.renderPath.writeBlendY(value);
                 break;
-            case GameBoyAdvanceIO.MOSAIC:
+            case IO.MOSAIC:
                 this.gba.video.renderPath.writeMosaic(value);
                 break;
 
             // Sound
-            case GameBoyAdvanceIO.SOUND1CNT_LO:
+            case IO.SOUND1CNT_LO:
                 value &= 0x007F;
                 this.gba.audio.writeSquareChannelSweep(0, value);
                 break;
-            case GameBoyAdvanceIO.SOUND1CNT_HI:
+            case IO.SOUND1CNT_HI:
                 this.gba.audio.writeSquareChannelDLE(0, value);
                 break;
-            case GameBoyAdvanceIO.SOUND1CNT_X:
+            case IO.SOUND1CNT_X:
                 value &= 0xC7FF;
                 this.gba.audio.writeSquareChannelFC(0, value);
                 value &= ~0x8000;
                 break;
-            case GameBoyAdvanceIO.SOUND2CNT_LO:
+            case IO.SOUND2CNT_LO:
                 this.gba.audio.writeSquareChannelDLE(1, value);
                 break;
-            case GameBoyAdvanceIO.SOUND2CNT_HI:
+            case IO.SOUND2CNT_HI:
                 value &= 0xC7FF;
                 this.gba.audio.writeSquareChannelFC(1, value);
                 value &= ~0x8000;
                 break;
-            case GameBoyAdvanceIO.SOUND3CNT_LO:
+            case IO.SOUND3CNT_LO:
                 value &= 0x00E0;
                 this.gba.audio.writeChannel3Lo(value);
                 break;
-            case GameBoyAdvanceIO.SOUND3CNT_HI:
+            case IO.SOUND3CNT_HI:
                 value &= 0xE0FF;
                 this.gba.audio.writeChannel3Hi(value);
                 break;
-            case GameBoyAdvanceIO.SOUND3CNT_X:
+            case IO.SOUND3CNT_X:
                 value &= 0xC7FF;
                 this.gba.audio.writeChannel3X(value);
                 value &= ~0x8000;
                 break;
-            case GameBoyAdvanceIO.SOUND4CNT_LO:
+            case IO.SOUND4CNT_LO:
                 value &= 0xFF3F;
                 this.gba.audio.writeChannel4LE(value);
                 break;
-            case GameBoyAdvanceIO.SOUND4CNT_HI:
+            case IO.SOUND4CNT_HI:
                 value &= 0xC0FF;
                 this.gba.audio.writeChannel4FC(value);
                 value &= ~0x8000;
                 break;
-            case GameBoyAdvanceIO.SOUNDCNT_LO:
+            case IO.SOUNDCNT_LO:
                 value &= 0xFF77;
                 this.gba.audio.writeSoundControlLo(value);
                 break;
-            case GameBoyAdvanceIO.SOUNDCNT_HI:
+            case IO.SOUNDCNT_HI:
                 value &= 0xFF0F;
                 this.gba.audio.writeSoundControlHi(value);
                 break;
-            case GameBoyAdvanceIO.SOUNDCNT_X:
+            case IO.SOUNDCNT_X:
                 value &= 0x0080;
                 this.gba.audio.writeEnable(!!value);
                 break;
-            case GameBoyAdvanceIO.WAVE_RAM0_LO:
-            case GameBoyAdvanceIO.WAVE_RAM0_HI:
-            case GameBoyAdvanceIO.WAVE_RAM1_LO:
-            case GameBoyAdvanceIO.WAVE_RAM1_HI:
-            case GameBoyAdvanceIO.WAVE_RAM2_LO:
-            case GameBoyAdvanceIO.WAVE_RAM2_HI:
-            case GameBoyAdvanceIO.WAVE_RAM3_LO:
-            case GameBoyAdvanceIO.WAVE_RAM3_HI:
-                this.gba.audio.writeWaveData(offset - GameBoyAdvanceIO.WAVE_RAM0_LO, value, 2);
+            case IO.WAVE_RAM0_LO:
+            case IO.WAVE_RAM0_HI:
+            case IO.WAVE_RAM1_LO:
+            case IO.WAVE_RAM1_HI:
+            case IO.WAVE_RAM2_LO:
+            case IO.WAVE_RAM2_HI:
+            case IO.WAVE_RAM3_LO:
+            case IO.WAVE_RAM3_HI:
+                this.gba.audio.writeWaveData(offset - IO.WAVE_RAM0_LO, value, 2);
                 break;
 
             // DMA
-            case GameBoyAdvanceIO.DMA0SAD_LO:
-            case GameBoyAdvanceIO.DMA0DAD_LO:
-            case GameBoyAdvanceIO.DMA1SAD_LO:
-            case GameBoyAdvanceIO.DMA1DAD_LO:
-            case GameBoyAdvanceIO.DMA2SAD_LO:
-            case GameBoyAdvanceIO.DMA2DAD_LO:
-            case GameBoyAdvanceIO.DMA3SAD_LO:
-            case GameBoyAdvanceIO.DMA3DAD_LO:
+            case IO.DMA0SAD_LO:
+            case IO.DMA0DAD_LO:
+            case IO.DMA1SAD_LO:
+            case IO.DMA1DAD_LO:
+            case IO.DMA2SAD_LO:
+            case IO.DMA2DAD_LO:
+            case IO.DMA3SAD_LO:
+            case IO.DMA3DAD_LO:
                 this.store32(offset, (this.registers[(offset >> 1) + 1] << 16) | value);
                 return;
 
-            case GameBoyAdvanceIO.DMA0SAD_HI:
-            case GameBoyAdvanceIO.DMA0DAD_HI:
-            case GameBoyAdvanceIO.DMA1SAD_HI:
-            case GameBoyAdvanceIO.DMA1DAD_HI:
-            case GameBoyAdvanceIO.DMA2SAD_HI:
-            case GameBoyAdvanceIO.DMA2DAD_HI:
-            case GameBoyAdvanceIO.DMA3SAD_HI:
-            case GameBoyAdvanceIO.DMA3DAD_HI:
+            case IO.DMA0SAD_HI:
+            case IO.DMA0DAD_HI:
+            case IO.DMA1SAD_HI:
+            case IO.DMA1DAD_HI:
+            case IO.DMA2SAD_HI:
+            case IO.DMA2DAD_HI:
+            case IO.DMA3SAD_HI:
+            case IO.DMA3DAD_HI:
                 this.store32(offset - 2, this.registers[(offset >> 1) - 1] | (value << 16));
                 return;
 
-            case GameBoyAdvanceIO.DMA0CNT_LO:
+            case IO.DMA0CNT_LO:
                 this.gba.irq.dmaSetWordCount(0, value);
                 break;
-            case GameBoyAdvanceIO.DMA0CNT_HI:
+            case IO.DMA0CNT_HI:
                 // The DMA registers need to set the values before writing the control, as writing the
                 // control can synchronously trigger a DMA transfer
                 this.registers[offset >> 1] = value & 0xFFE0;
                 this.gba.irq.dmaWriteControl(0, value);
                 return;
-            case GameBoyAdvanceIO.DMA1CNT_LO:
+            case IO.DMA1CNT_LO:
                 this.gba.irq.dmaSetWordCount(1, value);
                 break;
-            case GameBoyAdvanceIO.DMA1CNT_HI:
+            case IO.DMA1CNT_HI:
                 this.registers[offset >> 1] = value & 0xFFE0;
                 this.gba.irq.dmaWriteControl(1, value);
                 return;
-            case GameBoyAdvanceIO.DMA2CNT_LO:
+            case IO.DMA2CNT_LO:
                 this.gba.irq.dmaSetWordCount(2, value);
                 break;
-            case GameBoyAdvanceIO.DMA2CNT_HI:
+            case IO.DMA2CNT_HI:
                 this.registers[offset >> 1] = value & 0xFFE0;
                 this.gba.irq.dmaWriteControl(2, value);
                 return;
-            case GameBoyAdvanceIO.DMA3CNT_LO:
+            case IO.DMA3CNT_LO:
                 this.gba.irq.dmaSetWordCount(3, value);
                 break;
-            case GameBoyAdvanceIO.DMA3CNT_HI:
+            case IO.DMA3CNT_HI:
                 this.registers[offset >> 1] = value & 0xFFE0;
                 this.gba.irq.dmaWriteControl(3, value);
                 return;
 
             // Timers
-            case GameBoyAdvanceIO.TM0CNT_LO:
+            case IO.TM0CNT_LO:
                 this.gba.irq.timerSetReload(0, <boolean><any>(value & 0xFFFF));
                 return;
-            case GameBoyAdvanceIO.TM1CNT_LO:
+            case IO.TM1CNT_LO:
                 this.gba.irq.timerSetReload(1, <boolean><any>(value & 0xFFFF));
                 return;
-            case GameBoyAdvanceIO.TM2CNT_LO:
+            case IO.TM2CNT_LO:
                 this.gba.irq.timerSetReload(2, <boolean><any>(value & 0xFFFF));
                 return;
-            case GameBoyAdvanceIO.TM3CNT_LO:
+            case IO.TM3CNT_LO:
                 this.gba.irq.timerSetReload(3, <boolean><any>(value & 0xFFFF));
                 return;
 
-            case GameBoyAdvanceIO.TM0CNT_HI:
+            case IO.TM0CNT_HI:
                 value &= 0x00C7;
                 this.gba.irq.timerWriteControl(0, value);
                 break;
-            case GameBoyAdvanceIO.TM1CNT_HI:
+            case IO.TM1CNT_HI:
                 value &= 0x00C7;
                 this.gba.irq.timerWriteControl(1, value);
                 break;
-            case GameBoyAdvanceIO.TM2CNT_HI:
+            case IO.TM2CNT_HI:
                 value &= 0x00C7;
                 this.gba.irq.timerWriteControl(2, value);
                 break;
-            case GameBoyAdvanceIO.TM3CNT_HI:
+            case IO.TM3CNT_HI:
                 value &= 0x00C7;
                 this.gba.irq.timerWriteControl(3, value);
                 break;
 
             // SIO
-            case GameBoyAdvanceIO.SIOMULTI0:
-            case GameBoyAdvanceIO.SIOMULTI1:
-            case GameBoyAdvanceIO.SIOMULTI2:
-            case GameBoyAdvanceIO.SIOMULTI3:
-            case GameBoyAdvanceIO.SIODATA8:
+            case IO.SIOMULTI0:
+            case IO.SIOMULTI1:
+            case IO.SIOMULTI2:
+            case IO.SIOMULTI3:
+            case IO.SIODATA8:
                 this.STUB_REG('SIO', offset);
                 break;
-            case GameBoyAdvanceIO.RCNT:
-                this.gba.sio.setMode(((value >> 12) & 0xC) | ((this.registers[GameBoyAdvanceIO.SIOCNT >> 1] >> 12) & 0x3));
+            case IO.RCNT:
+                this.gba.sio.setMode(((value >> 12) & 0xC) | ((this.registers[IO.SIOCNT >> 1] >> 12) & 0x3));
                 this.gba.sio.writeRCNT(value);
                 break;
-            case GameBoyAdvanceIO.SIOCNT:
-                this.gba.sio.setMode(((value >> 12) & 0x3) | ((this.registers[GameBoyAdvanceIO.RCNT >> 1] >> 12) & 0xC));
+            case IO.SIOCNT:
+                this.gba.sio.setMode(((value >> 12) & 0x3) | ((this.registers[IO.RCNT >> 1] >> 12) & 0xC));
                 this.gba.sio.writeSIOCNT(value);
                 return;
-            case GameBoyAdvanceIO.JOYCNT:
-            case GameBoyAdvanceIO.JOYSTAT:
+            case IO.JOYCNT:
+            case IO.JOYSTAT:
                 this.STUB_REG('JOY', offset);
                 break;
 
             // Misc
-            case GameBoyAdvanceIO.IE:
+            case IO.IE:
                 value &= 0x3FFF;
                 this.gba.irq.setInterruptsEnabled(value);
                 break;
-            case GameBoyAdvanceIO.IF:
+            case IO.IF:
                 this.gba.irq.dismissIRQs(value);
                 return;
-            case GameBoyAdvanceIO.WAITCNT:
+            case IO.WAITCNT:
                 value &= 0xDFFF;
                 this.gba.mmu.adjustTimings(value);
                 break;
-            case GameBoyAdvanceIO.IME:
+            case IO.IME:
                 value &= 0x0001;
                 this.gba.irq.masterEnable(<boolean><any>value);
                 break;
@@ -762,59 +760,59 @@ class GameBoyAdvanceIO implements MemoryIO {
 
     store32(offset:number, value:number):void {
         switch (offset) {
-            case GameBoyAdvanceIO.BG2X_LO:
+            case IO.BG2X_LO:
                 value &= 0x0FFFFFFF;
                 this.gba.video.renderPath.writeBackgroundRefX(2, value);
                 break;
-            case GameBoyAdvanceIO.BG2Y_LO:
+            case IO.BG2Y_LO:
                 value &= 0x0FFFFFFF;
                 this.gba.video.renderPath.writeBackgroundRefY(2, value);
                 break;
-            case GameBoyAdvanceIO.BG3X_LO:
+            case IO.BG3X_LO:
                 value &= 0x0FFFFFFF;
                 this.gba.video.renderPath.writeBackgroundRefX(3, value);
                 break;
-            case GameBoyAdvanceIO.BG3Y_LO:
+            case IO.BG3Y_LO:
                 value &= 0x0FFFFFFF;
                 this.gba.video.renderPath.writeBackgroundRefY(3, value);
                 break;
-            case GameBoyAdvanceIO.DMA0SAD_LO:
+            case IO.DMA0SAD_LO:
                 this.gba.irq.dmaSetSourceAddress(0, value);
                 break;
-            case GameBoyAdvanceIO.DMA0DAD_LO:
+            case IO.DMA0DAD_LO:
                 this.gba.irq.dmaSetDestAddress(0, value);
                 break;
-            case GameBoyAdvanceIO.DMA1SAD_LO:
+            case IO.DMA1SAD_LO:
                 this.gba.irq.dmaSetSourceAddress(1, value);
                 break;
-            case GameBoyAdvanceIO.DMA1DAD_LO:
+            case IO.DMA1DAD_LO:
                 this.gba.irq.dmaSetDestAddress(1, value);
                 break;
-            case GameBoyAdvanceIO.DMA2SAD_LO:
+            case IO.DMA2SAD_LO:
                 this.gba.irq.dmaSetSourceAddress(2, value);
                 break;
-            case GameBoyAdvanceIO.DMA2DAD_LO:
+            case IO.DMA2DAD_LO:
                 this.gba.irq.dmaSetDestAddress(2, value);
                 break;
-            case GameBoyAdvanceIO.DMA3SAD_LO:
+            case IO.DMA3SAD_LO:
                 this.gba.irq.dmaSetSourceAddress(3, value);
                 break;
-            case GameBoyAdvanceIO.DMA3DAD_LO:
+            case IO.DMA3DAD_LO:
                 this.gba.irq.dmaSetDestAddress(3, value);
                 break;
-            case GameBoyAdvanceIO.FIFO_A_LO:
+            case IO.FIFO_A_LO:
                 this.gba.audio.appendToFifoA(value);
                 return;
-            case GameBoyAdvanceIO.FIFO_B_LO:
+            case IO.FIFO_B_LO:
                 this.gba.audio.appendToFifoB(value);
                 return;
 
             // High bits of this write should be ignored
-            case GameBoyAdvanceIO.IME:
+            case IO.IME:
                 this.store16(offset, value & 0xFFFF);
                 return;
-            case GameBoyAdvanceIO.JOY_RECV:
-            case GameBoyAdvanceIO.JOY_TRANS:
+            case IO.JOY_RECV:
+            case IO.JOY_TRANS:
                 this.STUB_REG('JOY', offset);
                 return;
             default:
@@ -833,4 +831,5 @@ class GameBoyAdvanceIO implements MemoryIO {
     STUB_REG(type:string, offset:number):void {
         this.gba.logger.STUB('Unimplemented ' + type + ' register write: ' + offset.toString(16));
     }
+}
 }

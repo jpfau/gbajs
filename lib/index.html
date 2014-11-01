@@ -28,7 +28,7 @@ var runCommands = [];
 var debug = null;
 
 try {
-    gba = new GameBoyAdvance();
+    gba = new GameBoyAdvance.Main();
     gba.keypad.eatInput = true;
     gba.logger.log = function (level, error) {
         console.log(error);
@@ -53,7 +53,7 @@ window.onload = function () {
         var canvas = document.getElementById('screen');
         gba.setCanvas(canvas);
 
-        gba.logger.logLevel = LoggerLevel.ERROR;
+        gba.logger.logLevel = Logger.Level.ERROR;
 
         loadRom('resources/bios.bin', function (bios) {
             gba.setBios(bios);

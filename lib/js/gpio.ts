@@ -1,18 +1,17 @@
-class GameBoyAdvanceGPIO {
-    private gba:GameBoyAdvance;
+module GameBoyAdvance {
+export class GPIO {
     rom:MemoryView;
     readWrite:number;
     direction:number;
-    device:GameBoyAdvanceRTC;
+    device:RTC;
 
-    constructor(gba:GameBoyAdvance, rom:MemoryView) {
-        this.gba = gba;
+    constructor(private gba:Main, rom:MemoryView) {
         this.rom = rom;
 
         this.readWrite = 0;
         this.direction = 0;
 
-        this.device = new GameBoyAdvanceRTC(gba, this); // TODO: Support more devices
+        this.device = new RTC(gba, this); // TODO: Support more devices
     }
 
     store16(offset:number, value:number):void {
@@ -46,10 +45,9 @@ class GameBoyAdvanceGPIO {
     }
 }
 
-class GameBoyAdvanceRTC {
+export class RTC {
 
-    private gba:GameBoyAdvance;
-    gpio:GameBoyAdvanceGPIO;
+    gpio:GPIO;
     pins:number;
     direction:number;
     totalBytes:number[];
@@ -63,8 +61,7 @@ class GameBoyAdvanceRTC {
     time:number[];
     read = false;
 
-    constructor(gba:GameBoyAdvance, gpio:GameBoyAdvanceGPIO) {
-        this.gba = gba;
+    constructor(private gba:Main, gpio:GPIO) {
         this.gpio = gpio;
 
         // PINOUT: SCK | SIO | CS | -
@@ -240,4 +237,5 @@ class GameBoyAdvanceRTC {
         counter += (binary % 10) << 4;
         return counter;
     }
+}
 }

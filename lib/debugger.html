@@ -86,9 +86,9 @@
         }
         function initialize(gba) {
             window.gba = gba;
-            gba.logger.logLevel = LoggerLevel.ERROR | LoggerLevel.WARN | LoggerLevel.DEBUG;
+            gba.logger.logLevel = Logger.Level.ERROR | Logger.Level.WARN | Logger.Level.DEBUG;
 
-            gbaCon = new GameBoyAdvanceConsole(gba);
+            gbaCon = new GameBoyAdvance.Console(gba);
             gba.logger.DEBUG('Debugger initialized');
             gba.logger.DEBUG('Logging begun!');
             gba.logger.DEBUG('Loading BIOS...');
@@ -107,7 +107,7 @@
                 document.getElementById('loading').style.display = 'none';
                 window.opener.postMessage('connect', location.origin || '*');
             } else {
-                initialize(new GameBoyAdvance());
+                initialize(new GameBoyAdvance.Main());
                 gba.setCanvas(canvas);
             }
         };
@@ -123,11 +123,11 @@
 <section id="top">
     <section id="consoleContainer">
         <div id="consoleControls">
-            <label><input type="checkbox" checked onclick="setLogLevel(LoggerLevel.ERROR, this.checked)">ERROR</label>
-            <label><input type="checkbox" checked onclick="setLogLevel(LoggerLevel.WARN, this.checked)">WARN</label>
-            <label><input type="checkbox" onclick="setLogLevel(LoggerLevel.STUB, this.checked)">STUB</label>
-            <label><input type="checkbox" onclick="setLogLevel(LoggerLevel.INFO, this.checked)">INFO</label>
-            <label><input type="checkbox" checked onclick="setLogLevel(LoggerLevel.DEBUG, this.checked)">DEBUG</label>
+            <label><input type="checkbox" checked onclick="setLogLevel(Logger.Level.ERROR, this.checked)">ERROR</label>
+            <label><input type="checkbox" checked onclick="setLogLevel(Logger.Level.WARN, this.checked)">WARN</label>
+            <label><input type="checkbox" onclick="setLogLevel(Logger.Level.STUB, this.checked)">STUB</label>
+            <label><input type="checkbox" onclick="setLogLevel(Logger.Level.INFO, this.checked)">INFO</label>
+            <label><input type="checkbox" checked onclick="setLogLevel(Logger.Level.DEBUG, this.checked)">DEBUG</label>
         </div>
         <ul id="console"></ul>
         <img id="saveState">

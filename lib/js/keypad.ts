@@ -1,4 +1,5 @@
-class GameBoyAdvanceKeypad {
+module GameBoyAdvance {
+export class Keypad {
 
     static KEYCODE_LEFT = 37;
     static KEYCODE_UP = 38;
@@ -40,44 +41,41 @@ class GameBoyAdvanceKeypad {
 
     gamepads:any[] = [];
 
-    private gba:GameBoyAdvance;
-
-    constructor(gba:GameBoyAdvance) {
-        this.gba = gba;
+    constructor(private gba:Main) {
     }
 
     keyboardHandler(e:KeyboardEvent):void {
         var toggle = 0;
         switch (e.keyCode) {
-            case GameBoyAdvanceKeypad.KEYCODE_START:
-                toggle = GameBoyAdvanceKeypad.START;
+            case Keypad.KEYCODE_START:
+                toggle = Keypad.START;
                 break;
-            case GameBoyAdvanceKeypad.KEYCODE_SELECT:
-                toggle = GameBoyAdvanceKeypad.SELECT;
+            case Keypad.KEYCODE_SELECT:
+                toggle = Keypad.SELECT;
                 break;
-            case GameBoyAdvanceKeypad.KEYCODE_A:
-                toggle = GameBoyAdvanceKeypad.A;
+            case Keypad.KEYCODE_A:
+                toggle = Keypad.A;
                 break;
-            case GameBoyAdvanceKeypad.KEYCODE_B:
-                toggle = GameBoyAdvanceKeypad.B;
+            case Keypad.KEYCODE_B:
+                toggle = Keypad.B;
                 break;
-            case GameBoyAdvanceKeypad.KEYCODE_L:
-                toggle = GameBoyAdvanceKeypad.L;
+            case Keypad.KEYCODE_L:
+                toggle = Keypad.L;
                 break;
-            case GameBoyAdvanceKeypad.KEYCODE_R:
-                toggle = GameBoyAdvanceKeypad.R;
+            case Keypad.KEYCODE_R:
+                toggle = Keypad.R;
                 break;
-            case GameBoyAdvanceKeypad.KEYCODE_UP:
-                toggle = GameBoyAdvanceKeypad.UP;
+            case Keypad.KEYCODE_UP:
+                toggle = Keypad.UP;
                 break;
-            case GameBoyAdvanceKeypad.KEYCODE_RIGHT:
-                toggle = GameBoyAdvanceKeypad.RIGHT;
+            case Keypad.KEYCODE_RIGHT:
+                toggle = Keypad.RIGHT;
                 break;
-            case GameBoyAdvanceKeypad.KEYCODE_DOWN:
-                toggle = GameBoyAdvanceKeypad.DOWN;
+            case Keypad.KEYCODE_DOWN:
+                toggle = Keypad.DOWN;
                 break;
-            case GameBoyAdvanceKeypad.KEYCODE_LEFT:
-                toggle = GameBoyAdvanceKeypad.LEFT;
+            case Keypad.KEYCODE_LEFT:
+                toggle = Keypad.LEFT;
                 break;
             default:
                 return;
@@ -97,35 +95,35 @@ class GameBoyAdvanceKeypad {
 
     gamepadHandler(gamepad:any):void {
         var value = 0;
-        if (gamepad.buttons[GameBoyAdvanceKeypad.GAMEPAD_LEFT] > GameBoyAdvanceKeypad.GAMEPAD_THRESHOLD) {
-            value |= 1 << GameBoyAdvanceKeypad.LEFT;
+        if (gamepad.buttons[Keypad.GAMEPAD_LEFT] > Keypad.GAMEPAD_THRESHOLD) {
+            value |= 1 << Keypad.LEFT;
         }
-        if (gamepad.buttons[GameBoyAdvanceKeypad.GAMEPAD_UP] > GameBoyAdvanceKeypad.GAMEPAD_THRESHOLD) {
-            value |= 1 << GameBoyAdvanceKeypad.UP;
+        if (gamepad.buttons[Keypad.GAMEPAD_UP] > Keypad.GAMEPAD_THRESHOLD) {
+            value |= 1 << Keypad.UP;
         }
-        if (gamepad.buttons[GameBoyAdvanceKeypad.GAMEPAD_RIGHT] > GameBoyAdvanceKeypad.GAMEPAD_THRESHOLD) {
-            value |= 1 << GameBoyAdvanceKeypad.RIGHT;
+        if (gamepad.buttons[Keypad.GAMEPAD_RIGHT] > Keypad.GAMEPAD_THRESHOLD) {
+            value |= 1 << Keypad.RIGHT;
         }
-        if (gamepad.buttons[GameBoyAdvanceKeypad.GAMEPAD_DOWN] > GameBoyAdvanceKeypad.GAMEPAD_THRESHOLD) {
-            value |= 1 << GameBoyAdvanceKeypad.DOWN;
+        if (gamepad.buttons[Keypad.GAMEPAD_DOWN] > Keypad.GAMEPAD_THRESHOLD) {
+            value |= 1 << Keypad.DOWN;
         }
-        if (gamepad.buttons[GameBoyAdvanceKeypad.GAMEPAD_START] > GameBoyAdvanceKeypad.GAMEPAD_THRESHOLD) {
-            value |= 1 << GameBoyAdvanceKeypad.START;
+        if (gamepad.buttons[Keypad.GAMEPAD_START] > Keypad.GAMEPAD_THRESHOLD) {
+            value |= 1 << Keypad.START;
         }
-        if (gamepad.buttons[GameBoyAdvanceKeypad.GAMEPAD_SELECT] > GameBoyAdvanceKeypad.GAMEPAD_THRESHOLD) {
-            value |= 1 << GameBoyAdvanceKeypad.SELECT;
+        if (gamepad.buttons[Keypad.GAMEPAD_SELECT] > Keypad.GAMEPAD_THRESHOLD) {
+            value |= 1 << Keypad.SELECT;
         }
-        if (gamepad.buttons[GameBoyAdvanceKeypad.GAMEPAD_A] > GameBoyAdvanceKeypad.GAMEPAD_THRESHOLD) {
-            value |= 1 << GameBoyAdvanceKeypad.A;
+        if (gamepad.buttons[Keypad.GAMEPAD_A] > Keypad.GAMEPAD_THRESHOLD) {
+            value |= 1 << Keypad.A;
         }
-        if (gamepad.buttons[GameBoyAdvanceKeypad.GAMEPAD_B] > GameBoyAdvanceKeypad.GAMEPAD_THRESHOLD) {
-            value |= 1 << GameBoyAdvanceKeypad.B;
+        if (gamepad.buttons[Keypad.GAMEPAD_B] > Keypad.GAMEPAD_THRESHOLD) {
+            value |= 1 << Keypad.B;
         }
-        if (gamepad.buttons[GameBoyAdvanceKeypad.GAMEPAD_L] > GameBoyAdvanceKeypad.GAMEPAD_THRESHOLD) {
-            value |= 1 << GameBoyAdvanceKeypad.L;
+        if (gamepad.buttons[Keypad.GAMEPAD_L] > Keypad.GAMEPAD_THRESHOLD) {
+            value |= 1 << Keypad.L;
         }
-        if (gamepad.buttons[GameBoyAdvanceKeypad.GAMEPAD_R] > GameBoyAdvanceKeypad.GAMEPAD_THRESHOLD) {
-            value |= 1 << GameBoyAdvanceKeypad.R;
+        if (gamepad.buttons[Keypad.GAMEPAD_R] > Keypad.GAMEPAD_THRESHOLD) {
+            value |= 1 << Keypad.R;
         }
 
         this.currentDown = ~value & 0x3FF;
@@ -176,4 +174,5 @@ class GameBoyAdvanceKeypad {
         window.addEventListener("mozgamepaddisconnected", this.gamepadDisconnectHandler.bind(this), true);
         window.addEventListener("webkitgamepaddisconnected", this.gamepadDisconnectHandler.bind(this), true);
     }
+}
 }

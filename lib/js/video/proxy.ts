@@ -1,13 +1,12 @@
-class MemoryProxy {
+module GameBoyAdvance.Proxy {
+export class Memory {
 
-    owner:GameBoyAdvanceRenderProxy;
     blocks:MemoryView[];
     blockSize:number;
     mask:number;
     size:number;
 
-    constructor(owner:GameBoyAdvanceRenderProxy, size:number, blockSize:number) {
-        this.owner = owner;
+    constructor(private owner:Render, size:number, blockSize:number) {
         this.blocks = [];
         this.blockSize = blockSize;
         this.mask = (1 << blockSize) - 1;
@@ -91,7 +90,7 @@ class MemoryProxy {
 
 }
 
-class GameBoyAdvanceRenderProxy {
+export class Render {
 
     worker:Worker;
     currentFrame:number;
@@ -100,9 +99,9 @@ class GameBoyAdvanceRenderProxy {
     dirty:any;
     backing:any;
     caller:{finishDraw:{(pixelData:ImageData):void}};
-    palette:MemoryProxy;
-    oam:MemoryProxy;
-    vram:MemoryProxy;
+    palette:Memory;
+    oam:Memory;
+    vram:Memory;
     scanlineQueue:any[];
 
     constructor() {
@@ -126,7 +125,7 @@ class GameBoyAdvanceRenderProxy {
         }
     }
 
-    memoryDirtied(mem:MemoryProxy, block:any):void {
+    memoryDirtied(mem:Memory, block:any):void {
         this.dirty = this.dirty || {};
         this.dirty.memory = this.dirty.memory || {};
         if (mem === this.palette) {
@@ -142,10 +141,10 @@ class GameBoyAdvanceRenderProxy {
     }
 
     clear():void {
-        var mmu = GameBoyAdvanceMMU;
-        this.palette = new MemoryProxy(this, mmu.SIZE_PALETTE_RAM, 0);
-        this.vram = new MemoryProxy(this, mmu.SIZE_VRAM, 13);
-        this.oam = new MemoryProxy(this, mmu.SIZE_OAM, 0);
+        var mmu = MMU;
+        this.palette = new Memory(this, mmu.SIZE_PALETTE_RAM, 0);
+        this.vram = new Memory(this, mmu.SIZE_VRAM, 13);
+        this.oam = new Memory(this, mmu.SIZE_OAM, 0);
 
         this.dirty = null;
         this.scanlineQueue = [];
@@ -281,23 +280,23 @@ class GameBoyAdvanceRenderProxy {
         this.dirty.MOSAIC = value;
     }
 
-    clearSubsets(mmu:GameBoyAdvanceMMU, regions:number) {
+    clearSubsets(mmu:MMU, regions:number) {
         this.dirty = this.dirty || {};
         if (regions & 0x04) {
-            this.palette = new MemoryProxy(this, GameBoyAdvanceMMU.SIZE_PALETTE_RAM, 0);
-            mmu.mmap(GameBoyAdvanceMMU.REGION_PALETTE_RAM, <any>this.palette);
+            this.palette = new Memory(this, MMU.SIZE_PALETTE_RAM, 0);
+            mmu.mmap(MMU.REGION_PALETTE_RAM, <any>this.palette);
             this.memoryDirtied(this.palette, 0);
         }
         if (regions & 0x08) {
-            this.vram = new MemoryProxy(this, GameBoyAdvanceMMU.SIZE_VRAM, 13);
-            mmu.mmap(GameBoyAdvanceMMU.REGION_VRAM, <any>this.vram);
+            this.vram = new Memory(this, MMU.SIZE_VRAM, 13);
+            mmu.mmap(MMU.REGION_VRAM, <any>this.vram);
             for (var i = 0; i < this.vram.blocks.length; ++i) {
                 this.memoryDirtied(this.vram, i);
             }
         }
         if (regions & 0x10) {
-            this.oam = new MemoryProxy(this, GameBoyAdvanceMMU.SIZE_OAM, 0);
-            mmu.mmap(GameBoyAdvanceMMU.REGION_OAM, <any>this.oam);
+            this.oam = new Memory(this, MMU.SIZE_OAM, 0);
+            mmu.mmap(MMU.REGION_OAM, <any>this.oam);
             this.memoryDirtied(this.oam, 0);
         }
     }
@@ -351,4 +350,5 @@ class GameBoyAdvanceRenderProxy {
             }
         }
     }
+}
 }

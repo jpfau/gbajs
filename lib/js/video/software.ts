@@ -1,4 +1,5 @@
-class MemoryAligned16 implements MemoryIO {
+module GameBoyAdvance {
+export class MemoryAligned16 implements MemoryIO {
     buffer:Uint16Array;
 
     constructor(size:number) {
@@ -53,7 +54,7 @@ class MemoryAligned16 implements MemoryIO {
     }
 }
 
-class GameBoyAdvanceVRAM extends MemoryAligned16 {
+export class VRAM extends MemoryAligned16 {
     vram:Uint16Array;
 
     constructor(size:number) {
@@ -62,26 +63,26 @@ class GameBoyAdvanceVRAM extends MemoryAligned16 {
     }
 }
 
-interface ScaleRot {
+export interface ScaleRot {
     a:number;
     b:number;
     c:number;
     d:number
 }
 
-class GameBoyAdvanceOAM extends MemoryAligned16 {
+export class OAM extends MemoryAligned16 {
     oam:Uint16Array;
-    objs:GameBoyAdvanceOBJ[];
+    objs:OBJ[];
     scalerot:ScaleRot[];
-    video:GameBoyAdvanceSoftwareRenderer;
+    video:SoftwareRenderer;
 
-    constructor(video:GameBoyAdvanceSoftwareRenderer, size:number) {
+    constructor(video:SoftwareRenderer, size:number) {
         this.video = video;
         super(size);
         this.oam = this.buffer;
-        this.objs = new Array<GameBoyAdvanceOBJ>(128);
+        this.objs = new Array<OBJ>(128);
         for (var i = 0; i < 128; ++i) {
-            this.objs[i] = new GameBoyAdvanceOBJ(this, i);
+            this.objs[i] = new OBJ(this, i);
         }
         this.scalerot = new Array<ScaleRot>(32);
         for (var i = 0; i < 32; ++i) {
@@ -180,7 +181,7 @@ class GameBoyAdvanceOAM extends MemoryAligned16 {
     }
 }
 
-class GameBoyAdvancePalette {
+export class Palette {
     colors:any[][];
     adjustedColors:any[][];
     passthroughColors:any[][];
@@ -382,9 +383,9 @@ class GameBoyAdvancePalette {
     }
 }
 
-class GameBoyAdvanceOBJ {
+export class OBJ {
 
-    oam:GameBoyAdvanceOAM;
+    oam:OAM;
     index:number;
 
     TILE_OFFSET = 0x10000;
@@ -408,7 +409,7 @@ class GameBoyAdvanceOBJ {
     cachedWidth = 8;
     cachedHeight = 8;
 
-    constructor(oam:GameBoyAdvanceOAM, index:number) {
+    constructor(oam:OAM, index:number) {
         this.pushPixel = oam.video.pushPixel;
         this.oam = oam;
         this.index = index;
@@ -419,16 +420,16 @@ class GameBoyAdvanceOBJ {
         var x:number;
         var underflow:number;
         var offset:number;
-        var mask = this.mode | video.target2[GameBoyAdvanceSoftwareRenderer.LAYER_OBJ] | (this.priority << 1);
+        var mask = this.mode | video.target2[SoftwareRenderer.LAYER_OBJ] | (this.priority << 1);
         if (this.mode == 0x10) {
             mask |= video.TARGET1_MASK;
         }
         if (video.blendMode == 1 && video.alphaEnabled) {
-            mask |= video.target1[GameBoyAdvanceSoftwareRenderer.LAYER_OBJ];
+            mask |= video.target1[SoftwareRenderer.LAYER_OBJ];
         }
 
         var totalWidth = this.cachedWidth;
-        if (this.x < GameBoyAdvanceSoftwareRenderer.HORIZONTAL_PIXELS) {
+        if (this.x < SoftwareRenderer.HORIZONTAL_PIXELS) {
             if (this.x < start) {
                 underflow = start - this.x;
                 offset = start;
@@ -494,7 +495,7 @@ class GameBoyAdvanceOBJ {
                     tileRow = video.accessTile(this.TILE_OFFSET + (localX & 0x4), this.tileBase + (tileOffset << 1) + ((localX & 0x01F8) >> 2), localYLo << 1);
                 }
             }
-            this.pushPixel(GameBoyAdvanceSoftwareRenderer.LAYER_OBJ, this, video, tileRow, localX & 0x7, offset, backing, mask, false);
+            this.pushPixel(SoftwareRenderer.LAYER_OBJ, this, video, tileRow, localX & 0x7, offset, backing, mask, false);
             offset++;
         }
     }
@@ -506,12 +507,12 @@ class GameBoyAdvanceOBJ {
         var x:number;
         var underflow:number;
         var offset:number;
-        var mask = this.mode | video.target2[GameBoyAdvanceSoftwareRenderer.LAYER_OBJ] | (this.priority << 1);
+        var mask = this.mode | video.target2[SoftwareRenderer.LAYER_OBJ] | (this.priority << 1);
         if (this.mode == 0x10) {
             mask |= video.TARGET1_MASK;
         }
         if (video.blendMode == 1 && video.alphaEnabled) {
-            mask |= video.target1[GameBoyAdvanceSoftwareRenderer.LAYER_OBJ];
+            mask |= video.target1[SoftwareRenderer.LAYER_OBJ];
         }
 
         var localX:number;
@@ -523,11 +524,11 @@ class GameBoyAdvanceOBJ {
         var totalWidth = this.cachedWidth << <any>this.doublesize;
         var totalHeight = this.cachedHeight << <any>this.doublesize;
         var drawWidth = totalWidth;
-        if (drawWidth > GameBoyAdvanceSoftwareRenderer.HORIZONTAL_PIXELS) {
-            totalWidth = GameBoyAdvanceSoftwareRenderer.HORIZONTAL_PIXELS;
+        if (drawWidth > SoftwareRenderer.HORIZONTAL_PIXELS) {
+            totalWidth = SoftwareRenderer.HORIZONTAL_PIXELS;
         }
 
-        if (this.x < GameBoyAdvanceSoftwareRenderer.HORIZONTAL_PIXELS) {
+        if (this.x < SoftwareRenderer.HORIZONTAL_PIXELS) {
             if (this.x < start) {
                 underflow = start - this.x;
                 offset = start;
@@ -565,7 +566,7 @@ class GameBoyAdvanceOBJ {
                 tileOffset = (localY & 0x01F8) << (2 - paletteShift);
             }
             var tileRow = video.accessTile(this.TILE_OFFSET + (localX & 0x4) * paletteShift, this.tileBase + (tileOffset << paletteShift) + ((localX & 0x01F8) >> (3 - paletteShift)), (localY & 0x7) << paletteShift);
-            this.pushPixel(GameBoyAdvanceSoftwareRenderer.LAYER_OBJ, this, video, tileRow, localX & 0x7, offset, backing, mask, false);
+            this.pushPixel(SoftwareRenderer.LAYER_OBJ, this, video, tileRow, localX & 0x7, offset, backing, mask, false);
             offset++;
         }
     }
@@ -626,19 +627,19 @@ class GameBoyAdvanceOBJ {
     }
 }
 
-class GameBoyAdvanceOBJLayer {
+export class OBJLayer {
 
-    video:GameBoyAdvanceSoftwareRenderer;
+    video:SoftwareRenderer;
     bg:boolean;
     index:number;
     priority:number;
     enabled:boolean;
     objwin:number;
 
-    constructor(video:GameBoyAdvanceSoftwareRenderer, index:number) {
+    constructor(video:SoftwareRenderer, index:number) {
         this.video = video;
         this.bg = false;
-        this.index = GameBoyAdvanceSoftwareRenderer.LAYER_OBJ;
+        this.index = SoftwareRenderer.LAYER_OBJ;
         this.priority = index;
         this.enabled = false;
         this.objwin = 0;
@@ -648,7 +649,7 @@ class GameBoyAdvanceOBJLayer {
         var y = this.video.vcount;
         var wrappedY:number;
         var mosaicY:number;
-        var obj:GameBoyAdvanceOBJ;
+        var obj:OBJ;
         if (start >= end) {
             return;
         }
@@ -664,7 +665,7 @@ class GameBoyAdvanceOBJLayer {
             if (!(obj.mode & this.video.OBJWIN_MASK) && this.priority != obj.priority) {
                 continue;
             }
-            if (obj.y < GameBoyAdvanceSoftwareRenderer.VERTICAL_PIXELS) {
+            if (obj.y < SoftwareRenderer.VERTICAL_PIXELS) {
                 wrappedY = obj.y;
             } else {
                 wrappedY = obj.y - 256;
@@ -691,7 +692,7 @@ class GameBoyAdvanceOBJLayer {
     }
 }
 
-interface ScanLine {
+export interface ScanLine {
     color:Uint16Array;
     /**
      // Stencil format:
@@ -706,19 +707,19 @@ interface ScanLine {
     stencil:Uint8Array
 }
 
-class GameBoyAdvanceSoftwareBackdropRenderer {
+export class SoftwareBackdropRenderer {
 
-    video:GameBoyAdvanceSoftwareRenderer;
+    video:SoftwareRenderer;
     bg:boolean;
     priority:number;
     index:number;
     enabled:boolean;
 
-    constructor(video:GameBoyAdvanceSoftwareRenderer) {
+    constructor(video:SoftwareRenderer) {
         this.video = video;
         this.bg = true;
         this.priority = -1;
-        this.index = GameBoyAdvanceSoftwareRenderer.LAYER_BACKDROP;
+        this.index = SoftwareRenderer.LAYER_BACKDROP;
         this.enabled = true;
     }
 
@@ -729,19 +730,19 @@ class GameBoyAdvanceSoftwareBackdropRenderer {
                 backing.color[x] = this.video.palette.accessColor(this.index, 0);
                 backing.stencil[x] = this.video.WRITTEN_MASK;
             } else if (backing.stencil[x] & this.video.TARGET1_MASK) {
-                backing.color[x] = GameBoyAdvancePalette.mix(this.video.blendB, this.video.palette.accessColor(this.index, 0), this.video.blendA, backing.color[x]);
+                backing.color[x] = Palette.mix(this.video.blendB, this.video.palette.accessColor(this.index, 0), this.video.blendA, backing.color[x]);
                 backing.stencil[x] = this.video.WRITTEN_MASK;
             }
         }
     }
 }
 
-interface GameBoyAdvanceWindow {
+export interface Window {
     enabled:boolean[]
     special:number
 }
 
-class GameBoyAdvanceSoftwareRenderer {
+export class SoftwareRenderer {
 
     static LAYER_BG0 = 0;
     static LAYER_BG1 = 1;
@@ -769,14 +770,14 @@ class GameBoyAdvanceSoftwareRenderer {
 
 
     constructor() {
-        this.drawBackdrop = new GameBoyAdvanceSoftwareBackdropRenderer(this);
+        this.drawBackdrop = new SoftwareBackdropRenderer(this);
     }
 
-    palette:GameBoyAdvancePalette;
-    vram:GameBoyAdvanceVRAM;
-    oam:GameBoyAdvanceOAM;
-    objLayers:GameBoyAdvanceOBJLayer[];
-    objwinLayer:GameBoyAdvanceOBJLayer;
+    palette:Palette;
+    vram:VRAM;
+    oam:OAM;
+    objLayers:OBJLayer[];
+    objwinLayer:OBJLayer;
     backgroundMode:number;
     displayFrameSelect:number;
     hblankIntervalFree:number;
@@ -794,7 +795,7 @@ class GameBoyAdvanceSoftwareRenderer {
     win0Bottom:number;
     win1Top:number;
     win1Bottom:number;
-    windows:GameBoyAdvanceWindow[];
+    windows:Window[];
     target1:any[];
     target2:any[];
     blendMode:number;
@@ -821,16 +822,16 @@ class GameBoyAdvanceSoftwareRenderer {
     sharedMap:any;
 
     clear() {
-        this.palette = new GameBoyAdvancePalette();
-        this.vram = new GameBoyAdvanceVRAM(GameBoyAdvanceMMU.SIZE_VRAM);
-        this.oam = new GameBoyAdvanceOAM(this, GameBoyAdvanceMMU.SIZE_OAM);
+        this.palette = new Palette();
+        this.vram = new VRAM(MMU.SIZE_VRAM);
+        this.oam = new OAM(this, MMU.SIZE_OAM);
         this.objLayers = [
-            new GameBoyAdvanceOBJLayer(this, 0),
-            new GameBoyAdvanceOBJLayer(this, 1),
-            new GameBoyAdvanceOBJLayer(this, 2),
-            new GameBoyAdvanceOBJLayer(this, 3)
+            new OBJLayer(this, 0),
+            new OBJLayer(this, 1),
+            new OBJLayer(this, 2),
+            new OBJLayer(this, 3)
         ];
-        this.objwinLayer = new GameBoyAdvanceOBJLayer(this, 4);
+        this.objwinLayer = new OBJLayer(this, 4);
         this.objwinLayer.objwin = this.OBJWIN_MASK;
 
         // DISPCNT
@@ -889,7 +890,7 @@ class GameBoyAdvanceSoftwareRenderer {
         this.objMosaicY = 1;
 
         this.lastHblank = 0;
-        this.nextHblank = GameBoyAdvanceVideo.HDRAW_LENGTH;
+        this.nextHblank = Video.HDRAW_LENGTH;
         this.nextEvent = this.nextHblank;
 
         this.nextHblankIRQ = 0;
@@ -952,8 +953,8 @@ class GameBoyAdvanceSoftwareRenderer {
         this.alphaEnabled = false;
 
         this.scanline = {
-            color: new Uint16Array(GameBoyAdvanceSoftwareRenderer.HORIZONTAL_PIXELS),
-            stencil: new Uint8Array(GameBoyAdvanceSoftwareRenderer.HORIZONTAL_PIXELS)
+            color: new Uint16Array(SoftwareRenderer.HORIZONTAL_PIXELS),
+            stencil: new Uint8Array(SoftwareRenderer.HORIZONTAL_PIXELS)
         };
         this.sharedColor = [ 0, 0, 0 ];
         this.sharedMap = {
@@ -966,15 +967,15 @@ class GameBoyAdvanceSoftwareRenderer {
 
     clearSubsets(regions:number) {
         if (regions & 0x04) {
-            this.palette.overwrite(new Uint16Array(GameBoyAdvanceMMU.SIZE_PALETTE_RAM >> 1));
+            this.palette.overwrite(new Uint16Array(MMU.SIZE_PALETTE_RAM >> 1));
         }
 
         if (regions & 0x08) {
-            this.vram.insert(0, new Uint16Array(GameBoyAdvanceMMU.SIZE_VRAM >> 1));
+            this.vram.insert(0, new Uint16Array(MMU.SIZE_VRAM >> 1));
         }
 
         if (regions & 0x10) {
-            this.oam.overwrite(new Uint16Array(GameBoyAdvanceMMU.SIZE_OAM >> 1));
+            this.oam.overwrite(new Uint16Array(MMU.SIZE_OAM >> 1));
             this.oam.video = this;
         }
     }
@@ -991,7 +992,7 @@ class GameBoyAdvanceSoftwareRenderer {
         this.pixelData = backing;
 
         // Clear backing first
-        for (var offset = 0; offset < GameBoyAdvanceSoftwareRenderer.HORIZONTAL_PIXELS * GameBoyAdvanceSoftwareRenderer.VERTICAL_PIXELS * 4; offset++) {
+        for (var offset = 0; offset < SoftwareRenderer.HORIZONTAL_PIXELS * SoftwareRenderer.VERTICAL_PIXELS * 4; offset++) {
             this.pixelData.data[offset + 0] = 0xFF;
             this.pixelData.data[offset + 1] = 0xFF;
             this.pixelData.data[offset + 2] = 0xFF;
@@ -1083,33 +1084,33 @@ class GameBoyAdvanceSoftwareRenderer {
 
     writeWin0H(value:number) {
         this.win0Left = (value & 0xFF00) >> 8;
-        this.win0Right = Math.min(GameBoyAdvanceSoftwareRenderer.HORIZONTAL_PIXELS, value & 0x00FF);
+        this.win0Right = Math.min(SoftwareRenderer.HORIZONTAL_PIXELS, value & 0x00FF);
         if (this.win0Left > this.win0Right) {
-            this.win0Right = GameBoyAdvanceSoftwareRenderer.HORIZONTAL_PIXELS;
+            this.win0Right = SoftwareRenderer.HORIZONTAL_PIXELS;
         }
     }
 
     writeWin1H(value:number) {
         this.win1Left = (value & 0xFF00) >> 8;
-        this.win1Right = Math.min(GameBoyAdvanceSoftwareRenderer.HORIZONTAL_PIXELS, value & 0x00FF);
+        this.win1Right = Math.min(SoftwareRenderer.HORIZONTAL_PIXELS, value & 0x00FF);
         if (this.win1Left > this.win1Right) {
-            this.win1Right = GameBoyAdvanceSoftwareRenderer.HORIZONTAL_PIXELS;
+            this.win1Right = SoftwareRenderer.HORIZONTAL_PIXELS;
         }
     }
 
     writeWin0V(value:number) {
         this.win0Top = (value & 0xFF00) >> 8;
-        this.win0Bottom = Math.min(GameBoyAdvanceSoftwareRenderer.VERTICAL_PIXELS, value & 0x00FF);
+        this.win0Bottom = Math.min(SoftwareRenderer.VERTICAL_PIXELS, value & 0x00FF);
         if (this.win0Top > this.win0Bottom) {
-            this.win0Bottom = GameBoyAdvanceSoftwareRenderer.VERTICAL_PIXELS;
+            this.win0Bottom = SoftwareRenderer.VERTICAL_PIXELS;
         }
     }
 
     writeWin1V(value:number) {
         this.win1Top = (value & 0xFF00) >> 8;
-        this.win1Bottom = Math.min(GameBoyAdvanceSoftwareRenderer.VERTICAL_PIXELS, value & 0x00FF);
+        this.win1Bottom = Math.min(SoftwareRenderer.VERTICAL_PIXELS, value & 0x00FF);
         if (this.win1Top > this.win1Bottom) {
-            this.win1Bottom = GameBoyAdvanceSoftwareRenderer.VERTICAL_PIXELS;
+            this.win1Bottom = SoftwareRenderer.VERTICAL_PIXELS;
         }
     }
 
@@ -1335,7 +1336,7 @@ class GameBoyAdvanceSoftwareRenderer {
         } else if (highPriority) {
             // We are higher priority
             if (mask & video.TARGET1_MASK && oldStencil & video.TARGET2_MASK) {
-                pixel = GameBoyAdvancePalette.mix(video.blendA, pixel, video.blendB, backing.color[offset]);
+                pixel = Palette.mix(video.blendA, pixel, video.blendB, backing.color[offset]);
             }
             // We just drew over something, so it doesn't make sense for us to be a TARGET1 anymore...
             stencil |= mask & ~video.TARGET1_MASK;
@@ -1343,7 +1344,7 @@ class GameBoyAdvanceSoftwareRenderer {
             // We're below another layer, but might be the blend target for it
             stencil = oldStencil & ~(video.TARGET1_MASK | video.TARGET2_MASK);
             if (mask & video.TARGET2_MASK && oldStencil & video.TARGET1_MASK) {
-                pixel = GameBoyAdvancePalette.mix(video.blendB, pixel, video.blendA, backing.color[offset]);
+                pixel = Palette.mix(video.blendB, pixel, video.blendA, backing.color[offset]);
             } else {
                 return;
             }
@@ -1361,21 +1362,21 @@ class GameBoyAdvanceSoftwareRenderer {
     }
 
     drawScanlineBlank(backing:any) {
-        for (var x = 0; x < GameBoyAdvanceSoftwareRenderer.HORIZONTAL_PIXELS; ++x) {
+        for (var x = 0; x < SoftwareRenderer.HORIZONTAL_PIXELS; ++x) {
             backing.color[x] = 0xFFFF;
             backing.stencil[x] = 0;
         }
     }
 
     prepareScanline(backing:any) {
-        for (var x = 0; x < GameBoyAdvanceSoftwareRenderer.HORIZONTAL_PIXELS; ++x) {
-            backing.stencil[x] = this.target2[GameBoyAdvanceSoftwareRenderer.LAYER_BACKDROP];
+        for (var x = 0; x < SoftwareRenderer.HORIZONTAL_PIXELS; ++x) {
+            backing.stencil[x] = this.target2[SoftwareRenderer.LAYER_BACKDROP];
         }
     }
 
     // The following methods execute in the context of this.bg[]
 
-    video:GameBoyAdvanceSoftwareRenderer;
+    video:SoftwareRenderer;
     mosaic:boolean;
 
     drawScanlineBGMode0(backing:any, bg:any, start:number, end:number) {
@@ -1529,11 +1530,11 @@ class GameBoyAdvanceSoftwareRenderer {
                 localX -= (x % video.bgMosaicX) * bg.dx + (y % video.bgMosaicY) * bg.dmx;
                 localY -= (x % video.bgMosaicX) * bg.dy + (y % video.bgMosaicY) * bg.dmy;
             }
-            if (localX < 0 || localY < 0 || localX >= GameBoyAdvanceSoftwareRenderer.HORIZONTAL_PIXELS || localY >= GameBoyAdvanceSoftwareRenderer.VERTICAL_PIXELS) {
+            if (localX < 0 || localY < 0 || localX >= SoftwareRenderer.HORIZONTAL_PIXELS || localY >= SoftwareRenderer.VERTICAL_PIXELS) {
                 offset++;
                 continue;
             }
-            color = this.vram.loadU16(((localY * GameBoyAdvanceSoftwareRenderer.HORIZONTAL_PIXELS) + localX) << 1);
+            color = this.vram.loadU16(((localY * SoftwareRenderer.HORIZONTAL_PIXELS) + localX) << 1);
             bg.pushPixel(index, map, video, color, 0, offset, backing, mask, true);
             offset++;
         }
@@ -1569,11 +1570,11 @@ class GameBoyAdvanceSoftwareRenderer {
                 localY -= (x % video.bgMosaicX) * bg.dy + (y % video.bgMosaicY) * bg.dmy;
             }
             yBase = (localY << 2) & 0x7E0;
-            if (localX < 0 || localY < 0 || localX >= GameBoyAdvanceSoftwareRenderer.HORIZONTAL_PIXELS || localY >= GameBoyAdvanceSoftwareRenderer.VERTICAL_PIXELS) {
+            if (localX < 0 || localY < 0 || localX >= SoftwareRenderer.HORIZONTAL_PIXELS || localY >= SoftwareRenderer.VERTICAL_PIXELS) {
                 offset++;
                 continue;
             }
-            color = this.vram.loadU8(charBase + (localY * GameBoyAdvanceSoftwareRenderer.HORIZONTAL_PIXELS) + localX);
+            color = this.vram.loadU8(charBase + (localY * SoftwareRenderer.HORIZONTAL_PIXELS) + localX);
             bg.pushPixel(index, map, video, color, 0, offset, backing, mask, false);
             offset++;
         }
@@ -1639,12 +1640,12 @@ class GameBoyAdvanceSoftwareRenderer {
             this.objwinActive = false;
             if (!(this.win0 || this.win1 || this.objwin)) {
                 this.setBlendEnabled(layer.index, this.target1[layer.index], this.blendMode);
-                layer.drawScanline(backing, layer, 0, GameBoyAdvanceSoftwareRenderer.HORIZONTAL_PIXELS);
+                layer.drawScanline(backing, layer, 0, SoftwareRenderer.HORIZONTAL_PIXELS);
             } else {
                 firstStart = 0;
-                firstEnd = GameBoyAdvanceSoftwareRenderer.HORIZONTAL_PIXELS;
+                firstEnd = SoftwareRenderer.HORIZONTAL_PIXELS;
                 lastStart = 0;
-                lastEnd = GameBoyAdvanceSoftwareRenderer.HORIZONTAL_PIXELS;
+                lastEnd = SoftwareRenderer.HORIZONTAL_PIXELS;
                 if (this.win0 && y >= this.win0Top && y < this.win0Bottom) {
                     if (this.windows[0].enabled[layer.index]) {
                         this.setBlendEnabled(layer.index, this.windows[0].special && this.target1[layer.index], this.blendMode);
@@ -1677,13 +1678,13 @@ class GameBoyAdvanceSoftwareRenderer {
                     this.objwinActive = !!this.objwin;
                     this.setBlendEnabled(layer.index, this.windows[2].special && this.target1[layer.index], this.blendMode); // Window 3 handled in pushPixel
                     if (firstEnd > lastStart) {
-                        layer.drawScanline(backing, layer, 0, GameBoyAdvanceSoftwareRenderer.HORIZONTAL_PIXELS);
+                        layer.drawScanline(backing, layer, 0, SoftwareRenderer.HORIZONTAL_PIXELS);
                     } else {
                         if (firstEnd) {
                             layer.drawScanline(backing, layer, 0, firstEnd);
                         }
-                        if (lastStart < GameBoyAdvanceSoftwareRenderer.HORIZONTAL_PIXELS) {
-                            layer.drawScanline(backing, layer, lastStart, GameBoyAdvanceSoftwareRenderer.HORIZONTAL_PIXELS);
+                        if (lastStart < SoftwareRenderer.HORIZONTAL_PIXELS) {
+                            layer.drawScanline(backing, layer, lastStart, SoftwareRenderer.HORIZONTAL_PIXELS);
                         }
                         if (lastEnd < firstStart) {
                             layer.drawScanline(backing, layer, lastEnd, firstStart);
@@ -1691,7 +1692,7 @@ class GameBoyAdvanceSoftwareRenderer {
                     }
                 }
 
-                this.setBlendEnabled(GameBoyAdvanceSoftwareRenderer.LAYER_BACKDROP, (!!this.target1[GameBoyAdvanceSoftwareRenderer.LAYER_BACKDROP] && !!this.windows[2].special), this.blendMode);
+                this.setBlendEnabled(SoftwareRenderer.LAYER_BACKDROP, (!!this.target1[SoftwareRenderer.LAYER_BACKDROP] && !!this.windows[2].special), this.blendMode);
             }
             if (layer.bg) {
                 layer.sx += layer.dmx;
@@ -1704,18 +1705,18 @@ class GameBoyAdvanceSoftwareRenderer {
 
     finishScanline(backing:ScanLine) {
         var color:number;
-        var bd = this.palette.accessColor(GameBoyAdvanceSoftwareRenderer.LAYER_BACKDROP, 0);
-        var xx = this.vcount * GameBoyAdvanceSoftwareRenderer.HORIZONTAL_PIXELS * 4;
-        var isTarget2 = this.target2[GameBoyAdvanceSoftwareRenderer.LAYER_BACKDROP];
-        for (var x = 0; x < GameBoyAdvanceSoftwareRenderer.HORIZONTAL_PIXELS; ++x) {
+        var bd = this.palette.accessColor(SoftwareRenderer.LAYER_BACKDROP, 0);
+        var xx = this.vcount * SoftwareRenderer.HORIZONTAL_PIXELS * 4;
+        var isTarget2 = this.target2[SoftwareRenderer.LAYER_BACKDROP];
+        for (var x = 0; x < SoftwareRenderer.HORIZONTAL_PIXELS; ++x) {
             if (backing.stencil[x] & this.WRITTEN_MASK) {
                 color = backing.color[x];
                 if (isTarget2 && backing.stencil[x] & this.TARGET1_MASK) {
-                    color = GameBoyAdvancePalette.mix(this.blendA, color, this.blendB, bd);
+                    color = Palette.mix(this.blendA, color, this.blendB, bd);
                 }
-                GameBoyAdvancePalette.convert16To32(color, this.sharedColor);
+                Palette.convert16To32(color, this.sharedColor);
             } else {
-                GameBoyAdvancePalette.convert16To32(bd, this.sharedColor);
+                Palette.convert16To32(bd, this.sharedColor);
             }
             this.pixelData.data[xx++] = this.sharedColor[0];
             this.pixelData.data[xx++] = this.sharedColor[1];
@@ -1736,4 +1737,5 @@ class GameBoyAdvanceSoftwareRenderer {
         caller.finishDraw(this.pixelData);
     }
 
+}
 }

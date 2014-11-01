@@ -1,4 +1,5 @@
-enum Register {
+module GameBoyAdvance {
+export enum Register {
     /**
      * Stack pointer
      */
@@ -13,7 +14,7 @@ enum Register {
     PC = 15
 }
 
-enum Mode {
+export enum Mode {
     ARM = 0,
     THUMB = 1,
 
@@ -26,7 +27,7 @@ enum Mode {
     SYSTEM = 0x1F
 }
 
-class ARMCore {
+export class ARMCore {
 
     static BANK_NONE = 0;
     static BANK_FIQ = 1;
@@ -58,14 +59,11 @@ class ARMCore {
      */
     gprs = new Int32Array(16);
 
-    private gba:GameBoyAdvance;
-
     cycles:number;
 
     step:{():void};
 
-    constructor(gba:GameBoyAdvance) {
-        this.gba = gba;
+    constructor(private gba:Main) {
         this.armCompiler = new ARMCoreArm(gba, this);
         this.thumbCompiler = new ARMCoreThumb(gba, this);
         this.generateConds();
@@ -318,8 +316,8 @@ class ARMCore {
     pageId:number;
 
     fetchPage(address:number):void {
-        var region = address >> GameBoyAdvanceMMU.BASE_OFFSET;
-        var pageId = this.gba.mmu.addressToPage(region, address & GameBoyAdvanceMMU.OFFSET_MASK);
+        var region = address >> MMU.BASE_OFFSET;
+        var pageId = this.gba.mmu.addressToPage(region, address & MMU.OFFSET_MASK);
         if (region == this.pageRegion) {
             if (pageId == this.pageId && !this.page.invalid) {
                 return;
@@ -1528,4 +1526,5 @@ class ARMCore {
         op.fixedJump = op.fixedJump || false;
         return op;
     }
+}
 }

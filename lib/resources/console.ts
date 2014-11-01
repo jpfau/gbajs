@@ -1,7 +1,6 @@
-class GameBoyAdvanceConsole {
+module GameBoyAdvance {
+export class Console {
 
-    cpu:ARMCore;
-    private gba:GameBoyAdvance;
     ul:HTMLElement;
     gprs:HTMLElement;
     memory:Memory;
@@ -11,9 +10,7 @@ class GameBoyAdvanceConsole {
     paletteView:PaletteViewer;
     tileView:TileViewer;
 
-    constructor(gba:GameBoyAdvance) {
-        this.gba = gba;
-        this.cpu = gba.cpu;
+    constructor(private gba:Main) {
         this.ul = document.getElementById('console');
         this.gprs = document.getElementById('gprs');
         this.memory = new Memory(gba.mmu);
@@ -33,12 +30,12 @@ class GameBoyAdvanceConsole {
 
     updateGPRs() {
         for (var i = 0; i < 16; ++i) {
-            this.gprs.querySelector('#r'+i).textContent = hex(this.cpu.gprs[i], undefined, false);
+            this.gprs.querySelector('#r'+i).textContent = hex(this.gba.cpu.gprs[i], undefined, false);
         }
     }
 
     updateCPSR() {
-        var cpu = this.cpu;
+        var cpu = this.gba.cpu;
         var bit = (psr:string, member:any) => {
             var element:any = document.getElementById(psr);
             if (member) {
@@ -87,24 +84,24 @@ class GameBoyAdvanceConsole {
 
     log = (level:number, message:any):void => {
         switch (level) {
-            case LoggerLevel.ERROR:
+            case Logger.Level.ERROR:
                 message = '[ERROR] ' + message;
                 break;
-            case LoggerLevel.WARN:
+            case Logger.Level.WARN:
                 message = '[WARN] ' + message;
                 break;
-            case LoggerLevel.STUB:
+            case Logger.Level.STUB:
                 message = '[STUB] ' + message;
                 break;
-            case LoggerLevel.INFO:
+            case Logger.Level.INFO:
                 message = '[INFO] ' + message;
                 break;
-            case LoggerLevel.DEBUG:
+            case Logger.Level.DEBUG:
                 message = '[DEBUG] ' + message;
                 break;
         }
         this.logQueue.push(message);
-        if (level == LoggerLevel.ERROR) {
+        if (level == Logger.Level.ERROR) {
             this.pause();
         }
         if (!this.stillRunning) {
@@ -158,10 +155,10 @@ class GameBoyAdvanceConsole {
 
     step() {
         try {
-            this.cpu.step();
+            this.gba.cpu.step();
             this.update();
         } catch (exception) {
-            this.log(LoggerLevel.DEBUG, exception);
+            this.log(Logger.Level.DEBUG, exception);
             throw exception;
         }
     }
@@ -177,14 +174,14 @@ class GameBoyAdvanceConsole {
             if (self.stillRunning) {
                 try {
                     self.step();
-                    if (self.breakpoints.length && self.breakpoints[self.cpu.gprs[Register.PC]]) {
+                    if (self.breakpoints.length && self.breakpoints[self.gba.cpu.gprs[Register.PC]]) {
                         self.breakpointHit();
                         return;
                     }
                     self.flushLog();
                     setTimeout(run, 0);
                 } catch (exception) {
-                    self.log(LoggerLevel.DEBUG, exception);
+                    self.log(Logger.Level.DEBUG, exception);
                     self.pause();
                     throw exception;
                 }
@@ -240,7 +237,7 @@ class GameBoyAdvanceConsole {
 
     breakpointHit() {
         this.pause();
-        this.log(LoggerLevel.DEBUG, 'Hit breakpoint at ' + hex(this.cpu.gprs[Register.PC]));
+        this.log(Logger.Level.DEBUG, 'Hit breakpoint at ' + hex(this.gba.cpu.gprs[Register.PC]));
     }
 
     addBreakpoint(addr:number) {
@@ -263,7 +260,7 @@ class GameBoyAdvanceConsole {
     }
 
     testBreakpoints() {
-        if (this.breakpoints.length && this.breakpoints[this.cpu.gprs[Register.PC]]) {
+        if (this.breakpoints.length && this.breakpoints[this.gba.cpu.gprs[Register.PC]]) {
             this.breakpointHit();
             return false;
         }
@@ -272,15 +269,15 @@ class GameBoyAdvanceConsole {
 
 }
 
-class Memory {
+export class Memory {
 
-    mmu:GameBoyAdvanceMMU;
+    mmu:MMU;
     ul:any;
     rowHeight:number;
     numberRows:number;
     scrollTop:number;
 
-    constructor(mmu:GameBoyAdvanceMMU) {
+    constructor(mmu:MMU) {
         this.mmu = mmu;
         this.ul = null;
         this.ul = document.getElementById('memoryView');
@@ -428,12 +425,12 @@ class Memory {
     }
 }
 
-class PaletteViewer {
+export class PaletteViewer {
 
-    palette:GameBoyAdvancePalette;
+    palette:Palette;
     view:any;
 
-    constructor(palette:GameBoyAdvancePalette) {
+    constructor(palette:Palette) {
         this.palette = palette;
         this.view = document.createElement('canvas');
         this.view.setAttribute('class', 'paletteView');
@@ -463,15 +460,15 @@ class PaletteViewer {
     }
 }
 
-class TileViewer {
+export class TileViewer {
 
     BG_MAP_WIDTH = 256;
-    vram:GameBoyAdvanceVRAM;
-    palette:GameBoyAdvancePalette;
+    vram:VRAM;
+    palette:Palette;
     view:any;
     activePalette:number;
 
-    constructor(vram:GameBoyAdvanceVRAM, palette:GameBoyAdvancePalette) {
+    constructor(vram:VRAM, palette:Palette) {
         this.vram = vram;
         this.palette = palette;
 
@@ -519,4 +516,5 @@ class TileViewer {
             }
         }
     }
+}
 }
