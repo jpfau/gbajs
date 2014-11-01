@@ -1,5 +1,5 @@
 function hex(i:number, leading = 8, usePrefix = true) {
-    var s = (i >>> 0).toString(16).toUpperCase();
+    var s = uint(i).toString(16).toUpperCase();
     leading -= s.length;
     if (leading < 0)
         return s;
@@ -50,6 +50,18 @@ function encodeBase64(view:DataView):string {
         data.push(btoa(wordstring.join('')));
     }
     return data.join('');
+}
+
+function uint(s:number):number {
+    return s >>> 0;
+}
+
+function int(b:boolean):number {
+    return b === true ? 1 : 0;
+}
+
+function bool(i:number):boolean {
+    return !!i;
 }
 
 module Serializer {
@@ -193,7 +205,7 @@ module Serializer {
                     body = (<any>view.buffer).slice(pointer.advance(size), pointer.advance(0));
                     break;
                 case Tag.BOOLEAN:
-                    body = !!view.getUint8(pointer.advance(1));
+                    body = bool(view.getUint8(pointer.advance(1)));
                     break;
             }
             object[head] = body;
