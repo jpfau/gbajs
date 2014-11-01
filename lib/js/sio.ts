@@ -1,12 +1,12 @@
 class GameBoyAdvanceSIO {
-    SIO_NORMAL_8 = 0;
-    SIO_NORMAL_32 = 1;
-    SIO_MULTI = 2;
-    SIO_UART = 3;
-    SIO_GPIO = 8;
-    SIO_JOYBUS = 12;
+    static SIO_NORMAL_8 = 0;
+    static SIO_NORMAL_32 = 1;
+    static SIO_MULTI = 2;
+    static SIO_UART = 3;
+    static SIO_GPIO = 8;
+    static SIO_JOYBUS = 12;
 
-    BAUD = [ 9600, 38400, 57600, 115200 ];
+    static BAUD = [ 9600, 38400, 57600, 115200 ];
 
     private gba:GameBoyAdvance;
 
@@ -21,7 +21,7 @@ class GameBoyAdvanceSIO {
     linkLayer:any;
 
     clear():void {
-        this.mode = this.SIO_GPIO;
+        this.mode = GameBoyAdvanceSIO.SIO_GPIO;
         this.sd = false;
 
         this.irq = false;
@@ -50,7 +50,7 @@ class GameBoyAdvanceSIO {
     }
 
     writeRCNT(value:number):void {
-        if (this.mode != this.SIO_GPIO) {
+        if (this.mode != GameBoyAdvanceSIO.SIO_GPIO) {
             return;
         }
 
@@ -59,16 +59,16 @@ class GameBoyAdvanceSIO {
 
     writeSIOCNT(value:number):void {
         switch (this.mode) {
-            case this.SIO_NORMAL_8:
+            case GameBoyAdvanceSIO.SIO_NORMAL_8:
                 this.gba.logger.STUB('8-bit transfer unsupported');
                 break;
-            case this.SIO_NORMAL_32:
+            case GameBoyAdvanceSIO.SIO_NORMAL_32:
                 this.gba.logger.STUB('32-bit transfer unsupported');
                 break;
-            case this.SIO_MULTI:
+            case GameBoyAdvanceSIO.SIO_MULTI:
                 this.multiplayer.baud = value & 0x0003;
                 if (this.linkLayer) {
-                    this.linkLayer.setBaud(this.BAUD[this.multiplayer.baud]);
+                    this.linkLayer.setBaud(GameBoyAdvanceSIO.BAUD[this.multiplayer.baud]);
                 }
 
                 if (!this.multiplayer.si) {
@@ -79,13 +79,13 @@ class GameBoyAdvanceSIO {
                 }
                 this.irq = !!(value & 0x4000);
                 break;
-            case this.SIO_UART:
+            case GameBoyAdvanceSIO.SIO_UART:
                 this.gba.logger.STUB('UART unsupported');
                 break;
-            case this.SIO_GPIO:
+            case GameBoyAdvanceSIO.SIO_GPIO:
                 // This register isn't used in general-purpose mode
                 break;
-            case this.SIO_JOYBUS:
+            case GameBoyAdvanceSIO.SIO_JOYBUS:
                 this.gba.logger.STUB('JOY BUS unsupported');
                 break;
         }
@@ -94,13 +94,13 @@ class GameBoyAdvanceSIO {
     readSIOCNT():number {
         var value = (this.mode << 12) & 0xFFFF;
         switch (this.mode) {
-            case this.SIO_NORMAL_8:
+            case GameBoyAdvanceSIO.SIO_NORMAL_8:
                 this.gba.logger.STUB('8-bit transfer unsupported');
                 break;
-            case this.SIO_NORMAL_32:
+            case GameBoyAdvanceSIO.SIO_NORMAL_32:
                 this.gba.logger.STUB('32-bit transfer unsupported');
                 break;
-            case this.SIO_MULTI:
+            case GameBoyAdvanceSIO.SIO_MULTI:
                 value |= this.multiplayer.baud;
                 value |= this.multiplayer.si;
                 value |= (<any>this.sd) << 3;
@@ -109,13 +109,13 @@ class GameBoyAdvanceSIO {
                 value |= this.multiplayer.busy;
                 value |= (<number><any>this.irq) << 14;
                 break;
-            case this.SIO_UART:
+            case GameBoyAdvanceSIO.SIO_UART:
                 this.gba.logger.STUB('UART unsupported');
                 break;
-            case this.SIO_GPIO:
+            case GameBoyAdvanceSIO.SIO_GPIO:
                 // This register isn't used in general-purpose mode
                 break;
-            case this.SIO_JOYBUS:
+            case GameBoyAdvanceSIO.SIO_JOYBUS:
                 this.gba.logger.STUB('JOY BUS unsupported');
                 break;
         }
@@ -124,12 +124,12 @@ class GameBoyAdvanceSIO {
 
     read(slot:number):number {
         switch (this.mode) {
-            case this.SIO_NORMAL_32:
+            case GameBoyAdvanceSIO.SIO_NORMAL_32:
                 this.gba.logger.STUB('32-bit transfer unsupported');
                 break;
-            case this.SIO_MULTI:
+            case GameBoyAdvanceSIO.SIO_MULTI:
                 return this.multiplayer.states[slot];
-            case this.SIO_UART:
+            case GameBoyAdvanceSIO.SIO_UART:
                 this.gba.logger.STUB('UART unsupported');
                 break;
             default:

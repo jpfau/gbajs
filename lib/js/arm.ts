@@ -971,16 +971,16 @@ class ARMCoreArm {
                 (f ? 0xFF000000 : 0x00000000);
 
             if (r) {
-                mask &= cpu.USER_MASK | cpu.PRIV_MASK | cpu.STATE_MASK;
+                mask &= ARMCore.USER_MASK | ARMCore.PRIV_MASK | ARMCore.STATE_MASK;
                 cpu.spsr = (cpu.spsr & ~mask) | (operand & mask)
             } else {
-                if (mask & cpu.USER_MASK) {
+                if (mask & ARMCore.USER_MASK) {
                     cpu.cpsr.N = <any>(operand >> 31);
                     cpu.cpsr.Z = <any>(operand & 0x40000000);
                     cpu.cpsr.C = <any>(operand & 0x20000000);
                     cpu.cpsr.V = <any>(operand & 0x10000000)
                 }
-                if (cpu.mode != Mode.USER && (mask & cpu.PRIV_MASK)) {
+                if (cpu.mode != Mode.USER && (mask & ARMCore.PRIV_MASK)) {
                     cpu.switchMode((operand & 0x0000000F) | 0x00000010);
                     cpu.cpsr.I = <any>(operand & 0x00000080);
                     cpu.cpsr.F = <any>(operand & 0x00000040);

@@ -299,16 +299,16 @@ class BadMemory implements MemoryIO {
 class GameBoyAdvanceMMU implements MemoryIO {
 
     static REGION_BIOS = 0x0;
-    REGION_WORKING_RAM = 0x2;
-    REGION_WORKING_IRAM = 0x3;
-    REGION_IO = 0x4;
-    REGION_PALETTE_RAM = 0x5;
-    REGION_VRAM = 0x6;
-    REGION_OAM = 0x7;
-    REGION_CART0 = 0x8;
-    REGION_CART1 = 0xA;
-    REGION_CART2 = 0xC;
-    REGION_CART_SRAM = 0xE;
+    static REGION_WORKING_RAM = 0x2;
+    static REGION_WORKING_IRAM = 0x3;
+    static REGION_IO = 0x4;
+    static REGION_PALETTE_RAM = 0x5;
+    static REGION_VRAM = 0x6;
+    static REGION_OAM = 0x7;
+    static REGION_CART0 = 0x8;
+    static REGION_CART1 = 0xA;
+    static REGION_CART2 = 0xC;
+    static REGION_CART_SRAM = 0xE;
 
     static BASE_BIOS = 0x00000000;
     static BASE_WORKING_RAM = 0x02000000;
@@ -322,36 +322,36 @@ class GameBoyAdvanceMMU implements MemoryIO {
     static BASE_CART2 = 0x0C000000;
     static BASE_CART_SRAM = 0x0E000000;
 
-    BASE_MASK = 0x0F000000;
-    BASE_OFFSET = 24;
-    OFFSET_MASK = 0x00FFFFFF;
+    static BASE_MASK = 0x0F000000;
+    static BASE_OFFSET = 24;
+    static OFFSET_MASK = 0x00FFFFFF;
 
     static SIZE_BIOS = 0x00004000;
-    SIZE_WORKING_RAM = 0x00040000;
-    SIZE_WORKING_IRAM = 0x00008000;
-    SIZE_IO = 0x00000400;
+    static SIZE_WORKING_RAM = 0x00040000;
+    static SIZE_WORKING_IRAM = 0x00008000;
+    static SIZE_IO = 0x00000400;
     static SIZE_PALETTE_RAM = 0x00000400;
     static SIZE_VRAM = 0x00018000;
     static SIZE_OAM = 0x00000400;
     static SIZE_CART0 = 0x02000000;
     static SIZE_CART1 = 0x02000000;
     static SIZE_CART2 = 0x02000000;
-    SIZE_CART_SRAM = 0x00008000;
-    SIZE_CART_FLASH512 = 0x00010000;
-    SIZE_CART_FLASH1M = 0x00020000;
-    SIZE_CART_EEPROM = 0x00002000;
+    static SIZE_CART_SRAM = 0x00008000;
+    static SIZE_CART_FLASH512 = 0x00010000;
+    static SIZE_CART_FLASH1M = 0x00020000;
+    static SIZE_CART_EEPROM = 0x00002000;
 
-    DMA_TIMING_NOW = 0;
-    DMA_TIMING_VBLANK = 1;
-    DMA_TIMING_HBLANK = 2;
-    DMA_TIMING_CUSTOM = 3;
+    static DMA_TIMING_NOW = 0;
+    static DMA_TIMING_VBLANK = 1;
+    static DMA_TIMING_HBLANK = 2;
+    static DMA_TIMING_CUSTOM = 3;
 
     static DMA_INCREMENT = 0;
     static DMA_DECREMENT = 1;
     static DMA_FIXED = 2;
-    DMA_INCREMENT_RELOAD = 3;
+    static DMA_INCREMENT_RELOAD = 3;
 
-    DMA_OFFSET = [ 1, -1, 0, 1 ];
+    static DMA_OFFSET = [ 1, -1, 0, 1 ];
 
     WAITSTATES:number[];
     WAITSTATES_32:number[];
@@ -405,8 +405,8 @@ class GameBoyAdvanceMMU implements MemoryIO {
         this.memory = [
             this.bios,
             badMemory, // Unused
-            new MemoryBlock(this.SIZE_WORKING_RAM, 9),
-            new MemoryBlock(this.SIZE_WORKING_IRAM, 7),
+            new MemoryBlock(GameBoyAdvanceMMU.SIZE_WORKING_RAM, 9),
+            new MemoryBlock(GameBoyAdvanceMMU.SIZE_WORKING_IRAM, 7),
             null, // This is owned by GameBoyAdvanceIO
             null, // This is owned by GameBoyAdvancePalette
             null, // This is owned by GameBoyAdvanceVRAM
@@ -435,23 +435,23 @@ class GameBoyAdvanceMMU implements MemoryIO {
         this.save = null;
 
         this.DMA_REGISTER = [
-                this.gba.io.DMA0CNT_HI >> 1,
-                this.gba.io.DMA1CNT_HI >> 1,
-                this.gba.io.DMA2CNT_HI >> 1,
-                this.gba.io.DMA3CNT_HI >> 1
+                GameBoyAdvanceIO.DMA0CNT_HI >> 1,
+                GameBoyAdvanceIO.DMA1CNT_HI >> 1,
+                GameBoyAdvanceIO.DMA2CNT_HI >> 1,
+                GameBoyAdvanceIO.DMA3CNT_HI >> 1
         ];
     }
 
     freeze():any {
         return {
-            'ram': Serializer.prefix(this.memory[this.REGION_WORKING_RAM].buffer),
-            'iram': Serializer.prefix(this.memory[this.REGION_WORKING_IRAM].buffer)
+            'ram': Serializer.prefix(this.memory[GameBoyAdvanceMMU.REGION_WORKING_RAM].buffer),
+            'iram': Serializer.prefix(this.memory[GameBoyAdvanceMMU.REGION_WORKING_IRAM].buffer)
         };
     }
 
     defrost(frost:any):void {
-        this.memory[this.REGION_WORKING_RAM].replaceData(frost.ram, 0);
-        this.memory[this.REGION_WORKING_IRAM].replaceData(frost.iram, 0);
+        this.memory[GameBoyAdvanceMMU.REGION_WORKING_RAM].replaceData(frost.ram, 0);
+        this.memory[GameBoyAdvanceMMU.REGION_WORKING_IRAM].replaceData(frost.iram, 0);
     }
 
     loadBios(bios:any, real:boolean):void {
@@ -466,15 +466,15 @@ class GameBoyAdvanceMMU implements MemoryIO {
         if (lo.view.getUint8(0xB2) != 0x96) {
             throw "Not a valid ROM";
         }
-        this.memory[this.REGION_CART0] = lo;
-        this.memory[this.REGION_CART1] = lo;
-        this.memory[this.REGION_CART2] = lo;
+        this.memory[GameBoyAdvanceMMU.REGION_CART0] = lo;
+        this.memory[GameBoyAdvanceMMU.REGION_CART1] = lo;
+        this.memory[GameBoyAdvanceMMU.REGION_CART2] = lo;
 
         if (rom.byteLength > 0x01000000) {
             var hi = new ROMView(rom, 0x01000000);
-            this.memory[this.REGION_CART0 + 1] = hi;
-            this.memory[this.REGION_CART1 + 1] = hi;
-            this.memory[this.REGION_CART2 + 1] = hi;
+            this.memory[GameBoyAdvanceMMU.REGION_CART0 + 1] = hi;
+            this.memory[GameBoyAdvanceMMU.REGION_CART1 + 1] = hi;
+            this.memory[GameBoyAdvanceMMU.REGION_CART2 + 1] = hi;
         }
 
         if (process) {
@@ -559,22 +559,22 @@ class GameBoyAdvanceMMU implements MemoryIO {
                 switch (state) {
                     case 'FLASH_V':
                     case 'FLASH512_V':
-                        this.save = this.memory[this.REGION_CART_SRAM] = new FlashSavedata(this.SIZE_CART_FLASH512);
+                        this.save = this.memory[GameBoyAdvanceMMU.REGION_CART_SRAM] = new FlashSavedata(GameBoyAdvanceMMU.SIZE_CART_FLASH512);
                         break;
                     case 'FLASH1M_V':
-                        this.save = this.memory[this.REGION_CART_SRAM] = new FlashSavedata(this.SIZE_CART_FLASH1M);
+                        this.save = this.memory[GameBoyAdvanceMMU.REGION_CART_SRAM] = new FlashSavedata(GameBoyAdvanceMMU.SIZE_CART_FLASH1M);
                         break;
                     case 'SRAM_V':
-                        this.save = this.memory[this.REGION_CART_SRAM] = new SRAMSavedata(this.SIZE_CART_SRAM);
+                        this.save = this.memory[GameBoyAdvanceMMU.REGION_CART_SRAM] = new SRAMSavedata(GameBoyAdvanceMMU.SIZE_CART_SRAM);
                         break;
                     case 'EEPROM_V':
-                        this.save = this.memory[this.REGION_CART2 + 1] = new EEPROMSavedata(this.gba, this.SIZE_CART_EEPROM);
+                        this.save = this.memory[GameBoyAdvanceMMU.REGION_CART2 + 1] = new EEPROMSavedata(this.gba, GameBoyAdvanceMMU.SIZE_CART_EEPROM);
                         break;
                 }
             }
             if (!this.save) {
                 // Assume we have SRAM
-                this.save = this.memory[this.REGION_CART_SRAM] = new SRAMSavedata(this.SIZE_CART_SRAM);
+                this.save = this.memory[GameBoyAdvanceMMU.REGION_CART_SRAM] = new SRAMSavedata(GameBoyAdvanceMMU.SIZE_CART_SRAM);
             }
         }
 
@@ -587,42 +587,42 @@ class GameBoyAdvanceMMU implements MemoryIO {
     }
 
     load8(offset:number):number {
-        return this.memory[offset >>> this.BASE_OFFSET].load8(offset & 0x00FFFFFF);
+        return this.memory[offset >>> GameBoyAdvanceMMU.BASE_OFFSET].load8(offset & 0x00FFFFFF);
     }
 
     load16(offset:number):number {
-        return this.memory[offset >>> this.BASE_OFFSET].load16(offset & 0x00FFFFFF);
+        return this.memory[offset >>> GameBoyAdvanceMMU.BASE_OFFSET].load16(offset & 0x00FFFFFF);
     }
 
     load32(offset:number):number {
-        return this.memory[offset >>> this.BASE_OFFSET].load32(offset & 0x00FFFFFF);
+        return this.memory[offset >>> GameBoyAdvanceMMU.BASE_OFFSET].load32(offset & 0x00FFFFFF);
     }
 
     loadU8(offset:number):number {
-        return this.memory[offset >>> this.BASE_OFFSET].loadU8(offset & 0x00FFFFFF);
+        return this.memory[offset >>> GameBoyAdvanceMMU.BASE_OFFSET].loadU8(offset & 0x00FFFFFF);
     }
 
     loadU16(offset:number):number {
-        return this.memory[offset >>> this.BASE_OFFSET].loadU16(offset & 0x00FFFFFF);
+        return this.memory[offset >>> GameBoyAdvanceMMU.BASE_OFFSET].loadU16(offset & 0x00FFFFFF);
     }
 
     store8(offset:number, value:number):void {
         var maskedOffset = offset & 0x00FFFFFF;
-        var memory = this.memory[offset >>> this.BASE_OFFSET];
+        var memory = this.memory[offset >>> GameBoyAdvanceMMU.BASE_OFFSET];
         memory.store8(maskedOffset, value);
         memory.invalidatePage(maskedOffset);
     }
 
     store16(offset:number, value:number):void {
         var maskedOffset = offset & 0x00FFFFFE;
-        var memory = this.memory[offset >>> this.BASE_OFFSET];
+        var memory = this.memory[offset >>> GameBoyAdvanceMMU.BASE_OFFSET];
         memory.store16(maskedOffset, value);
         memory.invalidatePage(maskedOffset);
     }
 
     store32(offset:number, value:number):void {
         var maskedOffset = offset & 0x00FFFFFC;
-        var memory = this.memory[offset >>> this.BASE_OFFSET];
+        var memory = this.memory[offset >>> GameBoyAdvanceMMU.BASE_OFFSET];
         memory.store32(maskedOffset, value);
         memory.invalidatePage(maskedOffset);
         memory.invalidatePage(maskedOffset + 2);
@@ -636,27 +636,27 @@ class GameBoyAdvanceMMU implements MemoryIO {
     waitstatesSeq32:number[];
 
     waitPrefetch(memory:number):void {
-        this.gba.cpu.cycles += 1 + this.waitstatesPrefetch[memory >>> this.BASE_OFFSET];
+        this.gba.cpu.cycles += 1 + this.waitstatesPrefetch[memory >>> GameBoyAdvanceMMU.BASE_OFFSET];
     }
 
     waitPrefetch32(memory:number):void {
-        this.gba.cpu.cycles += 1 + this.waitstatesPrefetch32[memory >>> this.BASE_OFFSET];
+        this.gba.cpu.cycles += 1 + this.waitstatesPrefetch32[memory >>> GameBoyAdvanceMMU.BASE_OFFSET];
     }
 
     wait(memory:number):void {
-        this.gba.cpu.cycles += 1 + this.waitstates[memory >>> this.BASE_OFFSET];
+        this.gba.cpu.cycles += 1 + this.waitstates[memory >>> GameBoyAdvanceMMU.BASE_OFFSET];
     }
 
     wait32(memory:number):void {
-        this.gba.cpu.cycles += 1 + this.waitstates32[memory >>> this.BASE_OFFSET];
+        this.gba.cpu.cycles += 1 + this.waitstates32[memory >>> GameBoyAdvanceMMU.BASE_OFFSET];
     }
 
     waitSeq(memory:number):void {
-        this.gba.cpu.cycles += 1 + this.waitstatesSeq[memory >>> this.BASE_OFFSET];
+        this.gba.cpu.cycles += 1 + this.waitstatesSeq[memory >>> GameBoyAdvanceMMU.BASE_OFFSET];
     }
 
     waitSeq32(memory:number):void {
-        this.gba.cpu.cycles += 1 + this.waitstatesSeq32[memory >>> this.BASE_OFFSET];
+        this.gba.cpu.cycles += 1 + this.waitstatesSeq32[memory >>> GameBoyAdvanceMMU.BASE_OFFSET];
     }
 
     waitMul(rs:number):void {
@@ -672,8 +672,8 @@ class GameBoyAdvanceMMU implements MemoryIO {
     }
 
     waitMulti32(memory:number, seq:number):void {
-        this.gba.cpu.cycles += 1 + this.waitstates32[memory >>> this.BASE_OFFSET];
-        this.gba.cpu.cycles += (1 + this.waitstatesSeq32[memory >>> this.BASE_OFFSET]) * (seq - 1);
+        this.gba.cpu.cycles += 1 + this.waitstates32[memory >>> GameBoyAdvanceMMU.BASE_OFFSET];
+        this.gba.cpu.cycles += (1 + this.waitstatesSeq32[memory >>> GameBoyAdvanceMMU.BASE_OFFSET]) * (seq - 1);
     }
 
     addressToPage(region:number, address:number):number {
@@ -698,16 +698,16 @@ class GameBoyAdvanceMMU implements MemoryIO {
 
     scheduleDma(number:number, info:DMA):void {
         switch (info.timing) {
-            case this.DMA_TIMING_NOW:
+            case GameBoyAdvanceMMU.DMA_TIMING_NOW:
                 this.serviceDma(number, info);
                 break;
-            case this.DMA_TIMING_HBLANK:
+            case GameBoyAdvanceMMU.DMA_TIMING_HBLANK:
                 // Handled implicitly
                 break;
-            case this.DMA_TIMING_VBLANK:
+            case GameBoyAdvanceMMU.DMA_TIMING_VBLANK:
                 // Handled implicitly
                 break;
-            case this.DMA_TIMING_CUSTOM:
+            case GameBoyAdvanceMMU.DMA_TIMING_CUSTOM:
                 switch (number) {
                     case 0:
                         this.gba.logger.WARN('Discarding invalid DMA0 scheduling');
@@ -726,7 +726,7 @@ class GameBoyAdvanceMMU implements MemoryIO {
     runHblankDmas():void {
         for (var i = 0; i < this.gba.irq.dma.length; ++i) {
             this.dma = this.gba.irq.dma[i];
-            if (this.dma.enable && this.dma.timing == this.DMA_TIMING_HBLANK) {
+            if (this.dma.enable && this.dma.timing == GameBoyAdvanceMMU.DMA_TIMING_HBLANK) {
                 this.serviceDma(i, this.dma);
             }
         }
@@ -735,7 +735,7 @@ class GameBoyAdvanceMMU implements MemoryIO {
     runVblankDmas():void {
         for (var i = 0; i < this.gba.irq.dma.length; ++i) {
             this.dma = this.gba.irq.dma[i];
-            if (this.dma.enable && this.dma.timing == this.DMA_TIMING_VBLANK) {
+            if (this.dma.enable && this.dma.timing == GameBoyAdvanceMMU.DMA_TIMING_VBLANK) {
                 this.serviceDma(i, this.dma);
             }
         }
@@ -748,13 +748,13 @@ class GameBoyAdvanceMMU implements MemoryIO {
         }
 
         var width = info.width;
-        var sourceOffset = this.DMA_OFFSET[info.srcControl] * width;
-        var destOffset = this.DMA_OFFSET[info.dstControl] * width;
+        var sourceOffset = GameBoyAdvanceMMU.DMA_OFFSET[info.srcControl] * width;
+        var destOffset = GameBoyAdvanceMMU.DMA_OFFSET[info.dstControl] * width;
         var wordsRemaining = info.nextCount;
-        var source = info.nextSource & this.OFFSET_MASK;
-        var dest = info.nextDest & this.OFFSET_MASK;
-        var sourceRegion = info.nextSource >>> this.BASE_OFFSET;
-        var destRegion = info.nextDest >>> this.BASE_OFFSET;
+        var source = info.nextSource & GameBoyAdvanceMMU.OFFSET_MASK;
+        var dest = info.nextDest & GameBoyAdvanceMMU.OFFSET_MASK;
+        var sourceRegion = info.nextSource >>> GameBoyAdvanceMMU.BASE_OFFSET;
+        var destRegion = info.nextDest >>> GameBoyAdvanceMMU.BASE_OFFSET;
         var sourceBlock = this.memory[sourceRegion];
         var destBlock = this.memory[destRegion];
         var sourceView:DataView = null;
@@ -770,12 +770,12 @@ class GameBoyAdvanceMMU implements MemoryIO {
             }
         }
 
-        if (destRegion == this.REGION_WORKING_RAM || destRegion == this.REGION_WORKING_IRAM) {
+        if (destRegion == GameBoyAdvanceMMU.REGION_WORKING_RAM || destRegion == GameBoyAdvanceMMU.REGION_WORKING_IRAM) {
             destView = destBlock.view;
             destMask = destBlock.mask;
         }
 
-        if (sourceRegion == this.REGION_WORKING_RAM || sourceRegion == this.REGION_WORKING_IRAM || sourceRegion == this.REGION_CART0 || sourceRegion == this.REGION_CART1) {
+        if (sourceRegion == GameBoyAdvanceMMU.REGION_WORKING_RAM || sourceRegion == GameBoyAdvanceMMU.REGION_WORKING_IRAM || sourceRegion == GameBoyAdvanceMMU.REGION_CART0 || sourceRegion == GameBoyAdvanceMMU.REGION_CART1) {
             sourceView = sourceBlock.view;
             sourceMask = sourceBlock.mask;
         }
@@ -848,19 +848,19 @@ class GameBoyAdvanceMMU implements MemoryIO {
                 : this.waitstatesSeq[sourceRegion] + this.waitstatesSeq[destRegion]);
         }
 
-        info.nextSource = source | (sourceRegion << this.BASE_OFFSET);
-        info.nextDest = dest | (destRegion << this.BASE_OFFSET);
+        info.nextSource = source | (sourceRegion << GameBoyAdvanceMMU.BASE_OFFSET);
+        info.nextDest = dest | (destRegion << GameBoyAdvanceMMU.BASE_OFFSET);
         info.nextCount = wordsRemaining;
 
         if (!info.repeat) {
             info.enable = false;
 
             // Clear the enable bit in memory
-            var io = <GameBoyAdvanceIO><any>this.memory[this.REGION_IO];
+            var io = <GameBoyAdvanceIO><any>this.memory[GameBoyAdvanceMMU.REGION_IO];
             io.registers[this.DMA_REGISTER[number]] &= 0x7FE0;
         } else {
             info.nextCount = info.count;
-            if (info.dstControl == this.DMA_INCREMENT_RELOAD) {
+            if (info.dstControl == GameBoyAdvanceMMU.DMA_INCREMENT_RELOAD) {
                 info.nextDest = info.dest;
             }
             this.scheduleDma(number, info);
@@ -877,43 +877,43 @@ class GameBoyAdvanceMMU implements MemoryIO {
         var ws2seq = (word & 0x0400) >> 10;
         var prefetch = word & 0x4000;
 
-        this.waitstates[this.REGION_CART_SRAM] = this.ROM_WS[sram];
-        this.waitstatesSeq[this.REGION_CART_SRAM] = this.ROM_WS[sram];
-        this.waitstates32[this.REGION_CART_SRAM] = this.ROM_WS[sram];
-        this.waitstatesSeq32[this.REGION_CART_SRAM] = this.ROM_WS[sram];
+        this.waitstates[GameBoyAdvanceMMU.REGION_CART_SRAM] = this.ROM_WS[sram];
+        this.waitstatesSeq[GameBoyAdvanceMMU.REGION_CART_SRAM] = this.ROM_WS[sram];
+        this.waitstates32[GameBoyAdvanceMMU.REGION_CART_SRAM] = this.ROM_WS[sram];
+        this.waitstatesSeq32[GameBoyAdvanceMMU.REGION_CART_SRAM] = this.ROM_WS[sram];
 
-        this.waitstates[this.REGION_CART0] = this.waitstates[this.REGION_CART0 + 1] = this.ROM_WS[ws0];
-        this.waitstates[this.REGION_CART1] = this.waitstates[this.REGION_CART1 + 1] = this.ROM_WS[ws1];
-        this.waitstates[this.REGION_CART2] = this.waitstates[this.REGION_CART2 + 1] = this.ROM_WS[ws2];
+        this.waitstates[GameBoyAdvanceMMU.REGION_CART0] = this.waitstates[GameBoyAdvanceMMU.REGION_CART0 + 1] = this.ROM_WS[ws0];
+        this.waitstates[GameBoyAdvanceMMU.REGION_CART1] = this.waitstates[GameBoyAdvanceMMU.REGION_CART1 + 1] = this.ROM_WS[ws1];
+        this.waitstates[GameBoyAdvanceMMU.REGION_CART2] = this.waitstates[GameBoyAdvanceMMU.REGION_CART2 + 1] = this.ROM_WS[ws2];
 
-        this.waitstatesSeq[this.REGION_CART0] = this.waitstatesSeq[this.REGION_CART0 + 1] = this.ROM_WS_SEQ[0][ws0seq];
-        this.waitstatesSeq[this.REGION_CART1] = this.waitstatesSeq[this.REGION_CART1 + 1] = this.ROM_WS_SEQ[1][ws1seq];
-        this.waitstatesSeq[this.REGION_CART2] = this.waitstatesSeq[this.REGION_CART2 + 1] = this.ROM_WS_SEQ[2][ws2seq];
+        this.waitstatesSeq[GameBoyAdvanceMMU.REGION_CART0] = this.waitstatesSeq[GameBoyAdvanceMMU.REGION_CART0 + 1] = this.ROM_WS_SEQ[0][ws0seq];
+        this.waitstatesSeq[GameBoyAdvanceMMU.REGION_CART1] = this.waitstatesSeq[GameBoyAdvanceMMU.REGION_CART1 + 1] = this.ROM_WS_SEQ[1][ws1seq];
+        this.waitstatesSeq[GameBoyAdvanceMMU.REGION_CART2] = this.waitstatesSeq[GameBoyAdvanceMMU.REGION_CART2 + 1] = this.ROM_WS_SEQ[2][ws2seq];
 
-        this.waitstates32[this.REGION_CART0] = this.waitstates32[this.REGION_CART0 + 1] = this.waitstates[this.REGION_CART0] + 1 + this.waitstatesSeq[this.REGION_CART0];
-        this.waitstates32[this.REGION_CART1] = this.waitstates32[this.REGION_CART1 + 1] = this.waitstates[this.REGION_CART1] + 1 + this.waitstatesSeq[this.REGION_CART1];
-        this.waitstates32[this.REGION_CART2] = this.waitstates32[this.REGION_CART2 + 1] = this.waitstates[this.REGION_CART2] + 1 + this.waitstatesSeq[this.REGION_CART2];
+        this.waitstates32[GameBoyAdvanceMMU.REGION_CART0] = this.waitstates32[GameBoyAdvanceMMU.REGION_CART0 + 1] = this.waitstates[GameBoyAdvanceMMU.REGION_CART0] + 1 + this.waitstatesSeq[GameBoyAdvanceMMU.REGION_CART0];
+        this.waitstates32[GameBoyAdvanceMMU.REGION_CART1] = this.waitstates32[GameBoyAdvanceMMU.REGION_CART1 + 1] = this.waitstates[GameBoyAdvanceMMU.REGION_CART1] + 1 + this.waitstatesSeq[GameBoyAdvanceMMU.REGION_CART1];
+        this.waitstates32[GameBoyAdvanceMMU.REGION_CART2] = this.waitstates32[GameBoyAdvanceMMU.REGION_CART2 + 1] = this.waitstates[GameBoyAdvanceMMU.REGION_CART2] + 1 + this.waitstatesSeq[GameBoyAdvanceMMU.REGION_CART2];
 
-        this.waitstatesSeq32[this.REGION_CART0] = this.waitstatesSeq32[this.REGION_CART0 + 1] = 2 * this.waitstatesSeq[this.REGION_CART0] + 1;
-        this.waitstatesSeq32[this.REGION_CART1] = this.waitstatesSeq32[this.REGION_CART1 + 1] = 2 * this.waitstatesSeq[this.REGION_CART1] + 1;
-        this.waitstatesSeq32[this.REGION_CART2] = this.waitstatesSeq32[this.REGION_CART2 + 1] = 2 * this.waitstatesSeq[this.REGION_CART2] + 1;
+        this.waitstatesSeq32[GameBoyAdvanceMMU.REGION_CART0] = this.waitstatesSeq32[GameBoyAdvanceMMU.REGION_CART0 + 1] = 2 * this.waitstatesSeq[GameBoyAdvanceMMU.REGION_CART0] + 1;
+        this.waitstatesSeq32[GameBoyAdvanceMMU.REGION_CART1] = this.waitstatesSeq32[GameBoyAdvanceMMU.REGION_CART1 + 1] = 2 * this.waitstatesSeq[GameBoyAdvanceMMU.REGION_CART1] + 1;
+        this.waitstatesSeq32[GameBoyAdvanceMMU.REGION_CART2] = this.waitstatesSeq32[GameBoyAdvanceMMU.REGION_CART2 + 1] = 2 * this.waitstatesSeq[GameBoyAdvanceMMU.REGION_CART2] + 1;
 
         if (prefetch) {
-            this.waitstatesPrefetch[this.REGION_CART0] = this.waitstatesPrefetch[this.REGION_CART0 + 1] = 0;
-            this.waitstatesPrefetch[this.REGION_CART1] = this.waitstatesPrefetch[this.REGION_CART1 + 1] = 0;
-            this.waitstatesPrefetch[this.REGION_CART2] = this.waitstatesPrefetch[this.REGION_CART2 + 1] = 0;
+            this.waitstatesPrefetch[GameBoyAdvanceMMU.REGION_CART0] = this.waitstatesPrefetch[GameBoyAdvanceMMU.REGION_CART0 + 1] = 0;
+            this.waitstatesPrefetch[GameBoyAdvanceMMU.REGION_CART1] = this.waitstatesPrefetch[GameBoyAdvanceMMU.REGION_CART1 + 1] = 0;
+            this.waitstatesPrefetch[GameBoyAdvanceMMU.REGION_CART2] = this.waitstatesPrefetch[GameBoyAdvanceMMU.REGION_CART2 + 1] = 0;
 
-            this.waitstatesPrefetch32[this.REGION_CART0] = this.waitstatesPrefetch32[this.REGION_CART0 + 1] = 0;
-            this.waitstatesPrefetch32[this.REGION_CART1] = this.waitstatesPrefetch32[this.REGION_CART1 + 1] = 0;
-            this.waitstatesPrefetch32[this.REGION_CART2] = this.waitstatesPrefetch32[this.REGION_CART2 + 1] = 0;
+            this.waitstatesPrefetch32[GameBoyAdvanceMMU.REGION_CART0] = this.waitstatesPrefetch32[GameBoyAdvanceMMU.REGION_CART0 + 1] = 0;
+            this.waitstatesPrefetch32[GameBoyAdvanceMMU.REGION_CART1] = this.waitstatesPrefetch32[GameBoyAdvanceMMU.REGION_CART1 + 1] = 0;
+            this.waitstatesPrefetch32[GameBoyAdvanceMMU.REGION_CART2] = this.waitstatesPrefetch32[GameBoyAdvanceMMU.REGION_CART2 + 1] = 0;
         } else {
-            this.waitstatesPrefetch[this.REGION_CART0] = this.waitstatesPrefetch[this.REGION_CART0 + 1] = this.waitstatesSeq[this.REGION_CART0];
-            this.waitstatesPrefetch[this.REGION_CART1] = this.waitstatesPrefetch[this.REGION_CART1 + 1] = this.waitstatesSeq[this.REGION_CART1];
-            this.waitstatesPrefetch[this.REGION_CART2] = this.waitstatesPrefetch[this.REGION_CART2 + 1] = this.waitstatesSeq[this.REGION_CART2];
+            this.waitstatesPrefetch[GameBoyAdvanceMMU.REGION_CART0] = this.waitstatesPrefetch[GameBoyAdvanceMMU.REGION_CART0 + 1] = this.waitstatesSeq[GameBoyAdvanceMMU.REGION_CART0];
+            this.waitstatesPrefetch[GameBoyAdvanceMMU.REGION_CART1] = this.waitstatesPrefetch[GameBoyAdvanceMMU.REGION_CART1 + 1] = this.waitstatesSeq[GameBoyAdvanceMMU.REGION_CART1];
+            this.waitstatesPrefetch[GameBoyAdvanceMMU.REGION_CART2] = this.waitstatesPrefetch[GameBoyAdvanceMMU.REGION_CART2 + 1] = this.waitstatesSeq[GameBoyAdvanceMMU.REGION_CART2];
 
-            this.waitstatesPrefetch32[this.REGION_CART0] = this.waitstatesPrefetch32[this.REGION_CART0 + 1] = this.waitstatesSeq32[this.REGION_CART0];
-            this.waitstatesPrefetch32[this.REGION_CART1] = this.waitstatesPrefetch32[this.REGION_CART1 + 1] = this.waitstatesSeq32[this.REGION_CART1];
-            this.waitstatesPrefetch32[this.REGION_CART2] = this.waitstatesPrefetch32[this.REGION_CART2 + 1] = this.waitstatesSeq32[this.REGION_CART2];
+            this.waitstatesPrefetch32[GameBoyAdvanceMMU.REGION_CART0] = this.waitstatesPrefetch32[GameBoyAdvanceMMU.REGION_CART0 + 1] = this.waitstatesSeq32[GameBoyAdvanceMMU.REGION_CART0];
+            this.waitstatesPrefetch32[GameBoyAdvanceMMU.REGION_CART1] = this.waitstatesPrefetch32[GameBoyAdvanceMMU.REGION_CART1 + 1] = this.waitstatesSeq32[GameBoyAdvanceMMU.REGION_CART1];
+            this.waitstatesPrefetch32[GameBoyAdvanceMMU.REGION_CART2] = this.waitstatesPrefetch32[GameBoyAdvanceMMU.REGION_CART2 + 1] = this.waitstatesSeq32[GameBoyAdvanceMMU.REGION_CART2];
         }
     }
 

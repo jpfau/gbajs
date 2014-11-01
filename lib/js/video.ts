@@ -1,19 +1,19 @@
 class GameBoyAdvanceVideo {
     renderPath = new GameBoyAdvanceSoftwareRenderer();
 
-    CYCLES_PER_PIXEL = 4;
+    static CYCLES_PER_PIXEL = 4;
 
-    HORIZONTAL_PIXELS = 240;
-    HBLANK_PIXELS = 68;
+    static HORIZONTAL_PIXELS = 240;
+    static HBLANK_PIXELS = 68;
     static HDRAW_LENGTH = 1006;
-    HBLANK_LENGTH = 226;
-    HORIZONTAL_LENGTH = 1232;
+    static HBLANK_LENGTH = 226;
+    static HORIZONTAL_LENGTH = 1232;
 
-    VERTICAL_PIXELS = 160;
-    VBLANK_PIXELS = 68;
-    VERTICAL_TOTAL_PIXELS = 228;
+    static VERTICAL_PIXELS = 160;
+    static VBLANK_PIXELS = 68;
+    static VERTICAL_TOTAL_PIXELS = 228;
 
-    TOTAL_LENGTH = 280896;
+    static TOTAL_LENGTH = 280896;
 
     drawCallback():void {
     }
@@ -27,7 +27,7 @@ class GameBoyAdvanceVideo {
         this.gba = gba;
     }
 
-    DISPSTAT_MASK:number;
+    static DISPSTAT_MASK = 0xFF38;
     inHblank:boolean;
     inVblank:boolean;
     vcounter:number;
@@ -50,7 +50,6 @@ class GameBoyAdvanceVideo {
         this.renderPath.clear();
 
         // DISPSTAT
-        this.DISPSTAT_MASK = 0xFF38;
         this.inHblank = false;
         this.inVblank = false;
         this.vcounter = 0;
@@ -112,11 +111,11 @@ class GameBoyAdvanceVideo {
     context:CanvasRenderingContext2D;
 
     setBacking(backing:CanvasRenderingContext2D):void {
-        var pixelData = backing.createImageData(this.HORIZONTAL_PIXELS, this.VERTICAL_PIXELS);
+        var pixelData = backing.createImageData(GameBoyAdvanceVideo.HORIZONTAL_PIXELS, GameBoyAdvanceVideo.VERTICAL_PIXELS);
         this.context = backing;
 
         // Clear backing first
-        for (var offset = 0; offset < this.HORIZONTAL_PIXELS * this.VERTICAL_PIXELS * 4; offset++) {
+        for (var offset = 0; offset < GameBoyAdvanceVideo.HORIZONTAL_PIXELS * GameBoyAdvanceVideo.VERTICAL_PIXELS * 4; offset++) {
             pixelData.data[offset + 0] = 0xFF;
             pixelData.data[offset + 1] = 0xFF;
             pixelData.data[offset + 2] = 0xFF;
@@ -138,20 +137,20 @@ class GameBoyAdvanceVideo {
                 ++this.vcount;
 
                 switch (this.vcount) {
-                    case this.VERTICAL_PIXELS:
+                    case GameBoyAdvanceVideo.VERTICAL_PIXELS:
                         this.inVblank = true;
                         this.renderPath.finishDraw(this);
-                        this.nextVblankIRQ = this.nextEvent + this.TOTAL_LENGTH;
+                        this.nextVblankIRQ = this.nextEvent + GameBoyAdvanceVideo.TOTAL_LENGTH;
                         this.gba.mmu.runVblankDmas();
                         if (this.vblankIRQ) {
-                            this.gba.irq.raiseIRQ(this.gba.irq.IRQ_VBLANK);
+                            this.gba.irq.raiseIRQ(GameBoyAdvanceInterruptHandler.IRQ_VBLANK);
                         }
                         this.vblankCallback();
                         break;
-                    case this.VERTICAL_TOTAL_PIXELS - 1:
+                    case GameBoyAdvanceVideo.VERTICAL_TOTAL_PIXELS - 1:
                         this.inVblank = false;
                         break;
-                    case this.VERTICAL_TOTAL_PIXELS:
+                    case GameBoyAdvanceVideo.VERTICAL_TOTAL_PIXELS:
                         this.vcount = 0;
                         this.renderPath.startDraw();
                         break;
@@ -159,26 +158,26 @@ class GameBoyAdvanceVideo {
 
                 this.vcounter = <number><any>(this.vcount == this.vcountSetting);
                 if (this.vcounter && this.vcounterIRQ) {
-                    this.gba.irq.raiseIRQ(this.gba.irq.IRQ_VCOUNTER);
-                    this.nextVcounterIRQ += this.TOTAL_LENGTH;
+                    this.gba.irq.raiseIRQ(GameBoyAdvanceInterruptHandler.IRQ_VCOUNTER);
+                    this.nextVcounterIRQ += GameBoyAdvanceVideo.TOTAL_LENGTH;
                 }
 
-                if (this.vcount < this.VERTICAL_PIXELS) {
+                if (this.vcount < GameBoyAdvanceVideo.VERTICAL_PIXELS) {
                     this.renderPath.drawScanline(this.vcount);
                 }
             } else {
                 // Begin Hblank
                 this.inHblank = true;
                 this.lastHblank = this.nextHblank;
-                this.nextEvent = this.lastHblank + this.HBLANK_LENGTH;
+                this.nextEvent = this.lastHblank + GameBoyAdvanceVideo.HBLANK_LENGTH;
                 this.nextHblank = this.nextEvent + GameBoyAdvanceVideo.HDRAW_LENGTH;
                 this.nextHblankIRQ = this.nextHblank;
 
-                if (this.vcount < this.VERTICAL_PIXELS) {
+                if (this.vcount < GameBoyAdvanceVideo.VERTICAL_PIXELS) {
                     this.gba.mmu.runHblankDmas();
                 }
                 if (this.hblankIRQ) {
-                    this.gba.irq.raiseIRQ(this.gba.irq.IRQ_HBLANK);
+                    this.gba.irq.raiseIRQ(GameBoyAdvanceInterruptHandler.IRQ_HBLANK);
                 }
             }
         }
@@ -192,9 +191,9 @@ class GameBoyAdvanceVideo {
 
         if (this.vcounterIRQ) {
             // FIXME: this can be too late if we're in the middle of an Hblank
-            this.nextVcounterIRQ = this.nextHblank + this.HBLANK_LENGTH + (this.vcountSetting - this.vcount) * this.HORIZONTAL_LENGTH;
+            this.nextVcounterIRQ = this.nextHblank + GameBoyAdvanceVideo.HBLANK_LENGTH + (this.vcountSetting - this.vcount) * GameBoyAdvanceVideo.HORIZONTAL_LENGTH;
             if (this.nextVcounterIRQ < this.nextEvent) {
-                this.nextVcounterIRQ += this.TOTAL_LENGTH;
+                this.nextVcounterIRQ += GameBoyAdvanceVideo.TOTAL_LENGTH;
             }
         }
     }

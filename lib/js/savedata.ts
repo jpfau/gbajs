@@ -23,16 +23,16 @@ class SRAMSavedata extends DefaultMemoryView {
 
 class FlashSavedata extends DefaultMemoryView {
 
-    COMMAND_WIPE = 0x10;
-    COMMAND_ERASE_SECTOR = 0x30;
-    COMMAND_ERASE = 0x80;
-    COMMAND_ID = 0x90;
-    COMMAND_WRITE = 0xA0;
-    COMMAND_SWITCH_BANK = 0xB0;
-    COMMAND_TERMINATE_ID = 0xF0;
+    static COMMAND_WIPE = 0x10;
+    static COMMAND_ERASE_SECTOR = 0x30;
+    static COMMAND_ERASE = 0x80;
+    static COMMAND_ID = 0x90;
+    static COMMAND_WRITE = 0xA0;
+    static COMMAND_SWITCH_BANK = 0xB0;
+    static COMMAND_TERMINATE_ID = 0xF0;
 
-    ID_PANASONIC = 0x1B32;
-    ID_SANYO = 0x1362;
+    static ID_PANASONIC = 0x1B32;
+    static ID_SANYO = 0x1362;
     id:number;
     bank0:DataView;
     bank1:DataView;
@@ -48,10 +48,10 @@ class FlashSavedata extends DefaultMemoryView {
 
         this.bank0 = new DataView(this.buffer, 0, 0x00010000);
         if (size > 0x00010000) {
-            this.id = this.ID_SANYO;
+            this.id = FlashSavedata.ID_SANYO;
             this.bank1 = new DataView(this.buffer, 0x00010000);
         } else {
-            this.id = this.ID_PANASONIC;
+            this.id = FlashSavedata.ID_PANASONIC;
             this.bank1 = null;
         }
         this.bank = this.bank0;
@@ -98,13 +98,13 @@ class FlashSavedata extends DefaultMemoryView {
                 if (offset == 0x5555) {
                     if (this.second == 0x55) {
                         switch (value) {
-                            case this.COMMAND_ERASE:
+                            case FlashSavedata.COMMAND_ERASE:
                                 this.pendingCommand = value;
                                 break;
-                            case this.COMMAND_ID:
+                            case FlashSavedata.COMMAND_ID:
                                 this.idMode = true;
                                 break;
-                            case this.COMMAND_TERMINATE_ID:
+                            case FlashSavedata.COMMAND_TERMINATE_ID:
                                 this.idMode = false;
                                 break;
                             default:
@@ -127,16 +127,16 @@ class FlashSavedata extends DefaultMemoryView {
                     }
                 }
                 break;
-            case this.COMMAND_ERASE:
+            case FlashSavedata.COMMAND_ERASE:
                 switch (value) {
-                    case this.COMMAND_WIPE:
+                    case FlashSavedata.COMMAND_WIPE:
                         if (offset == 0x5555) {
                             for (var i = 0; i < this.view.byteLength; i += 4) {
                                 this.view.setInt32(i, -1);
                             }
                         }
                         break;
-                    case this.COMMAND_ERASE_SECTOR:
+                    case FlashSavedata.COMMAND_ERASE_SECTOR:
                         if ((offset & 0x0FFF) == 0) {
                             for (var i = offset; i < offset + 0x1000; i += 4) {
                                 this.bank.setInt32(i, -1);
@@ -147,13 +147,13 @@ class FlashSavedata extends DefaultMemoryView {
                 this.pendingCommand = 0;
                 this.command = 0;
                 break;
-            case this.COMMAND_WRITE:
+            case FlashSavedata.COMMAND_WRITE:
                 this.bank.setInt8(offset, value);
                 this.command = 0;
 
                 this.writePending = true;
                 break;
-            case this.COMMAND_SWITCH_BANK:
+            case FlashSavedata.COMMAND_SWITCH_BANK:
                 if (this.bank1 && offset == 0) {
                     if (value == 1) {
                         this.bank = this.bank1;
@@ -202,11 +202,11 @@ class EEPROMSavedata extends DefaultMemoryView {
     addressBits = 0;
 
 
-    COMMAND_NULL = 0;
-    COMMAND_PENDING = 1;
-    COMMAND_WRITE = 2;
-    COMMAND_READ_PENDING = 3;
-    COMMAND_READ = 4;
+    static COMMAND_NULL = 0;
+    static COMMAND_PENDING = 1;
+    static COMMAND_WRITE = 2;
+    static COMMAND_READ_PENDING = 3;
+    static COMMAND_READ = 4;
 
     dma:DMA;
 
@@ -230,7 +230,7 @@ class EEPROMSavedata extends DefaultMemoryView {
     }
 
     loadU16(offset:number):number {
-        if (this.command != this.COMMAND_READ || !this.dma.enable) {
+        if (this.command != EEPROMSavedata.COMMAND_READ || !this.dma.enable) {
             return 1;
         }
         --this.readBitsRemaining;
@@ -238,7 +238,7 @@ class EEPROMSavedata extends DefaultMemoryView {
             var step = 63 - this.readBitsRemaining;
             var data = this.view.getUint8((this.readAddress + step) >> 3) >> (0x7 - (step & 0x7));
             if (!this.readBitsRemaining) {
-                this.command = this.COMMAND_NULL;
+                this.command = EEPROMSavedata.COMMAND_NULL;
             }
             return data & 0x1;
         }
@@ -256,14 +256,14 @@ class EEPROMSavedata extends DefaultMemoryView {
     store16(offset:number, value:number):void {
         switch (this.command) {
             // Read header
-            case this.COMMAND_NULL:
+            case EEPROMSavedata.COMMAND_NULL:
             default:
                 this.command = value & 0x1;
                 break;
-            case this.COMMAND_PENDING:
+            case EEPROMSavedata.COMMAND_PENDING:
                 this.command <<= 1;
                 this.command |= value & 0x1;
-                if (this.command == this.COMMAND_WRITE) {
+                if (this.command == FlashSavedata.COMMAND_WRITE) {
                     if (!this.realSize) {
                         var bits = this.dma.count - 67;
                         this.realSize = 8 << bits;
@@ -282,13 +282,13 @@ class EEPROMSavedata extends DefaultMemoryView {
                 }
                 break;
             // Do commands
-            case this.COMMAND_WRITE:
+            case FlashSavedata.COMMAND_WRITE:
                 // Write
                 if (--this.commandBitsRemaining > 64) {
                     this.writeAddress <<= 1;
                     this.writeAddress |= (value & 0x1) << 6;
                 } else if (this.commandBitsRemaining <= 0) {
-                    this.command = this.COMMAND_NULL;
+                    this.command = EEPROMSavedata.COMMAND_NULL;
                     this.writePending = true;
                 } else {
                     var current = this.view.getUint8(this.writeAddress >> 3);
@@ -298,7 +298,7 @@ class EEPROMSavedata extends DefaultMemoryView {
                     ++this.writeAddress;
                 }
                 break;
-            case this.COMMAND_READ_PENDING:
+            case EEPROMSavedata.COMMAND_READ_PENDING:
                 // Read
                 if (--this.commandBitsRemaining > 0) {
                     this.readAddress <<= 1;
@@ -307,7 +307,7 @@ class EEPROMSavedata extends DefaultMemoryView {
                     }
                 } else {
                     this.readBitsRemaining = 68;
-                    this.command = this.COMMAND_READ;
+                    this.command = EEPROMSavedata.COMMAND_READ;
                 }
                 break;
         }

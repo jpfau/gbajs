@@ -28,28 +28,28 @@ enum Mode {
 
 class ARMCore {
 
-    BANK_NONE = 0;
-    BANK_FIQ = 1;
-    BANK_IRQ = 2;
-    BANK_SUPERVISOR = 3;
-    BANK_ABORT = 4;
-    BANK_UNDEFINED = 5;
+    static BANK_NONE = 0;
+    static BANK_FIQ = 1;
+    static BANK_IRQ = 2;
+    static BANK_SUPERVISOR = 3;
+    static BANK_ABORT = 4;
+    static BANK_UNDEFINED = 5;
 
-    UNALLOC_MASK = 0x0FFFFF00;
-    USER_MASK = 0xF0000000;
-    PRIV_MASK = 0x000000CF; // This is out of spec, but it seems to be what's done in other implementations
-    STATE_MASK = 0x00000020;
+    static UNALLOC_MASK = 0x0FFFFF00;
+    static USER_MASK = 0xF0000000;
+    static PRIV_MASK = 0x000000CF; // This is out of spec, but it seems to be what's done in other implementations
+    static STATE_MASK = 0x00000020;
 
-    WORD_SIZE_ARM = 4;
-    WORD_SIZE_THUMB = 2;
+    static WORD_SIZE_ARM = 4;
+    static WORD_SIZE_THUMB = 2;
 
-    BASE_RESET = 0x00000000;
-    BASE_UNDEF = 0x00000004;
-    BASE_SWI = 0x00000008;
-    BASE_PABT = 0x0000000C;
-    BASE_DABT = 0x00000010;
-    BASE_IRQ = 0x00000018;
-    BASE_FIQ = 0x0000001C;
+    static BASE_RESET = 0x00000000;
+    static BASE_UNDEF = 0x00000004;
+    static BASE_SWI = 0x00000008;
+    static BASE_PABT = 0x0000000C;
+    static BASE_DABT = 0x00000010;
+    static BASE_IRQ = 0x00000018;
+    static BASE_FIQ = 0x0000001C;
 
     armCompiler:ARMCoreArm;
     thumbCompiler:ARMCoreThumb;
@@ -95,7 +95,7 @@ class ARMCore {
         for (var i = 0; i < Register.PC; ++i) {
             this.gprs[i] = 0;
         }
-        this.gprs[Register.PC] = startOffset + this.WORD_SIZE_ARM;
+        this.gprs[Register.PC] = startOffset + ARMCore.WORD_SIZE_ARM;
 
         this.switchExecMode(Mode.ARM);
 
@@ -318,8 +318,8 @@ class ARMCore {
     pageId:number;
 
     fetchPage(address:number):void {
-        var region = address >> this.gba.mmu.BASE_OFFSET;
-        var pageId = this.gba.mmu.addressToPage(region, address & this.gba.mmu.OFFSET_MASK);
+        var region = address >> GameBoyAdvanceMMU.BASE_OFFSET;
+        var pageId = this.gba.mmu.addressToPage(region, address & GameBoyAdvanceMMU.OFFSET_MASK);
         if (region == this.pageRegion) {
             if (pageId == this.pageId && !this.page.invalid) {
                 return;
@@ -377,17 +377,17 @@ class ARMCore {
             case Mode.USER:
             case Mode.SYSTEM:
                 // No banked registers
-                return this.BANK_NONE;
+                return ARMCore.BANK_NONE;
             case Mode.FIQ:
-                return this.BANK_FIQ;
+                return ARMCore.BANK_FIQ;
             case Mode.IRQ:
-                return this.BANK_IRQ;
+                return ARMCore.BANK_IRQ;
             case Mode.SUPERVISOR:
-                return this.BANK_SUPERVISOR;
+                return ARMCore.BANK_SUPERVISOR;
             case Mode.ABORT:
-                return this.BANK_ABORT;
+                return ARMCore.BANK_ABORT;
             case Mode.UNDEFINED:
-                return this.BANK_UNDEFINED;
+                return ARMCore.BANK_UNDEFINED;
             default:
                 throw "Invalid user mode passed to selectBank";
         }
@@ -397,10 +397,10 @@ class ARMCore {
         if (this.execMode != newMode) {
             this.execMode = newMode;
             if (newMode == Mode.ARM) {
-                this.instructionWidth = this.WORD_SIZE_ARM;
+                this.instructionWidth = ARMCore.WORD_SIZE_ARM;
                 this.loadInstruction = this.loadInstructionArm;
             } else {
-                this.instructionWidth = this.WORD_SIZE_THUMB;
+                this.instructionWidth = ARMCore.WORD_SIZE_THUMB;
                 this.loadInstruction = this.loadInstructionThumb;
             }
         }
@@ -419,8 +419,8 @@ class ARMCore {
             if (newBank != oldBank) {
                 // TODO: support FIQ
                 if (newMode == Mode.FIQ || this.mode == Mode.FIQ) {
-                    var oldFiqBank = <number><any>(oldBank == this.BANK_FIQ);
-                    var newFiqBank = <number><any>(newBank == this.BANK_FIQ);
+                    var oldFiqBank = <number><any>(oldBank == ARMCore.BANK_FIQ);
+                    var newFiqBank = <number><any>(newBank == ARMCore.BANK_FIQ);
                     this.bankedRegisters[oldFiqBank][2] = this.gprs[8];
                     this.bankedRegisters[oldFiqBank][3] = this.gprs[9];
                     this.bankedRegisters[oldFiqBank][4] = this.gprs[10];
@@ -475,7 +475,7 @@ class ARMCore {
         this.switchMode(Mode.IRQ);
         this.spsr = cpsr;
         this.gprs[Register.LR] = this.gprs[Register.PC] - instructionWidth + 4;
-        this.gprs[Register.PC] = this.BASE_IRQ + this.WORD_SIZE_ARM;
+        this.gprs[Register.PC] = ARMCore.BASE_IRQ + ARMCore.WORD_SIZE_ARM;
         this.instruction = null;
         this.switchExecMode(Mode.ARM);
         this.cpsr.I = true;
@@ -487,7 +487,7 @@ class ARMCore {
         this.switchMode(Mode.SUPERVISOR);
         this.spsr = cpsr;
         this.gprs[Register.LR] = this.gprs[Register.PC] - instructionWidth;
-        this.gprs[Register.PC] = this.BASE_SWI + this.WORD_SIZE_ARM;
+        this.gprs[Register.PC] = ARMCore.BASE_SWI + ARMCore.WORD_SIZE_ARM;
         this.instruction = null;
         this.switchExecMode(Mode.ARM);
         this.cpsr.I = true;

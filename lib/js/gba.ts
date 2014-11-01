@@ -1,6 +1,6 @@
 class GameBoyAdvance {
 
-    SYS_ID = 'com.endrift.gbajs';
+    static SYS_ID = 'com.endrift.gbajs';
 
     rom:Cart;
 
@@ -117,10 +117,10 @@ class GameBoyAdvance {
         this.video.clear();
         this.sio.clear();
 
-        this.mmu.mmap(this.mmu.REGION_IO, <MemoryView><any>this.io);
-        this.mmu.mmap(this.mmu.REGION_PALETTE_RAM, <MemoryView><any>this.video.renderPath.palette);
-        this.mmu.mmap(this.mmu.REGION_VRAM, <MemoryView><any>this.video.renderPath.vram);
-        this.mmu.mmap(this.mmu.REGION_OAM, <MemoryView><any>this.video.renderPath.oam);
+        this.mmu.mmap(GameBoyAdvanceMMU.REGION_IO, <MemoryView><any>this.io);
+        this.mmu.mmap(GameBoyAdvanceMMU.REGION_PALETTE_RAM, <MemoryView><any>this.video.renderPath.palette);
+        this.mmu.mmap(GameBoyAdvanceMMU.REGION_VRAM, <MemoryView><any>this.video.renderPath.vram);
+        this.mmu.mmap(GameBoyAdvanceMMU.REGION_OAM, <MemoryView><any>this.video.renderPath.oam);
 
         this.cpu.resetCPU(0);
     }
@@ -259,7 +259,7 @@ class GameBoyAdvance {
         var sram = this.mmu.save;
         try {
             var storage = window.localStorage;
-            storage[this.SYS_ID + '.' + this.mmu.cart.code] = encodeBase64(sram.view);
+            storage[GameBoyAdvance.SYS_ID + '.' + this.mmu.cart.code] = encodeBase64(sram.view);
         } catch (e) {
             this.logger.WARN('Could not store savedata! ' + e);
         }
@@ -268,7 +268,7 @@ class GameBoyAdvance {
     retrieveSavedata():boolean {
         try {
             var storage = window.localStorage;
-            var data:string = storage[this.SYS_ID + '.' + this.mmu.cart.code];
+            var data:string = storage[GameBoyAdvance.SYS_ID + '.' + this.mmu.cart.code];
             if (data) {
                 this.setSavedata(decodeBase64(data));
                 return true;
