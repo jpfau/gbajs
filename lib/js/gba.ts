@@ -52,24 +52,22 @@ class GameBoyAdvance {
         };
     }
 
-    indirectCanvas:HTMLElement;
-    targetCanvas:any;
+    indirectCanvas:HTMLCanvasElement;
+    targetCanvas:HTMLCanvasElement;
     context:CanvasRenderingContext2D;
 
-    setCanvas(canvas:any):void {
+    setCanvas(canvas:HTMLCanvasElement):void {
+        this.targetCanvas = canvas;
+        this.indirectCanvas = canvas;
         if (canvas.offsetWidth != 240 || canvas.offsetHeight != 160) {
             this.indirectCanvas = document.createElement("canvas");
             this.indirectCanvas.setAttribute("height", "160");
             this.indirectCanvas.setAttribute("width", "240");
-            this.targetCanvas = canvas;
-            this.setCanvasDirect(this.indirectCanvas);
-            var targetContext = canvas.getContext('2d');
             this.video.drawCallback = () => {
-                targetContext.drawImage(this.indirectCanvas, 0, 0, canvas.offsetWidth, canvas.offsetHeight);
+                this.context.drawImage(this.indirectCanvas, 0, 0, canvas.offsetWidth, canvas.offsetHeight);
             }
-        } else {
-            this.setCanvasDirect(canvas);
         }
+        this.setCanvasDirect(this.indirectCanvas);
     }
 
     setCanvasDirect(canvas:any):void {
