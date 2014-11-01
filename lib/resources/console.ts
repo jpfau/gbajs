@@ -39,20 +39,20 @@ class GameBoyAdvanceConsole {
 
     updateCPSR() {
         var cpu = this.cpu;
-        var bit = (psr:string, member:string) => {
+        var bit = (psr:string, member:any) => {
             var element:any = document.getElementById(psr);
-            if ((<any>cpu)[member]) {
+            if (member) {
                 element.removeAttribute('class');
             } else {
                 element.setAttribute('class', 'disabled');
             }
         };
-        bit('cpsrN', '.N');
-        bit('cpsrZ', 'cpsr.Z');
-        bit('cpsrC', 'cpsr.C');
-        bit('cpsrV', 'cpsr.V');
-        bit('cpsrI', 'cpsr.I');
-        bit('cpsrT', 'execMode');
+        bit('cpsrN', cpu.cpsr.N);
+        bit('cpsrZ', cpu.cpsr.Z);
+        bit('cpsrC', cpu.cpsr.C);
+        bit('cpsrV', cpu.cpsr.V);
+        bit('cpsrI', cpu.cpsr.I);
+        bit('cpsrT', cpu.execMode);
 
         var mode = document.getElementById('mode');
         switch (cpu.mode) {
