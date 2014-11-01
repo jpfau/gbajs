@@ -18,8 +18,8 @@ module GameBoyAdvance {
             this.logQueue = [];
 
             this.activeView = null;
-            this.paletteView = new PaletteViewer(gba.video.renderPath.palette);
-            this.tileView = new TileViewer(gba.video.renderPath.vram, gba.video.renderPath.palette);
+            this.paletteView = new PaletteViewer(()=>gba.video.renderPath.palette);
+            this.tileView = new TileViewer(()=>gba.video.renderPath.vram, ()=>gba.video.renderPath.palette);
             this.update();
 
             gba.logger.log = this.log;
@@ -427,10 +427,10 @@ module GameBoyAdvance {
 
     export class PaletteViewer {
 
-        palette:Palette;
+        palette:()=>Palette;
         view:any;
 
-        constructor(palette:Palette) {
+        constructor(palette:()=>Palette) {
             this.palette = palette;
             this.view = document.createElement('canvas');
             this.view.setAttribute('class', 'paletteView');
@@ -448,7 +448,7 @@ module GameBoyAdvance {
             for (var p = 0; p < 2; ++p) {
                 for (var y = 0; y < 16; ++y) {
                     for (var x = 0; x < 16; ++x) {
-                        var color = this.palette.loadU16((p * 256 + y * 16 + x) * 2);
+                        var color = this.palette().loadU16((p * 256 + y * 16 + x) * 2);
                         var r = (color & 0x001F) << 3;
                         var g = (color & 0x03E0) >> 2;
                         var b = (color & 0x7C00) >> 7;
@@ -463,12 +463,12 @@ module GameBoyAdvance {
     export class TileViewer {
 
         BG_MAP_WIDTH = 256;
-        vram:VRAM;
-        palette:Palette;
+        vram:()=>VRAM;
+        palette:()=>Palette;
         view:any;
         activePalette:number;
 
-        constructor(vram:VRAM, palette:Palette) {
+        constructor(vram:()=>VRAM, palette:()=>Palette) {
             this.vram = vram;
             this.palette = palette;
 
@@ -502,10 +502,10 @@ module GameBoyAdvance {
                 var memOffset = tile << 5;
                 memOffset |= j << 2;
 
-                var row = this.vram.load32(memOffset);
+                var row = this.vram().load32(memOffset);
                 for (var i = 0; i < 8; ++i) {
                     var index = (row >> (i << 2)) & 0xF;
-                    var color = this.palette.loadU16((index << 1) + (palette << 5));
+                    var color = this.palette().loadU16((index << 1) + (palette << 5));
                     var r = (color & 0x001F) << 3;
                     var g = (color & 0x03E0) >> 2;
                     var b = (color & 0x7C00) >> 7;
