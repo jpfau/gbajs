@@ -16,13 +16,13 @@ module.exports = function (grunt) {
                 }
             },
             watch: {
-                tasks: ['watch', 'typescript'],
+                tasks: ['watch', 'typescript:watch'],
                 options: {
                     logConcurrentOutput: true
                 }
             },
             serve: {
-                tasks: ['connect', 'open'],
+                tasks: ['connect'],
                 options: {
                     logConcurrentOutput: true
                 }
@@ -46,18 +46,24 @@ module.exports = function (grunt) {
             }
         },
         typescript: {
+            options: {
+                basePath: 'out',
+                module: 'amd',
+                target: 'es5',
+                sourceMap: true,
+                declaration: false,
+                comments: true,
+                noImplicitAny: true
+            },
             base: {
+                src: ['out/build.d.ts'],
+                dest: 'out'
+            },
+            watch: {
                 src: ['out/build.d.ts'],
                 dest: 'out',
                 options: {
-                    watch: true,
-                    basePath: 'out',
-                    module: 'amd',
-                    target: 'es5',
-                    sourceMap: true,
-                    declaration: true,
-                    comments: true,
-                    noImplicitAny: true
+                    watch: true
                 }
             }
         },
@@ -73,13 +79,13 @@ module.exports = function (grunt) {
         },
         open: {
             dev: {
-                path: 'http://localhost:8080/index.html'
+                path: 'http://localhost:8080/debugger.html'
             }
         }
     });
 
-    grunt.registerTask('build', ['concurrent:watch']);
-    grunt.registerTask('serve', ['concurrent:serve']);
-    grunt.registerTask('default', ['concurrent:all']);
+    grunt.registerTask('build', ['sync', 'typescript:base']);
+    grunt.registerTask('default', ['build', 'concurrent:all']);
+    grunt.registerTask('browse', ['open']);
 
 };
