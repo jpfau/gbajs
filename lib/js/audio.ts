@@ -23,84 +23,84 @@ module GameBoyAdvance {
 
     export class Audio {
         context:any;
-        jsAudio:JSAudio;
-        bufferSize:number;
-        maxSamples:number;
-        buffers:Float32Array[];
-        sampleMask:number;
+        private jsAudio:JSAudio;
+        private bufferSize:number;
+        private maxSamples:number;
+        private buffers:Float32Array[];
+        private sampleMask:number;
         masterEnable:boolean;
         masterVolume:number;
 
-        static SOUND_MAX = 0x400;
-        static FIFO_MAX = 0x200;
-        static PSG_MAX = 0x080;
+        private static SOUND_MAX = 0x400;
+        private static FIFO_MAX = 0x200;
+        private static PSG_MAX = 0x080;
 
-        fifoA:number[];
-        fifoB:number[];
-        fifoASample:number;
-        fifoBSample:number;
+        private fifoA:number[];
+        private fifoB:number[];
+        private fifoASample:number;
+        private fifoBSample:number;
         enabled:boolean;
-        enableChannel3:boolean;
-        enableChannel4:boolean;
+        private enableChannel3:boolean;
+        private enableChannel4:boolean;
         enableChannelA:boolean;
         enableChannelB:boolean;
-        enableRightChannelA:boolean;
-        enableLeftChannelA:boolean;
-        enableRightChannelB:boolean;
-        enableLeftChannelB:boolean;
-        playingChannel3:boolean;
-        playingChannel4:boolean;
+        private enableRightChannelA:boolean;
+        private enableLeftChannelA:boolean;
+        private enableRightChannelB:boolean;
+        private enableLeftChannelB:boolean;
+        private playingChannel3:boolean;
+        private playingChannel4:boolean;
 
-        volumeLeft:number;
-        volumeRight:number;
-        ratioChannelA:number;
-        ratioChannelB:number;
-        enabledLeft:number;
-        enabledRight:number;
+        private volumeLeft:number;
+        private volumeRight:number;
+        private ratioChannelA:number;
+        private ratioChannelB:number;
+        private enabledLeft:number;
+        private enabledRight:number;
 
         dmaA:number;
         dmaB:number;
         soundTimerA:number;
         soundTimerB:number;
 
-        soundRatio:number;
-        soundBias:number;
+        private soundRatio:number;
+        private soundBias:number;
 
-        squareChannels:any[];
+        private squareChannels:any[];
 
-        waveData:Uint8Array;
-        channel3Dimension:number;
-        channel3Bank:number;
-        channel3Volume:number;
-        channel3Interval:number;
-        channel3Next:number;
-        channel3Length:number;
-        channel3Timed:boolean;
-        channel3End:number;
-        channel3Pointer:number;
-        channel3Sample:number;
+        private waveData:Uint8Array;
+        private channel3Dimension:number;
+        private channel3Bank:number;
+        private channel3Volume:number;
+        private channel3Interval:number;
+        private channel3Next:number;
+        private channel3Length:number;
+        private channel3Timed:boolean;
+        private channel3End:number;
+        private channel3Pointer:number;
+        private channel3Sample:number;
 
-        cpuFrequency:number;
+        private cpuFrequency:number;
 
-        channel4:Channel4;
+        private channel4:Channel4;
 
         nextEvent:number;
 
-        nextSample:number;
-        outputPointer:number;
-        samplePointer:number;
+        private nextSample:number;
+        private outputPointer:number;
+        private samplePointer:number;
 
-        backup:number;
-        totalSamples:number;
+        private backup:number;
+        private totalSamples:number;
 
-        sampleRate:number;
-        sampleInterval:number;
-        resampleRatio:number;
+        private sampleRate:number;
+        private sampleInterval:number;
+        private resampleRatio:number;
 
-        channel3Write:boolean;
+        private channel3Write:boolean;
 
-        masterVolumeLeft:number;
-        masterVolumeRight:number;
+        private masterVolumeLeft:number;
+        private masterVolumeRight:number;
 
         constructor(private gba:Main) {
             var AudioContext = (<any>window).AudioContext || (<any>window).webkitAudioContext;
@@ -115,7 +115,7 @@ module GameBoyAdvance {
                 } else {
                     this.jsAudio = this.context.createJavaScriptNode(this.bufferSize);
                 }
-                this.jsAudio.onaudioprocess = this.audioProcess;
+                this.jsAudio.onaudioprocess = (e) => this.audioProcess(e);
             } else {
                 this.context = null;
             }
@@ -395,7 +395,7 @@ module GameBoyAdvance {
             }
         }
 
-        resetSquareChannel(channel:any):void {
+        private resetSquareChannel(channel:any):void {
             if (channel.step) {
                 channel.nextStep = this.gba.cpu.cycles + channel.step;
             }
@@ -410,7 +410,7 @@ module GameBoyAdvance {
             this.gba.irq.pollNextEvent();
         }
 
-        setSquareChannelEnabled(channel:any, enable:number):void {
+        private setSquareChannelEnabled(channel:any, enable:number):void {
             if (!(channel.enabled && channel.playing) && enable) {
                 channel.enabled = !!enable;
                 this.updateTimers();
@@ -549,7 +549,7 @@ module GameBoyAdvance {
             }
         }
 
-        resetChannel3():void {
+        private resetChannel3():void {
             this.channel3Next = this.gba.cpu.cycles;
             this.nextEvent = this.channel3Next;
             this.channel3End = this.gba.cpu.cycles + this.channel3Length;
@@ -570,7 +570,7 @@ module GameBoyAdvance {
             this.waveData[offset] = data & 0xFF;
         }
 
-        setChannel4Enabled(enable:boolean):void {
+        private setChannel4Enabled(enable:boolean):void {
             if (!this.enableChannel4 && enable) {
                 this.channel4.next = this.gba.cpu.cycles;
                 this.channel4.end = this.gba.cpu.cycles + this.channel4.length;
@@ -615,7 +615,7 @@ module GameBoyAdvance {
             }
         }
 
-        resetChannel4():void {
+        private resetChannel4():void {
             if (this.channel4.width == 15) {
                 this.channel4.lfsr = 0x4000;
             } else {
@@ -634,7 +634,7 @@ module GameBoyAdvance {
             this.gba.irq.pollNextEvent();
         }
 
-        writeChannelLE(channel:any, value:number):void {
+        private writeChannelLE(channel:any, value:number):void {
             channel.length = this.cpuFrequency * ((0x40 - (value & 0x3F)) / 256);
 
             if (value & 0x0800) {
@@ -647,7 +647,7 @@ module GameBoyAdvance {
             channel.step = this.cpuFrequency * (((value >> 8) & 0x7) / 64);
         }
 
-        updateEnvelope(channel:any, cycles:number = undefined):void {
+        private updateEnvelope(channel:any, cycles:number = undefined):void {
             if (channel.step) {
                 if (cycles >= channel.nextStep) {
                     channel.volume += channel.increment;
@@ -724,7 +724,7 @@ module GameBoyAdvance {
             }
         }
 
-        sample():void {
+        private sample():void {
             var sampleLeft = 0;
             var sampleRight = 0;
             var sample:number;
@@ -804,7 +804,7 @@ module GameBoyAdvance {
             this.samplePointer = (samplePointer + 1) & this.sampleMask;
         }
 
-        audioProcess(audioProcessingEvent:any):void {
+        private audioProcess(audioProcessingEvent:any):void {
             var left = audioProcessingEvent.outputBuffer.getChannelData(0);
             var right = audioProcessingEvent.outputBuffer.getChannelData(1);
             if (this.masterEnable) {
