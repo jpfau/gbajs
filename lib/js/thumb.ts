@@ -1,6 +1,8 @@
 module GameBoyAdvance {
     export class ARMCoreThumb {
 
+        static WORD_SIZE = 2;
+
         constructor(private gba:Main, private cpu:ARMCore) {
         }
 

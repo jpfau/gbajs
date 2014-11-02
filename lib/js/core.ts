@@ -1,4 +1,5 @@
 module GameBoyAdvance {
+
     export enum Register {
         /**
          * Stack pointer
@@ -14,10 +15,12 @@ module GameBoyAdvance {
         PC = 15
     }
 
-    export enum Mode {
+    export enum ExecMode {
         ARM = 0,
-        THUMB = 1,
+        THUMB = 1
+    }
 
+    export enum Mode {
         USER = 0x10,
         FIQ = 0x11,
         IRQ = 0x12,
@@ -27,57 +30,59 @@ module GameBoyAdvance {
         SYSTEM = 0x1F
     }
 
-    export class ARMCore {
+    export enum Bank {
+        NONE = 0,
+        FIQ = 1,
+        IRQ = 2,
+        SUPERVISOR = 3,
+        ABORT = 4,
+        UNDEFINED = 5
+    }
 
-        static BANK_NONE = 0;
-        static BANK_FIQ = 1;
-        static BANK_IRQ = 2;
-        static BANK_SUPERVISOR = 3;
-        static BANK_ABORT = 4;
-        static BANK_UNDEFINED = 5;
+    export enum Base {
+        RESET = 0x00000000,
+        UNDEF = 0x00000004,
+        SWI = 0x00000008,
+        PABT = 0x0000000C,
+        DABT = 0x00000010,
+        IRQ = 0x00000018,
+        FIQ = 0x0000001C
+    }
 
-        static UNALLOC_MASK = 0x0FFFFF00;
-        static USER_MASK = 0xF0000000;
-        static PRIV_MASK = 0x000000CF; // This is out of spec, but it seems to be what's done in other implementations
-        static STATE_MASK = 0x00000020;
-
-        static WORD_SIZE_ARM = 4;
-        static WORD_SIZE_THUMB = 2;
-
-        static BASE_RESET = 0x00000000;
-        static BASE_UNDEF = 0x00000004;
-        static BASE_SWI = 0x00000008;
-        static BASE_PABT = 0x0000000C;
-        static BASE_DABT = 0x00000010;
-        static BASE_IRQ = 0x00000018;
-        static BASE_FIQ = 0x0000001C;
-
-        armCompiler:ARMCoreArm;
-        thumbCompiler:ARMCoreThumb;
-        /**
-         * Registers
+    export enum Mask {
+        UNALLOC = 0x0FFFFF00,
+        USER = 0xF0000000,
+        /*
+         * This is out of spec, but it seems to be what's done in other implementations
          */
-        gprs = new Int32Array(16);
+        PRIV = 0x000000CF,
+        STATE = 0x00000020
+    }
 
-        cycles:number;
+    export interface Instruction {
+        ():void
+        next?:Instruction
+        page?:Page
+        address?:number
+        opcode?:number
 
-        step:{():void};
+        execMode?:ExecMode
+        writesPC?:boolean
+        fixedJump?:boolean
+    }
+
+    export interface AddressAccessor {
+        (writeInitial?:boolean):number
+        writesPC:boolean
+    }
+
+    export class ARMCore {
 
         constructor(private gba:Main) {
             this.armCompiler = new ARMCoreArm(gba, this);
             this.thumbCompiler = new ARMCoreThumb(gba, this);
-            this.generateConds();
+            ARMCore.generateConds(this);
         }
-
-        instruction:any;
-        instructionWidth:number;
-        loadInstruction:{(address:number):any};
-        execMode:number;
-        mode:number;
-
-        bankedRegisters:Int32Array[];
-        bankedSPSRs:Int32Array;
-        page:Page;
 
         spsr:number;
         cpsr = {
@@ -89,13 +94,71 @@ module GameBoyAdvance {
             N: false
         };
 
+        cycles:number;
+
+        execMode:ExecMode;
+
+        /**
+         * Registers
+         */
+        gprs = new Int32Array(16);
+
+        instruction:any;
+        instructionWidth:number;
+
+        mode:Mode;
+
+        shifterCarryOut:number;
+        shifterOperand:number;
+
+        step() {
+            var mmu = this.gba.mmu;
+            var gprs = this.gprs;
+            var instruction = this.instruction || (this.instruction = this.loadInstruction(gprs[Register.PC] - this.instructionWidth));
+            gprs[Register.PC] += this.instructionWidth;
+            this.conditionPassed = true;
+            instruction();
+
+            if (!instruction.writesPC) {
+                if (this.instruction != null) { // We might have gotten an interrupt from the instruction
+                    if (instruction.next == null || instruction.next.page.invalid) {
+                        instruction.next = this.loadInstruction(gprs[Register.PC] - this.instructionWidth);
+                    }
+                    this.instruction = instruction.next;
+                }
+            } else {
+                if (this.conditionPassed) {
+                    var pc = gprs[Register.PC] &= 0xFFFFFFFE;
+                    if (this.execMode == ExecMode.ARM) {
+                        mmu.wait32(pc);
+                        mmu.waitPrefetch32(pc);
+                    } else {
+                        mmu.wait(pc);
+                        mmu.waitPrefetch(pc);
+                    }
+                    gprs[Register.PC] += this.instructionWidth;
+                    if (!instruction.fixedJump) {
+                        this.instruction = null;
+                    } else if (this.instruction != null) {
+                        if (instruction.next == null || instruction.next.page.invalid) {
+                            instruction.next = this.loadInstruction(gprs[Register.PC] - this.instructionWidth);
+                        }
+                        this.instruction = instruction.next;
+                    }
+                } else {
+                    this.instruction = null;
+                }
+            }
+            this.gba.irq.updateTimers();
+        }
+
         resetCPU(startOffset:number):void {
-            for (var i = 0; i < Register.PC; ++i) {
+            for (var i = 0; i < Register.PC; i++) {
                 this.gprs[i] = 0;
             }
-            this.gprs[Register.PC] = startOffset + ARMCore.WORD_SIZE_ARM;
+            this.gprs[Register.PC] = startOffset + ARMCoreArm.WORD_SIZE;
 
-            this.switchExecMode(Mode.ARM);
+            this.switchExecMode(ExecMode.ARM);
 
             this.mode = Mode.SYSTEM;
 
@@ -122,47 +185,6 @@ module GameBoyAdvance {
             this.instruction = null;
 
             this.gba.irq.clear();
-
-            var gprs = this.gprs;
-            var mmu = this.gba.mmu;
-            this.step = function () {
-                var instruction = this.instruction || (this.instruction = this.loadInstruction(gprs[Register.PC] - this.instructionWidth));
-                gprs[Register.PC] += this.instructionWidth;
-                this.conditionPassed = true;
-                instruction();
-
-                if (!instruction.writesPC) {
-                    if (this.instruction != null) { // We might have gotten an interrupt from the instruction
-                        if (instruction.next == null || instruction.next.page.invalid) {
-                            instruction.next = this.loadInstruction(gprs[Register.PC] - this.instructionWidth);
-                        }
-                        this.instruction = instruction.next;
-                    }
-                } else {
-                    if (this.conditionPassed) {
-                        var pc = gprs[Register.PC] &= 0xFFFFFFFE;
-                        if (this.execMode == Mode.ARM) {
-                            mmu.wait32(pc);
-                            mmu.waitPrefetch32(pc);
-                        } else {
-                            mmu.wait(pc);
-                            mmu.waitPrefetch(pc);
-                        }
-                        gprs[Register.PC] += this.instructionWidth;
-                        if (!instruction.fixedJump) {
-                            this.instruction = null;
-                        } else if (this.instruction != null) {
-                            if (instruction.next == null || instruction.next.page.invalid) {
-                                instruction.next = this.loadInstruction(gprs[Register.PC] - this.instructionWidth);
-                            }
-                            this.instruction = instruction.next;
-                        }
-                    } else {
-                        this.instruction = null;
-                    }
-                }
-                this.gba.irq.updateTimers();
-            };
         }
 
         freeze():any {
@@ -186,12 +208,7 @@ module GameBoyAdvance {
                     this.gprs[15]
                 ],
                 'mode': this.mode,
-                'cpsr.I': this.cpsr.I,
-                'cpsr.F': this.cpsr.F,
-                'cpsr.V': this.cpsr.V,
-                'cpsr.C': this.cpsr.C,
-                'cpsr.Z': this.cpsr.Z,
-                'cpsr.N': this.cpsr.N,
+                'cpsr': this.cpsr,
                 'bankedRegisters': [
                     [
                         this.bankedRegisters[0][0],
@@ -266,12 +283,7 @@ module GameBoyAdvance {
             this.gprs[15] = frost.gprs[15];
 
             this.mode = frost.mode;
-            this.cpsr.I = frost.cpsr.I;
-            this.cpsr.F = frost.cpsr.F;
-            this.cpsr.V = frost.cpsr.V;
-            this.cpsr.C = frost.cpsr.C;
-            this.cpsr.Z = frost.cpsr.Z;
-            this.cpsr.N = frost.cpsr.N;
+            this.cpsr = frost.cpsr;
 
             this.bankedRegisters[0][0] = frost.bankedRegisters[0][0];
             this.bankedRegisters[0][1] = frost.bankedRegisters[0][1];
@@ -312,113 +324,34 @@ module GameBoyAdvance {
             this.cycles = frost.cycles;
         }
 
-        pageRegion:number;
-        pageId:number;
-
-        fetchPage(address:number):void {
-            var region = address >> MMU.BASE_OFFSET;
-            var pageId = this.gba.mmu.addressToPage(region, address & MMU.OFFSET_MASK);
-            if (region == this.pageRegion) {
-                if (pageId == this.pageId && !this.page.invalid) {
-                    return;
-                }
-                this.pageId = pageId;
-            } else {
-                this.pageMask = this.gba.mmu.memory[region].PAGE_MASK;
-                this.pageRegion = region;
-                this.pageId = pageId;
-            }
-
-            this.page = this.gba.mmu.accessPage(region, pageId);
-        }
-
-        pageMask:number;
-
-        loadInstructionArm(address:number):any {
-            var next:any = null;
-            this.fetchPage(address);
-            var offset = (address & this.pageMask) >> 2;
-            next = this.page.arm[offset];
-            if (next) {
-                return next;
-            }
-            var instruction = this.gba.mmu.load32(address) >>> 0;
-            next = this.compileArm(instruction);
-            next.next = null;
-            next.page = this.page;
-            next.address = address;
-            next.opcode = instruction;
-            this.page.arm[offset] = next;
-            return next;
-        }
-
-        loadInstructionThumb(address:number):any {
-            var next:any = null;
-            this.fetchPage(address);
-            var offset = (address & this.pageMask) >> 1;
-            next = this.page.thumb[offset];
-            if (next) {
-                return next;
-            }
-            var instruction = this.gba.mmu.load16(address);
-            next = this.compileThumb(instruction);
-            next.next = null;
-            next.page = this.page;
-            next.address = address;
-            next.opcode = instruction;
-            this.page.thumb[offset] = next;
-            return next;
-        }
-
-        selectBank(mode:Mode):number {
-            switch (mode) {
-                case Mode.USER:
-                case Mode.SYSTEM:
-                    // No banked registers
-                    return ARMCore.BANK_NONE;
-                case Mode.FIQ:
-                    return ARMCore.BANK_FIQ;
-                case Mode.IRQ:
-                    return ARMCore.BANK_IRQ;
-                case Mode.SUPERVISOR:
-                    return ARMCore.BANK_SUPERVISOR;
-                case Mode.ABORT:
-                    return ARMCore.BANK_ABORT;
-                case Mode.UNDEFINED:
-                    return ARMCore.BANK_UNDEFINED;
-                default:
-                    throw "Invalid user mode passed to selectBank";
-            }
-        }
-
-        switchExecMode(newMode:Mode):void {
+        switchExecMode(newMode:ExecMode):void {
             if (this.execMode != newMode) {
                 this.execMode = newMode;
-                if (newMode == Mode.ARM) {
-                    this.instructionWidth = ARMCore.WORD_SIZE_ARM;
+                if (newMode == ExecMode.ARM) {
+                    this.instructionWidth = ARMCoreArm.WORD_SIZE;
                     this.loadInstruction = this.loadInstructionArm;
                 } else {
-                    this.instructionWidth = ARMCore.WORD_SIZE_THUMB;
+                    this.instructionWidth = ARMCoreThumb.WORD_SIZE;
                     this.loadInstruction = this.loadInstructionThumb;
                 }
             }
 
         }
 
-        switchMode(newMode:number) {
+        switchMode(newMode:Mode) {
             if (newMode == this.mode) {
                 // Not switching modes after all
                 return;
             }
             if (newMode != Mode.USER || newMode != Mode.SYSTEM) {
                 // Switch banked registers
-                var newBank = this.selectBank(newMode);
-                var oldBank = this.selectBank(this.mode);
+                var newBank = GameBoyAdvance.ARMCore.selectBank(newMode);
+                var oldBank = GameBoyAdvance.ARMCore.selectBank(this.mode);
                 if (newBank != oldBank) {
                     // TODO: support FIQ
                     if (newMode == Mode.FIQ || this.mode == Mode.FIQ) {
-                        var oldFiqBank = <number><any>(oldBank == ARMCore.BANK_FIQ);
-                        var newFiqBank = <number><any>(newBank == ARMCore.BANK_FIQ);
+                        var oldFiqBank = int(oldBank == Bank.FIQ);
+                        var newFiqBank = int(newBank == Bank.FIQ);
                         this.bankedRegisters[oldFiqBank][2] = this.gprs[8];
                         this.bankedRegisters[oldFiqBank][3] = this.gprs[9];
                         this.bankedRegisters[oldFiqBank][4] = this.gprs[10];
@@ -443,19 +376,25 @@ module GameBoyAdvance {
         }
 
         packCPSR():number {
-            return this.mode | (this.execMode << 5) | (<any>this.cpsr.F << 6) | (<any>this.cpsr.I << 7) |
-                (<any>this.cpsr.N << 31) | (<any>this.cpsr.Z << 30) | (<any>this.cpsr.C << 29) | (<any>this.cpsr.V << 28);
+            return this.mode
+                | (this.execMode << 5)
+                | (<any>this.cpsr.F << 6)
+                | (<any>this.cpsr.I << 7)
+                | (<any>this.cpsr.V << 28)
+                | (<any>this.cpsr.C << 29)
+                | (<any>this.cpsr.Z << 30)
+                | (<any>this.cpsr.N << 31)
         }
 
         unpackCPSR(spsr:number) {
             this.switchMode(spsr & 0x0000001F);
-            this.switchExecMode(<number><any>!!(spsr & 0x00000020));
-            this.cpsr.F = !!(spsr & 0x00000040);
-            this.cpsr.I = !!(spsr & 0x00000080);
-            this.cpsr.N = !!(spsr & 0x80000000);
-            this.cpsr.Z = !!(spsr & 0x40000000);
-            this.cpsr.C = !!(spsr & 0x20000000);
-            this.cpsr.V = !!(spsr & 0x10000000);
+            this.switchExecMode(int(bool(spsr & 0x00000020)));
+            this.cpsr.F = bool(spsr & 0x00000040);
+            this.cpsr.I = bool(spsr & 0x00000080);
+            this.cpsr.N = bool(spsr & 0x80000000);
+            this.cpsr.Z = bool(spsr & 0x40000000);
+            this.cpsr.C = bool(spsr & 0x20000000);
+            this.cpsr.V = bool(spsr & 0x10000000);
 
             this.gba.irq.testIRQ();
         }
@@ -473,9 +412,9 @@ module GameBoyAdvance {
             this.switchMode(Mode.IRQ);
             this.spsr = cpsr;
             this.gprs[Register.LR] = this.gprs[Register.PC] - instructionWidth + 4;
-            this.gprs[Register.PC] = ARMCore.BASE_IRQ + ARMCore.WORD_SIZE_ARM;
+            this.gprs[Register.PC] = Base.IRQ + ARMCoreArm.WORD_SIZE;
             this.instruction = null;
-            this.switchExecMode(Mode.ARM);
+            this.switchExecMode(ExecMode.ARM);
             this.cpsr.I = true;
         }
 
@@ -485,22 +424,24 @@ module GameBoyAdvance {
             this.switchMode(Mode.SUPERVISOR);
             this.spsr = cpsr;
             this.gprs[Register.LR] = this.gprs[Register.PC] - instructionWidth;
-            this.gprs[Register.PC] = ARMCore.BASE_SWI + ARMCore.WORD_SIZE_ARM;
+            this.gprs[Register.PC] = Base.SWI + ARMCoreArm.WORD_SIZE;
             this.instruction = null;
-            this.switchExecMode(Mode.ARM);
+            this.switchExecMode(ExecMode.ARM);
             this.cpsr.I = true;
         }
 
-        badOp(instruction:number):any {
-            var func:any = function () {
-                throw "Illegal instruction: 0x" + instruction.toString(16);
-            };
-            func.writesPC = true;
-            func.fixedJump = false;
-            return func;
-        }
+        private armCompiler:ARMCoreArm;
+        private bankedRegisters:Int32Array[];
+        private bankedSPSRs:Int32Array;
+        private conditionPassed:boolean;
+        private conds:Array<()=>boolean>;
+        private page:Page;
+        private pageId:number;
+        private pageMask:number;
+        private pageRegion:number;
+        private thumbCompiler:ARMCoreThumb;
 
-        badAddress(instruction:number):{(writeInitial?:boolean):number; writesPC:boolean} {
+        private static badAddress(instruction:number):AddressAccessor {
             var func:any = function () {
                 throw "Unimplemented memory access: 0x" + instruction.toString(16);
             };
@@ -508,11 +449,17 @@ module GameBoyAdvance {
             return func;
         }
 
-        conditionPassed:boolean;
+        private static badOp(instruction:number):Instruction {
+            var func:Instruction = function () {
+                throw "Illegal instruction: 0x" + instruction.toString(16);
+            };
+            func.writesPC = true;
+            func.fixedJump = false;
+            return func;
+        }
 
-        generateConds():void {
-            var cpu = this;
-            this.conds = [
+        private static generateConds(cpu:ARMCore):void {
+            cpu.conds = [
                 // EQ
                 function () {
                     return cpu.conditionPassed = cpu.cpsr.Z;
@@ -575,13 +522,31 @@ module GameBoyAdvance {
             ]
         }
 
-        shifterOperand:number;
-        shifterCarryOut:number;
+        private static selectBank(mode:Mode):number {
+            switch (mode) {
+                case Mode.USER:
+                case Mode.SYSTEM:
+                    // No banked registers
+                    return Bank.NONE;
+                case Mode.FIQ:
+                    return Bank.FIQ;
+                case Mode.IRQ:
+                    return Bank.IRQ;
+                case Mode.SUPERVISOR:
+                    return Bank.SUPERVISOR;
+                case Mode.ABORT:
+                    return Bank.ABORT;
+                case Mode.UNDEFINED:
+                    return Bank.UNDEFINED;
+                default:
+                    throw "Invalid user mode passed to selectBank";
+            }
+        }
 
-        barrelShiftImmediate(shiftType:number, immediate:number, rm:number):any {
+        private barrelShiftImmediate(instruction:number, shiftType:number, immediate:number, rm:number) {
             var cpu = this;
             var gprs = this.gprs;
-            var shiftOp = this.badOp;
+            var shiftOp = ARMCore.badOp(instruction);
             switch (shiftType) {
                 case 0x00000000:
                     // LSL
@@ -649,21 +614,17 @@ module GameBoyAdvance {
             return shiftOp;
         }
 
-        conds:Array<()=>boolean>;
-
-        compileArm(instruction:number):any {
-            var op = this.badOp(instruction);
-            var address:{(writeInitial?:boolean):number; writesPC:boolean} = this.badAddress(instruction);
+        private compileArm(instruction:number):Instruction {
+            var op = ARMCore.badOp(instruction);
+            var address:AddressAccessor = ARMCore.badAddress(instruction);
 
             var i = instruction & 0x0E000000;
-            var cpu = this;
-            var gprs = this.gprs;
 
             var condOp = this.conds[(instruction & 0xF0000000) >>> 28];
             if ((instruction & 0x0FFFFFF0) == 0x012FFF10) {
                 // BX
                 var rm = instruction & 0xF;
-                op = this.armCompiler.constructBX(rm, condOp);
+                op = <any>this.armCompiler.constructBX(rm, condOp);
                 op.writesPC = true;
                 op.fixedJump = false;
             } else if (!(instruction & 0x0C000000) && (i == 0x02000000 || (instruction & 0x00000090) != 0x00000090)) {
@@ -678,12 +639,12 @@ module GameBoyAdvance {
                         var immediate = instruction & 0x000000FF;
                         var rotateImm = (instruction & 0x00000F00) >> 7;
                         immediate = (immediate >>> rotateImm) | (immediate << (32 - rotateImm));
-                        op = this.armCompiler.constructMSR(rm, r, instruction, immediate, condOp);
+                        op = <any>this.armCompiler.constructMSR(rm, r, instruction, immediate, condOp);
                         op.writesPC = false;
                     } else if ((instruction & 0x00BF0000) == 0x000F0000) {
                         // MRS
                         var rd = (instruction & 0x0000F000) >> 12;
-                        op = this.armCompiler.constructMRS(rd, r, condOp);
+                        op = <any>this.armCompiler.constructMRS(rd, r, condOp);
                         op.writesPC = rd == Register.PC;
                     }
                 } else {
@@ -728,120 +689,120 @@ module GameBoyAdvance {
                         }
                     } else {
                         var immediate = (instruction & 0x00000F80) >> 7;
-                        shiftOp = this.barrelShiftImmediate(shiftType, immediate, rm);
+                        shiftOp = this.barrelShiftImmediate(instruction, shiftType, immediate, rm);
                     }
 
                     switch (opcode) {
                         case 0x00000000:
                             // AND
                             if (s) {
-                                op = this.armCompiler.constructANDS(rd, rn, shiftOp, condOp);
+                                op = <any>this.armCompiler.constructANDS(rd, rn, shiftOp, condOp);
                             } else {
-                                op = this.armCompiler.constructAND(rd, rn, shiftOp, condOp);
+                                op = <any>this.armCompiler.constructAND(rd, rn, shiftOp, condOp);
                             }
                             break;
                         case 0x00200000:
                             // EOR
                             if (s) {
-                                op = this.armCompiler.constructEORS(rd, rn, shiftOp, condOp);
+                                op = <any>this.armCompiler.constructEORS(rd, rn, shiftOp, condOp);
                             } else {
-                                op = this.armCompiler.constructEOR(rd, rn, shiftOp, condOp);
+                                op = <any>this.armCompiler.constructEOR(rd, rn, shiftOp, condOp);
                             }
                             break;
                         case 0x00400000:
                             // SUB
                             if (s) {
-                                op = this.armCompiler.constructSUBS(rd, rn, shiftOp, condOp);
+                                op = <any>this.armCompiler.constructSUBS(rd, rn, shiftOp, condOp);
                             } else {
-                                op = this.armCompiler.constructSUB(rd, rn, shiftOp, condOp);
+                                op = <any>this.armCompiler.constructSUB(rd, rn, shiftOp, condOp);
                             }
                             break;
                         case 0x00600000:
                             // RSB
                             if (s) {
-                                op = this.armCompiler.constructRSBS(rd, rn, shiftOp, condOp);
+                                op = <any>this.armCompiler.constructRSBS(rd, rn, shiftOp, condOp);
                             } else {
-                                op = this.armCompiler.constructRSB(rd, rn, shiftOp, condOp);
+                                op = <any>this.armCompiler.constructRSB(rd, rn, shiftOp, condOp);
                             }
                             break;
                         case 0x00800000:
                             // ADD
                             if (s) {
-                                op = this.armCompiler.constructADDS(rd, rn, shiftOp, condOp);
+                                op = <any>this.armCompiler.constructADDS(rd, rn, shiftOp, condOp);
                             } else {
-                                op = this.armCompiler.constructADD(rd, rn, shiftOp, condOp);
+                                op = <any>this.armCompiler.constructADD(rd, rn, shiftOp, condOp);
                             }
                             break;
                         case 0x00A00000:
                             // ADC
                             if (s) {
-                                op = this.armCompiler.constructADCS(rd, rn, shiftOp, condOp);
+                                op = <any>this.armCompiler.constructADCS(rd, rn, shiftOp, condOp);
                             } else {
-                                op = this.armCompiler.constructADC(rd, rn, shiftOp, condOp);
+                                op = <any>this.armCompiler.constructADC(rd, rn, shiftOp, condOp);
                             }
                             break;
                         case 0x00C00000:
                             // SBC
                             if (s) {
-                                op = this.armCompiler.constructSBCS(rd, rn, shiftOp, condOp);
+                                op = <any>this.armCompiler.constructSBCS(rd, rn, shiftOp, condOp);
                             } else {
-                                op = this.armCompiler.constructSBC(rd, rn, shiftOp, condOp);
+                                op = <any>this.armCompiler.constructSBC(rd, rn, shiftOp, condOp);
                             }
                             break;
                         case 0x00E00000:
                             // RSC
                             if (s) {
-                                op = this.armCompiler.constructRSCS(rd, rn, shiftOp, condOp);
+                                op = <any>this.armCompiler.constructRSCS(rd, rn, shiftOp, condOp);
                             } else {
-                                op = this.armCompiler.constructRSC(rd, rn, shiftOp, condOp);
+                                op = <any>this.armCompiler.constructRSC(rd, rn, shiftOp, condOp);
                             }
                             break;
                         case 0x01000000:
                             // TST
-                            op = this.armCompiler.constructTST(rd, rn, shiftOp, condOp);
+                            op = <any>this.armCompiler.constructTST(rd, rn, shiftOp, condOp);
                             break;
                         case 0x01200000:
                             // TEQ
-                            op = this.armCompiler.constructTEQ(rd, rn, shiftOp, condOp);
+                            op = <any>this.armCompiler.constructTEQ(rd, rn, shiftOp, condOp);
                             break;
                         case 0x01400000:
                             // CMP
-                            op = this.armCompiler.constructCMP(rd, rn, shiftOp, condOp);
+                            op = <any>this.armCompiler.constructCMP(rd, rn, shiftOp, condOp);
                             break;
                         case 0x01600000:
                             // CMN
-                            op = this.armCompiler.constructCMN(rd, rn, shiftOp, condOp);
+                            op = <any>this.armCompiler.constructCMN(rd, rn, shiftOp, condOp);
                             break;
                         case 0x01800000:
                             // ORR
                             if (s) {
-                                op = this.armCompiler.constructORRS(rd, rn, shiftOp, condOp);
+                                op = <any>this.armCompiler.constructORRS(rd, rn, shiftOp, condOp);
                             } else {
-                                op = this.armCompiler.constructORR(rd, rn, shiftOp, condOp);
+                                op = <any>this.armCompiler.constructORR(rd, rn, shiftOp, condOp);
                             }
                             break;
                         case 0x01A00000:
                             // MOV
                             if (s) {
-                                op = this.armCompiler.constructMOVS(rd, rn, shiftOp, condOp);
+                                op = <any>this.armCompiler.constructMOVS(rd, rn, shiftOp, condOp);
                             } else {
-                                op = this.armCompiler.constructMOV(rd, rn, shiftOp, condOp);
+                                op = <any>this.armCompiler.constructMOV(rd, rn, shiftOp, condOp);
                             }
                             break;
                         case 0x01C00000:
                             // BIC
                             if (s) {
-                                op = this.armCompiler.constructBICS(rd, rn, shiftOp, condOp);
+                                op = <any>this.armCompiler.constructBICS(rd, rn, shiftOp, condOp);
                             } else {
-                                op = this.armCompiler.constructBIC(rd, rn, shiftOp, condOp);
+                                op = <any>this.armCompiler.constructBIC(rd, rn, shiftOp, condOp);
                             }
                             break;
                         case 0x01E00000:
                             // MVN
                             if (s) {
-                                op = this.armCompiler.constructMVNS(rd, rn, shiftOp, condOp);
+                                op = <any>this.armCompiler.constructMVNS(rd, rn, shiftOp, condOp);
                             } else {
-                                op = this.armCompiler.constructMVN(rd, rn, shiftOp, condOp);
+                                op = <any>this.armCompiler.constructMVN(rd, rn, shiftOp, condOp);
                             }
                             break;
                     }
@@ -853,9 +814,9 @@ module GameBoyAdvance {
                 var rd = (instruction >> 12) & 0x0000000F;
                 var rn = (instruction >> 16) & 0x0000000F;
                 if (instruction & 0x00400000) {
-                    op = this.armCompiler.constructSWPB(rd, rn, rm, condOp);
+                    op = <any>this.armCompiler.constructSWPB(rd, rn, rm, condOp);
                 } else {
-                    op = this.armCompiler.constructSWP(rd, rn, rm, condOp);
+                    op = <any>this.armCompiler.constructSWP(rd, rn, rm, condOp);
                 }
                 op.writesPC = rd == Register.PC;
             } else {
@@ -870,51 +831,51 @@ module GameBoyAdvance {
                             switch (instruction & 0x00F00000) {
                                 case 0x00000000:
                                     // MUL
-                                    op = this.armCompiler.constructMUL(rd, rs, rm, condOp);
+                                    op = <any>this.armCompiler.constructMUL(rd, rs, rm, condOp);
                                     break;
                                 case 0x00100000:
                                     // MULS
-                                    op = this.armCompiler.constructMULS(rd, rs, rm, condOp);
+                                    op = <any>this.armCompiler.constructMULS(rd, rs, rm, condOp);
                                     break;
                                 case 0x00200000:
                                     // MLA
-                                    op = this.armCompiler.constructMLA(rd, rn, rs, rm, condOp);
+                                    op = <any>this.armCompiler.constructMLA(rd, rn, rs, rm, condOp);
                                     break;
                                 case 0x00300000:
                                     // MLAS
-                                    op = this.armCompiler.constructMLAS(rd, rn, rs, rm, condOp);
+                                    op = <any>this.armCompiler.constructMLAS(rd, rn, rs, rm, condOp);
                                     break;
                                 case 0x00800000:
                                     // UMULL
-                                    op = this.armCompiler.constructUMULL(rd, rn, rs, rm, condOp);
+                                    op = <any>this.armCompiler.constructUMULL(rd, rn, rs, rm, condOp);
                                     break;
                                 case 0x00900000:
                                     // UMULLS
-                                    op = this.armCompiler.constructUMULLS(rd, rn, rs, rm, condOp);
+                                    op = <any>this.armCompiler.constructUMULLS(rd, rn, rs, rm, condOp);
                                     break;
                                 case 0x00A00000:
                                     // UMLAL
-                                    op = this.armCompiler.constructUMLAL(rd, rn, rs, rm, condOp);
+                                    op = <any>this.armCompiler.constructUMLAL(rd, rn, rs, rm, condOp);
                                     break;
                                 case 0x00B00000:
                                     // UMLALS
-                                    op = this.armCompiler.constructUMLALS(rd, rn, rs, rm, condOp);
+                                    op = <any>this.armCompiler.constructUMLALS(rd, rn, rs, rm, condOp);
                                     break;
                                 case 0x00C00000:
                                     // SMULL
-                                    op = this.armCompiler.constructSMULL(rd, rn, rs, rm, condOp);
+                                    op = <any>this.armCompiler.constructSMULL(rd, rn, rs, rm, condOp);
                                     break;
                                 case 0x00D00000:
                                     // SMULLS
-                                    op = this.armCompiler.constructSMULLS(rd, rn, rs, rm, condOp);
+                                    op = <any>this.armCompiler.constructSMULLS(rd, rn, rs, rm, condOp);
                                     break;
                                 case 0x00E00000:
                                     // SMLAL
-                                    op = this.armCompiler.constructSMLAL(rd, rn, rs, rm, condOp);
+                                    op = <any>this.armCompiler.constructSMLAL(rd, rn, rs, rm, condOp);
                                     break;
                                 case 0x00F00000:
                                     // SMLALS
-                                    op = this.armCompiler.constructSMLALS(rd, rn, rs, rm, condOp);
+                                    op = <any>this.armCompiler.constructSMLALS(rd, rn, rs, rm, condOp);
                                     break;
                             }
                             op.writesPC = rd == Register.PC;
@@ -943,20 +904,20 @@ module GameBoyAdvance {
                                     if (h) {
                                         if (s) {
                                             // LDRSH
-                                            op = this.armCompiler.constructLDRSH(rd, address, condOp);
+                                            op = <any>this.armCompiler.constructLDRSH(rd, address, condOp);
                                         } else {
                                             // LDRH
-                                            op = this.armCompiler.constructLDRH(rd, address, condOp);
+                                            op = <any>this.armCompiler.constructLDRH(rd, address, condOp);
                                         }
                                     } else {
                                         if (s) {
                                             // LDRSB
-                                            op = this.armCompiler.constructLDRSB(rd, address, condOp);
+                                            op = <any>this.armCompiler.constructLDRSB(rd, address, condOp);
                                         }
                                     }
                                 } else if (!s && h) {
                                     // STRH
-                                    op = this.armCompiler.constructSTRH(rd, address, condOp);
+                                    op = <any>this.armCompiler.constructSTRH(rd, address, condOp);
                                 }
                             }
                             op.writesPC = rd == Register.PC || address.writesPC;
@@ -981,7 +942,7 @@ module GameBoyAdvance {
                             var shiftImmediate = (instruction & 0x00000F80) >> 7;
 
                             if (shiftType || shiftImmediate) {
-                                shiftOp = this.barrelShiftImmediate(shiftType, shiftImmediate, rm);
+                                shiftOp = this.barrelShiftImmediate(instruction, shiftType, shiftImmediate, rm);
                                 address = this.armCompiler.constructAddressingMode2RegisterShifted(instruction, shiftOp, condOp);
                             } else {
                                 address = this.armCompiler.constructAddressingMode23Register(instruction, rm, condOp);
@@ -994,18 +955,18 @@ module GameBoyAdvance {
                         if (load) {
                             if (b) {
                                 // LDRB
-                                op = this.armCompiler.constructLDRB(rd, address, condOp);
+                                op = <any>this.armCompiler.constructLDRB(rd, address, condOp);
                             } else {
                                 // LDR
-                                op = this.armCompiler.constructLDR(rd, address, condOp);
+                                op = <any>this.armCompiler.constructLDR(rd, address, condOp);
                             }
                         } else {
                             if (b) {
                                 // STRB
-                                op = this.armCompiler.constructSTRB(rd, address, condOp);
+                                op = <any>this.armCompiler.constructSTRB(rd, address, condOp);
                             } else {
                                 // STR
-                                op = this.armCompiler.constructSTR(rd, address, condOp);
+                                op = <any>this.armCompiler.constructSTR(rd, address, condOp);
                             }
                         }
                         op.writesPC = rd == Register.PC || address.writesPC;
@@ -1027,7 +988,7 @@ module GameBoyAdvance {
                             if (p) {
                                 immediate = 4;
                             }
-                            for (var m = 0x01, i = 0; i < 16; m <<= 1, ++i) {
+                            for (var m = 0x01, i = 0; i < 16; m <<= 1, i++) {
                                 if (rs & m) {
                                     if (w && i == rn && !offset) {
                                         rs &= ~m;
@@ -1041,7 +1002,7 @@ module GameBoyAdvance {
                             if (!p) {
                                 immediate = 4;
                             }
-                            for (var m = 0x01, i = 0; i < 16; m <<= 1, ++i) {
+                            for (var m = 0x01, i = 0; i < 16; m <<= 1, i++) {
                                 if (rs & m) {
                                     if (w && i == rn && !offset) {
                                         rs &= ~m;
@@ -1061,17 +1022,17 @@ module GameBoyAdvance {
                         if (load) {
                             // LDM
                             if (user) {
-                                op = this.armCompiler.constructLDMS(rs, address, condOp);
+                                op = <any>this.armCompiler.constructLDMS(rs, address, condOp);
                             } else {
-                                op = this.armCompiler.constructLDM(rs, address, condOp);
+                                op = <any>this.armCompiler.constructLDM(rs, address, condOp);
                             }
                             op.writesPC = !!(rs & (1 << 15));
                         } else {
                             // STM
                             if (user) {
-                                op = this.armCompiler.constructSTMS(rs, address, condOp);
+                                op = <any>this.armCompiler.constructSTMS(rs, address, condOp);
                             } else {
-                                op = this.armCompiler.constructSTM(rs, address, condOp);
+                                op = <any>this.armCompiler.constructSTM(rs, address, condOp);
                             }
                             op.writesPC = false;
                         }
@@ -1085,9 +1046,9 @@ module GameBoyAdvance {
                         immediate <<= 2;
                         var link = instruction & 0x01000000;
                         if (link) {
-                            op = this.armCompiler.constructBL(immediate, condOp);
+                            op = <any>this.armCompiler.constructBL(immediate, condOp);
                         } else {
-                            op = this.armCompiler.constructB(immediate, condOp);
+                            op = <any>this.armCompiler.constructB(immediate, condOp);
                         }
                         op.writesPC = true;
                         op.fixedJump = true;
@@ -1100,7 +1061,7 @@ module GameBoyAdvance {
                         if ((instruction & 0x0F000000) == 0x0F000000) {
                             // SWI
                             var immediate = (instruction & 0x00FFFFFF);
-                            op = this.armCompiler.constructSWI(immediate, condOp);
+                            op = <any>this.armCompiler.constructSWI(immediate, condOp);
                             op.writesPC = false;
                         }
                         break;
@@ -1109,15 +1070,13 @@ module GameBoyAdvance {
                 }
             }
 
-            op.execMode = Mode.ARM;
+            op.execMode = ExecMode.ARM;
             op.fixedJump = op.fixedJump || false;
             return op;
         }
 
-        compileThumb(instruction:number):any {
-            var op = this.badOp(instruction & 0xFFFF);
-            var cpu = this;
-            var gprs = this.gprs;
+        private compileThumb(instruction:number):Instruction {
+            var op = ARMCore.badOp(instruction & 0xFFFF);
             if ((instruction & 0xFC00) == 0x4000) {
                 // Data-processing register
                 var rm = (instruction & 0x0038) >> 3;
@@ -1125,67 +1084,67 @@ module GameBoyAdvance {
                 switch (instruction & 0x03C0) {
                     case 0x0000:
                         // AND
-                        op = this.thumbCompiler.constructAND(rd, rm);
+                        op = <any>this.thumbCompiler.constructAND(rd, rm);
                         break;
                     case 0x0040:
                         // EOR
-                        op = this.thumbCompiler.constructEOR(rd, rm);
+                        op = <any>this.thumbCompiler.constructEOR(rd, rm);
                         break;
                     case 0x0080:
                         // LSL(2)
-                        op = this.thumbCompiler.constructLSL2(rd, rm);
+                        op = <any>this.thumbCompiler.constructLSL2(rd, rm);
                         break;
                     case 0x00C0:
                         // LSR(2)
-                        op = this.thumbCompiler.constructLSR2(rd, rm);
+                        op = <any>this.thumbCompiler.constructLSR2(rd, rm);
                         break;
                     case 0x0100:
                         // ASR(2)
-                        op = this.thumbCompiler.constructASR2(rd, rm);
+                        op = <any>this.thumbCompiler.constructASR2(rd, rm);
                         break;
                     case 0x0140:
                         // ADC
-                        op = this.thumbCompiler.constructADC(rd, rm);
+                        op = <any>this.thumbCompiler.constructADC(rd, rm);
                         break;
                     case 0x0180:
                         // SBC
-                        op = this.thumbCompiler.constructSBC(rd, rm);
+                        op = <any>this.thumbCompiler.constructSBC(rd, rm);
                         break;
                     case 0x01C0:
                         // ROR
-                        op = this.thumbCompiler.constructROR(rd, rm);
+                        op = <any>this.thumbCompiler.constructROR(rd, rm);
                         break;
                     case 0x0200:
                         // TST
-                        op = this.thumbCompiler.constructTST(rd, rm);
+                        op = <any>this.thumbCompiler.constructTST(rd, rm);
                         break;
                     case 0x0240:
                         // NEG
-                        op = this.thumbCompiler.constructNEG(rd, rm);
+                        op = <any>this.thumbCompiler.constructNEG(rd, rm);
                         break;
                     case 0x0280:
                         // CMP(2)
-                        op = this.thumbCompiler.constructCMP2(rd, rm);
+                        op = <any>this.thumbCompiler.constructCMP2(rd, rm);
                         break;
                     case 0x02C0:
                         // CMN
-                        op = this.thumbCompiler.constructCMN(rd, rm);
+                        op = <any>this.thumbCompiler.constructCMN(rd, rm);
                         break;
                     case 0x0300:
                         // ORR
-                        op = this.thumbCompiler.constructORR(rd, rm);
+                        op = <any>this.thumbCompiler.constructORR(rd, rm);
                         break;
                     case 0x0340:
                         // MUL
-                        op = this.thumbCompiler.constructMUL(rd, rm);
+                        op = <any>this.thumbCompiler.constructMUL(rd, rm);
                         break;
                     case 0x0380:
                         // BIC
-                        op = this.thumbCompiler.constructBIC(rd, rm);
+                        op = <any>this.thumbCompiler.constructBIC(rd, rm);
                         break;
                     case 0x03C0:
                         // MVN
-                        op = this.thumbCompiler.constructMVN(rd, rm);
+                        op = <any>this.thumbCompiler.constructMVN(rd, rm);
                         break;
                 }
                 op.writesPC = false;
@@ -1198,22 +1157,22 @@ module GameBoyAdvance {
                 switch (instruction & 0x0300) {
                     case 0x0000:
                         // ADD(4)
-                        op = this.thumbCompiler.constructADD4(rd, rm);
+                        op = <any>this.thumbCompiler.constructADD4(rd, rm);
                         op.writesPC = rd == Register.PC;
                         break;
                     case 0x0100:
                         // CMP(3)
-                        op = this.thumbCompiler.constructCMP3(rd, rm);
+                        op = <any>this.thumbCompiler.constructCMP3(rd, rm);
                         op.writesPC = false;
                         break;
                     case 0x0200:
                         // MOV(3)
-                        op = this.thumbCompiler.constructMOV3(rd, rm);
+                        op = <any>this.thumbCompiler.constructMOV3(rd, rm);
                         op.writesPC = rd == Register.PC;
                         break;
                     case 0x0300:
                         // BX
-                        op = this.thumbCompiler.constructBX(rd, rm);
+                        op = <any>this.thumbCompiler.constructBX(rd, rm);
                         op.writesPC = true;
                         op.fixedJump = false;
                         break;
@@ -1226,26 +1185,26 @@ module GameBoyAdvance {
                 switch (instruction & 0x0600) {
                     case 0x0000:
                         // ADD(3)
-                        op = this.thumbCompiler.constructADD3(rd, rn, rm);
+                        op = <any>this.thumbCompiler.constructADD3(rd, rn, rm);
                         break;
                     case 0x0200:
                         // SUB(3)
-                        op = this.thumbCompiler.constructSUB3(rd, rn, rm);
+                        op = <any>this.thumbCompiler.constructSUB3(rd, rn, rm);
                         break;
                     case 0x0400:
                         var immediate = (instruction & 0x01C0) >> 6;
                         if (immediate) {
                             // ADD(1)
-                            op = this.thumbCompiler.constructADD1(rd, rn, immediate);
+                            op = <any>this.thumbCompiler.constructADD1(rd, rn, immediate);
                         } else {
                             // MOV(2)
-                            op = this.thumbCompiler.constructMOV2(rd, rn, rm);
+                            op = <any>this.thumbCompiler.constructMOV2(rd, rn, rm);
                         }
                         break;
                     case 0x0600:
                         // SUB(1)
                         var immediate = (instruction & 0x01C0) >> 6;
-                        op = this.thumbCompiler.constructSUB1(rd, rn, immediate);
+                        op = <any>this.thumbCompiler.constructSUB1(rd, rn, immediate);
                         break;
                 }
                 op.writesPC = false;
@@ -1257,15 +1216,15 @@ module GameBoyAdvance {
                 switch (instruction & 0x1800) {
                     case 0x0000:
                         // LSL(1)
-                        op = this.thumbCompiler.constructLSL1(rd, rm, immediate);
+                        op = <any>this.thumbCompiler.constructLSL1(rd, rm, immediate);
                         break;
                     case 0x0800:
                         // LSR(1)
-                        op = this.thumbCompiler.constructLSR1(rd, rm, immediate);
+                        op = <any>this.thumbCompiler.constructLSR1(rd, rm, immediate);
                         break;
                     case 0x1000:
                         // ASR(1)
-                        op = this.thumbCompiler.constructASR1(rd, rm, immediate);
+                        op = <any>this.thumbCompiler.constructASR1(rd, rm, immediate);
                         break;
                     case 0x1800:
                         break;
@@ -1278,19 +1237,19 @@ module GameBoyAdvance {
                 switch (instruction & 0x1800) {
                     case 0x0000:
                         // MOV(1)
-                        op = this.thumbCompiler.constructMOV1(rn, immediate);
+                        op = <any>this.thumbCompiler.constructMOV1(rn, immediate);
                         break;
                     case 0x0800:
                         // CMP(1)
-                        op = this.thumbCompiler.constructCMP1(rn, immediate);
+                        op = <any>this.thumbCompiler.constructCMP1(rn, immediate);
                         break;
                     case 0x1000:
                         // ADD(2)
-                        op = this.thumbCompiler.constructADD2(rn, immediate);
+                        op = <any>this.thumbCompiler.constructADD2(rn, immediate);
                         break;
                     case 0x1800:
                         // SUB(2)
-                        op = this.thumbCompiler.constructSUB2(rn, immediate);
+                        op = <any>this.thumbCompiler.constructSUB2(rn, immediate);
                         break;
                 }
                 op.writesPC = false;
@@ -1298,7 +1257,7 @@ module GameBoyAdvance {
                 // LDR(3)
                 var rd = (instruction & 0x0700) >> 8;
                 var immediate = (instruction & 0x00FF) << 2;
-                op = this.thumbCompiler.constructLDR3(rd, immediate);
+                op = <any>this.thumbCompiler.constructLDR3(rd, immediate);
                 op.writesPC = false;
             } else if ((instruction & 0xF000) == 0x5000) {
                 // Load and store with relative offset
@@ -1309,35 +1268,35 @@ module GameBoyAdvance {
                 switch (opcode) {
                     case 0x0000:
                         // STR(2)
-                        op = this.thumbCompiler.constructSTR2(rd, rn, rm);
+                        op = <any>this.thumbCompiler.constructSTR2(rd, rn, rm);
                         break;
                     case 0x0200:
                         // STRH(2)
-                        op = this.thumbCompiler.constructSTRH2(rd, rn, rm);
+                        op = <any>this.thumbCompiler.constructSTRH2(rd, rn, rm);
                         break;
                     case 0x0400:
                         // STRB(2)
-                        op = this.thumbCompiler.constructSTRB2(rd, rn, rm);
+                        op = <any>this.thumbCompiler.constructSTRB2(rd, rn, rm);
                         break;
                     case 0x0600:
                         // LDRSB
-                        op = this.thumbCompiler.constructLDRSB(rd, rn, rm);
+                        op = <any>this.thumbCompiler.constructLDRSB(rd, rn, rm);
                         break;
                     case 0x0800:
                         // LDR(2)
-                        op = this.thumbCompiler.constructLDR2(rd, rn, rm);
+                        op = <any>this.thumbCompiler.constructLDR2(rd, rn, rm);
                         break;
                     case 0x0A00:
                         // LDRH(2)
-                        op = this.thumbCompiler.constructLDRH2(rd, rn, rm);
+                        op = <any>this.thumbCompiler.constructLDRH2(rd, rn, rm);
                         break;
                     case 0x0C00:
                         // LDRB(2)
-                        op = this.thumbCompiler.constructLDRB2(rd, rn, rm);
+                        op = <any>this.thumbCompiler.constructLDRB2(rd, rn, rm);
                         break;
                     case 0x0E00:
                         // LDRSH
-                        op = this.thumbCompiler.constructLDRSH(rd, rn, rm);
+                        op = <any>this.thumbCompiler.constructLDRSH(rd, rn, rm);
                         break;
                 }
                 op.writesPC = false;
@@ -1354,18 +1313,18 @@ module GameBoyAdvance {
                 if (load) {
                     if (b) {
                         // LDRB(1)
-                        op = this.thumbCompiler.constructLDRB1(rd, rn, immediate);
+                        op = <any>this.thumbCompiler.constructLDRB1(rd, rn, immediate);
                     } else {
                         // LDR(1)
-                        op = this.thumbCompiler.constructLDR1(rd, rn, immediate);
+                        op = <any>this.thumbCompiler.constructLDR1(rd, rn, immediate);
                     }
                 } else {
                     if (b) {
                         // STRB(1)
-                        op = this.thumbCompiler.constructSTRB1(rd, rn, immediate);
+                        op = <any>this.thumbCompiler.constructSTRB1(rd, rn, immediate);
                     } else {
                         // STR(1)
-                        op = this.thumbCompiler.constructSTR1(rd, rn, immediate);
+                        op = <any>this.thumbCompiler.constructSTR1(rd, rn, immediate);
                     }
                 }
                 op.writesPC = false;
@@ -1375,12 +1334,12 @@ module GameBoyAdvance {
                 var rs = instruction & 0x00FF;
                 if (instruction & 0x0800) {
                     // POP
-                    op = this.thumbCompiler.constructPOP(rs, r);
+                    op = <any>this.thumbCompiler.constructPOP(rs, r);
                     op.writesPC = r;
                     op.fixedJump = false;
                 } else {
                     // PUSH
-                    op = this.thumbCompiler.constructPUSH(rs, r);
+                    op = <any>this.thumbCompiler.constructPUSH(rs, r);
                     op.writesPC = false;
                 }
             } else if (instruction & 0x8000) {
@@ -1392,10 +1351,10 @@ module GameBoyAdvance {
                         var immediate = (instruction & 0x07C0) >> 5;
                         if (instruction & 0x0800) {
                             // LDRH(1)
-                            op = this.thumbCompiler.constructLDRH1(rd, rn, immediate);
+                            op = <any>this.thumbCompiler.constructLDRH1(rd, rn, immediate);
                         } else {
                             // STRH(1)
-                            op = this.thumbCompiler.constructSTRH1(rd, rn, immediate);
+                            op = <any>this.thumbCompiler.constructSTRH1(rd, rn, immediate);
                         }
                         op.writesPC = false;
                         break;
@@ -1406,10 +1365,10 @@ module GameBoyAdvance {
                         var load = instruction & 0x0800;
                         if (load) {
                             // LDR(4)
-                            op = this.thumbCompiler.constructLDR4(rd, immediate);
+                            op = <any>this.thumbCompiler.constructLDR4(rd, immediate);
                         } else {
                             // STR(3)
-                            op = this.thumbCompiler.constructSTR3(rd, immediate);
+                            op = <any>this.thumbCompiler.constructSTR3(rd, immediate);
                         }
                         op.writesPC = false;
                         break;
@@ -1419,10 +1378,10 @@ module GameBoyAdvance {
                         var immediate = (instruction & 0x00FF) << 2;
                         if (instruction & 0x0800) {
                             // ADD(6)
-                            op = this.thumbCompiler.constructADD6(rd, immediate);
+                            op = <any>this.thumbCompiler.constructADD6(rd, immediate);
                         } else {
                             // ADD(5)
-                            op = this.thumbCompiler.constructADD5(rd, immediate);
+                            op = <any>this.thumbCompiler.constructADD5(rd, immediate);
                         }
                         op.writesPC = false;
                         break;
@@ -1436,7 +1395,7 @@ module GameBoyAdvance {
                             if (b) {
                                 immediate = -immediate;
                             }
-                            op = this.thumbCompiler.constructADD7(immediate);
+                            op = <any>this.thumbCompiler.constructADD7(immediate);
                             op.writesPC = false;
                         }
                         break;
@@ -1446,10 +1405,10 @@ module GameBoyAdvance {
                         var rs = instruction & 0x00FF;
                         if (instruction & 0x0800) {
                             // LDMIA
-                            op = this.thumbCompiler.constructLDMIA(rn, rs);
+                            op = <any>this.thumbCompiler.constructLDMIA(rn, rs);
                         } else {
                             // STMIA
-                            op = this.thumbCompiler.constructSTMIA(rn, rs);
+                            op = <any>this.thumbCompiler.constructSTMIA(rn, rs);
                         }
                         op.writesPC = false;
                         break;
@@ -1459,7 +1418,7 @@ module GameBoyAdvance {
                         var immediate = (instruction & 0x00FF);
                         if (cond == 0xF) {
                             // SWI
-                            op = this.thumbCompiler.constructSWI(immediate);
+                            op = <any>this.thumbCompiler.constructSWI(immediate);
                             op.writesPC = false;
                         } else {
                             // B(1)
@@ -1468,7 +1427,7 @@ module GameBoyAdvance {
                             }
                             immediate <<= 1;
                             var condOp = this.conds[cond];
-                            op = this.thumbCompiler.constructB1(immediate, condOp);
+                            op = <any>this.thumbCompiler.constructB1(immediate, condOp);
                             op.writesPC = true;
                             op.fixedJump = true;
                         }
@@ -1485,18 +1444,18 @@ module GameBoyAdvance {
                                     immediate |= 0xFFFFF800;
                                 }
                                 immediate <<= 1;
-                                op = this.thumbCompiler.constructB2(immediate);
+                                op = <any>this.thumbCompiler.constructB2(immediate);
                                 op.writesPC = true;
                                 op.fixedJump = true;
                                 break;
                             case 0x0800:
                                 // BLX (ARMv5T)
-                                /*op = function() {
-                                 var pc = gprs[cpu.PC];
-                                 gprs[cpu.PC] = (gprs[cpu.LR] + (immediate << 1)) & 0xFFFFFFFC;
-                                 gprs[cpu.LR] = pc - 1;
-                                 cpu.switchExecMode(cpu.MODE_ARM);
-                                 }*/
+//                                op = () => {
+//                                    var pc = this.gprs[Register.PC];
+//                                    this.gprs[Register.PC] = (this.gprs[Register.LR] + (immediate << 1)) & 0xFFFFFFFC;
+//                                    this.gprs[Register.LR] = pc - 1;
+//                                    this.switchExecMode(ExecMode.ARM);
+//                                };
                                 break;
                             case 0x1000:
                                 // BL(1)
@@ -1504,12 +1463,12 @@ module GameBoyAdvance {
                                     immediate |= 0xFFFFFC00;
                                 }
                                 immediate <<= 12;
-                                op = this.thumbCompiler.constructBL1(immediate);
+                                op = <any>this.thumbCompiler.constructBL1(immediate);
                                 op.writesPC = false;
                                 break;
                             case 0x1800:
                                 // BL(2)
-                                op = this.thumbCompiler.constructBL2(immediate);
+                                op = <any>this.thumbCompiler.constructBL2(immediate);
                                 op.writesPC = true;
                                 op.fixedJump = false;
                                 break;
@@ -1522,9 +1481,63 @@ module GameBoyAdvance {
                 throw 'Bad opcode: 0x' + instruction.toString(16);
             }
 
-            op.execMode = Mode.THUMB;
+            op.execMode = ExecMode.THUMB;
             op.fixedJump = op.fixedJump || false;
             return op;
         }
+
+        private fetchPage(address:number):void {
+            var region = address >> MMU.BASE_OFFSET;
+            var pageId = this.gba.mmu.addressToPage(region, address & MMU.OFFSET_MASK);
+            if (region == this.pageRegion) {
+                if (pageId == this.pageId && !this.page.invalid) {
+                    return;
+                }
+                this.pageId = pageId;
+            } else {
+                this.pageId = pageId;
+                this.pageMask = this.gba.mmu.memory[region].PAGE_MASK;
+                this.pageRegion = region;
+            }
+
+            this.page = this.gba.mmu.accessPage(region, pageId);
+        }
+
+        private loadInstruction:{(address:number):Instruction};
+
+        private loadInstructionArm(address:number):Instruction {
+            this.fetchPage(address);
+            var offset = (address & this.pageMask) / ARMCoreArm.WORD_SIZE;
+            var next = this.page.arm[offset];
+            if (next) {
+                return next;
+            }
+            var instruction = this.gba.mmu.load32(address);
+            next = this.compileArm(instruction);
+            next.next = null;
+            next.page = this.page;
+            next.address = address;
+            next.opcode = instruction;
+            this.page.arm[offset] = next;
+            return next;
+        }
+
+        private loadInstructionThumb(address:number):Instruction {
+            this.fetchPage(address);
+            var offset = (address & this.pageMask) / ARMCoreThumb.WORD_SIZE;
+            var next = this.page.thumb[offset];
+            if (next) {
+                return next;
+            }
+            var instruction = this.gba.mmu.load16(address);
+            next = this.compileThumb(instruction);
+            next.next = null;
+            next.page = this.page;
+            next.address = address;
+            next.opcode = instruction;
+            this.page.thumb[offset] = next;
+            return next;
+        }
+
     }
 }

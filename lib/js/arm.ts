@@ -1,6 +1,8 @@
 module GameBoyAdvance {
     export class ARMCoreArm {
 
+        static WORD_SIZE = 4;
+
         addressingMode23Immediate:any[];
         addressingMode23Register:any[];
         addressingMode2RegisterShifted:any[];
@@ -725,7 +727,7 @@ module GameBoyAdvance {
             }
         }
 
-        constructLDM(rs:number, address:{(writeInitial?:boolean):number}, condOp:{():boolean}) {
+        constructLDM(rs:number, address:AddressAccessor, condOp:{():boolean}) {
             var cpu = this.cpu;
             var gprs = this.cpu.gprs;
             var mmu = this.gba.mmu;
@@ -749,7 +751,7 @@ module GameBoyAdvance {
             }
         }
 
-        constructLDMS(rs:number, address:{(writeInitial?:boolean):number}, condOp:{():boolean}) {
+        constructLDMS(rs:number, address:AddressAccessor, condOp:{():boolean}) {
             var cpu = this.cpu;
             var gprs = this.cpu.gprs;
             var mmu = this.gba.mmu;
@@ -776,7 +778,7 @@ module GameBoyAdvance {
             }
         }
 
-        constructLDR(rd:number, address:{(writeInitial?:boolean):number}, condOp:{():boolean}) {
+        constructLDR(rd:number, address:AddressAccessor, condOp:{():boolean}) {
             var cpu = this.cpu;
             var gprs = this.cpu.gprs;
             return () => {
@@ -791,7 +793,7 @@ module GameBoyAdvance {
             }
         }
 
-        constructLDRB(rd:number, address:{(writeInitial?:boolean):number}, condOp:{():boolean}) {
+        constructLDRB(rd:number, address:AddressAccessor, condOp:{():boolean}) {
             var cpu = this.cpu;
             var gprs = this.cpu.gprs;
             return () => {
@@ -806,7 +808,7 @@ module GameBoyAdvance {
             }
         }
 
-        constructLDRH(rd:number, address:{(writeInitial?:boolean):number}, condOp:{():boolean}) {
+        constructLDRH(rd:number, address:AddressAccessor, condOp:{():boolean}) {
             var cpu = this.cpu;
             var gprs = this.cpu.gprs;
             return () => {
@@ -821,7 +823,7 @@ module GameBoyAdvance {
             }
         }
 
-        constructLDRSB(rd:number, address:{(writeInitial?:boolean):number}, condOp:{():boolean}) {
+        constructLDRSB(rd:number, address:AddressAccessor, condOp:{():boolean}) {
             var cpu = this.cpu;
             var gprs = this.cpu.gprs;
             return () => {
@@ -836,7 +838,7 @@ module GameBoyAdvance {
             }
         }
 
-        constructLDRSH(rd:number, address:{(writeInitial?:boolean):number}, condOp:{():boolean}) {
+        constructLDRSH(rd:number, address:AddressAccessor, condOp:{():boolean}) {
             var cpu = this.cpu;
             var gprs = this.cpu.gprs;
             return () => {
@@ -968,16 +970,16 @@ module GameBoyAdvance {
                     (f ? 0xFF000000 : 0x00000000);
 
                 if (r) {
-                    mask &= ARMCore.USER_MASK | ARMCore.PRIV_MASK | ARMCore.STATE_MASK;
+                    mask &= Mask.USER | Mask.PRIV | Mask.STATE;
                     cpu.spsr = (cpu.spsr & ~mask) | (operand & mask)
                 } else {
-                    if (mask & ARMCore.USER_MASK) {
+                    if (mask & Mask.USER) {
                         cpu.cpsr.N = <any>(operand >> 31);
                         cpu.cpsr.Z = <any>(operand & 0x40000000);
                         cpu.cpsr.C = <any>(operand & 0x20000000);
                         cpu.cpsr.V = <any>(operand & 0x10000000)
                     }
-                    if (cpu.mode != Mode.USER && (mask & ARMCore.PRIV_MASK)) {
+                    if (cpu.mode != Mode.USER && (mask & Mask.PRIV)) {
                         cpu.switchMode((operand & 0x0000000F) | 0x00000010);
                         cpu.cpsr.I = <any>(operand & 0x00000080);
                         cpu.cpsr.F = <any>(operand & 0x00000040);
@@ -1284,7 +1286,7 @@ module GameBoyAdvance {
             }
         }
 
-        constructSTM(rs:number, address:{(writeInitial?:boolean):number}, condOp:{():boolean}) {
+        constructSTM(rs:number, address:AddressAccessor, condOp:{():boolean}) {
             var cpu = this.cpu;
             var gprs = this.cpu.gprs;
             var mmu = this.gba.mmu;
@@ -1308,7 +1310,7 @@ module GameBoyAdvance {
             }
         }
 
-        constructSTMS(rs:number, address:{(writeInitial?:boolean):number}, condOp:{():boolean}) {
+        constructSTMS(rs:number, address:AddressAccessor, condOp:{():boolean}) {
             var cpu = this.cpu;
             var gprs = this.cpu.gprs;
             var mmu = this.gba.mmu;
@@ -1335,7 +1337,7 @@ module GameBoyAdvance {
             }
         }
 
-        constructSTR(rd:number, address:{(writeInitial?:boolean):number}, condOp:{():boolean}) {
+        constructSTR(rd:number, address:AddressAccessor, condOp:{():boolean}) {
             var cpu = this.cpu;
             var gprs = this.cpu.gprs;
             return () => {
@@ -1350,7 +1352,7 @@ module GameBoyAdvance {
             }
         }
 
-        constructSTRB(rd:number, address:{(writeInitial?:boolean):number}, condOp:{():boolean}) {
+        constructSTRB(rd:number, address:AddressAccessor, condOp:{():boolean}) {
             var cpu = this.cpu;
             var gprs = this.cpu.gprs;
             return () => {
@@ -1365,7 +1367,7 @@ module GameBoyAdvance {
             }
         }
 
-        constructSTRH(rd:number, address:{(writeInitial?:boolean):number}, condOp:{():boolean}) {
+        constructSTRH(rd:number, address:AddressAccessor, condOp:{():boolean}) {
             var cpu = this.cpu;
             var gprs = this.cpu.gprs;
             return () => {

@@ -12,8 +12,8 @@ module GameBoyAdvance {
     }
 
     export interface Page {
-        thumb:any[]
-        arm:any[]
+        thumb:Instruction[]
+        arm:Instruction[]
         invalid:boolean
     }
 
@@ -276,7 +276,7 @@ module GameBoyAdvance {
         }
 
         load32(offset:number):number {
-            if (this.cpu.execMode == Mode.ARM) {
+            if (this.cpu.execMode == ExecMode.ARM) {
                 return this.mmu.load32(this.cpu.gprs[Register.PC] - this.cpu.instructionWidth);
             } else {
                 var halfword = this.mmu.loadU16(this.cpu.gprs[Register.PC] - this.cpu.instructionWidth);

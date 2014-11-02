@@ -336,7 +336,7 @@ module GameBoyAdvance {
                     } else {
                         this.gba.cpu.gprs[Register.LR] = 0x02000000;
                     }
-                    this.gba.cpu.switchExecMode(Mode.ARM);
+                    this.gba.cpu.switchExecMode(ExecMode.ARM);
                     this.gba.cpu.instruction.writesPC = true;
                     this.gba.cpu.gprs[Register.PC] = this.gba.cpu.gprs[Register.LR];
                     break;
