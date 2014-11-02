@@ -55,7 +55,6 @@ module GameBoyAdvance {
 
         indirectCanvas:HTMLCanvasElement;
         targetCanvas:HTMLCanvasElement;
-        context:CanvasRenderingContext2D;
 
         setCanvas(canvas:HTMLCanvasElement):void {
             this.targetCanvas = canvas;
@@ -64,16 +63,12 @@ module GameBoyAdvance {
                 this.indirectCanvas = document.createElement("canvas");
                 this.indirectCanvas.setAttribute("height", "160");
                 this.indirectCanvas.setAttribute("width", "240");
+                var scaleContext = canvas.getContext('2d');
                 this.video.drawCallback = () => {
-                    this.context.drawImage(this.indirectCanvas, 0, 0, canvas.offsetWidth, canvas.offsetHeight);
+                    scaleContext.drawImage(this.indirectCanvas, 0, 0, canvas.offsetWidth, canvas.offsetHeight);
                 }
             }
-            this.setCanvasDirect(this.indirectCanvas);
-        }
-
-        setCanvasDirect(canvas:any):void {
-            this.context = canvas.getContext('2d');
-            this.video.setBacking(this.context);
+            this.video.setBacking(this.indirectCanvas.getContext('2d'));
         }
 
         setBios(bios:any, real = false):void {
