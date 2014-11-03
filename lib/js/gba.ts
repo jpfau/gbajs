@@ -29,7 +29,7 @@ module GameBoyAdvance {
             this.io = new IO(this);
             this.audio = new Audio(this);
             this.video = new Video(this);
-            this.keypad = new Keypad(this);
+            this.keypad = new Keypad();
             this.sio = new SIO(this);
 
             this.keypad.registerHandlers();

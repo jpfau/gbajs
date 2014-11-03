@@ -15,15 +15,9 @@ module GameBoyAdvance {
         next?: number;
     }
 
-    export interface JSAudio {
-        connect(destination:any):void;
-        disconnect(destination:any):void;
-        onaudioprocess(audioProcessingEvent:any):void;
-    }
-
     export class Audio {
         context:any;
-        private jsAudio:JSAudio;
+        private jsAudio:ScriptProcessorNode;
         private bufferSize:number;
         private maxSamples:number;
         private buffers:Float32Array[];
@@ -103,18 +97,14 @@ module GameBoyAdvance {
         private masterVolumeRight:number;
 
         constructor(private gba:Main) {
-            var AudioContext = (<any>window).AudioContext || (<any>window).webkitAudioContext;
+            var AudioContext = AudioContext || webkitAudioContext;
             if (AudioContext) {
                 this.context = new AudioContext();
                 this.bufferSize = 4096;
                 this.maxSamples = this.bufferSize << 2;
                 this.buffers = [new Float32Array(this.maxSamples), new Float32Array(this.maxSamples)];
                 this.sampleMask = this.maxSamples - 1;
-                if (this.context.createScriptProcessor) {
-                    this.jsAudio = this.context.createScriptProcessor(this.bufferSize);
-                } else {
-                    this.jsAudio = this.context.createJavaScriptNode(this.bufferSize);
-                }
+                this.jsAudio = this.context.createScriptProcessor(this.bufferSize);
                 this.jsAudio.onaudioprocess = (e) => this.audioProcess(e);
             } else {
                 this.context = null;
