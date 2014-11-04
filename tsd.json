@@ -1,0 +1,15 @@
+{
+  "version": "v4",
+  "repo": "borisyankov/DefinitelyTyped",
+  "ref": "master",
+  "path": "typings",
+  "bundle": "typings/tsd.d.ts",
+  "installed": {
+    "webaudioapi/waa.d.ts": {
+      "commit": "0202fa011287e4f8394f01edc6681442dbdeaf51"
+    },
+    "gamepad/gamepad.d.ts": {
+      "commit": "0202fa011287e4f8394f01edc6681442dbdeaf51"
+    }
+  }
+}
