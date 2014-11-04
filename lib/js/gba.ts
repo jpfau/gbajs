@@ -39,18 +39,18 @@ module GameBoyAdvance {
             this.seenFrame = false;
             this.seenSave = false;
 
-            this.queue = null;
+            this.queue = 0;
             this.reportFPS = null;
-
-            (<any>window).queueFrame = (f:any) => {
-                this.queue = window.setTimeout(f, this.throttle);
-            };
 
             (<any>window).URL = (<any>window).URL || (<any>window).webkitURL;
 
             this.video.vblankCallback = () => {
                 this.seenFrame = true;
             };
+        }
+
+        queueFrame(handler:any) {
+            this.queue = window.setTimeout(handler, this.throttle);
         }
 
         indirectCanvas:HTMLCanvasElement;
@@ -134,14 +134,14 @@ module GameBoyAdvance {
         }
 
         paused:boolean;
-        queue:any;
+        queue:number;
 
         pause():void {
             this.paused = true;
             this.audio.pause(true);
             if (this.queue) {
                 clearTimeout(this.queue);
-                this.queue = null;
+                this.queue = 0;
             }
         }
 
@@ -162,11 +162,10 @@ module GameBoyAdvance {
             }
         }
 
-        interval:boolean;
         reportFPS:(fps:number) => void;
 
         runStable():void {
-            if (this.interval) {
+            if (this.queue) {
                 return; // Already running
             }
             var timer = 0;
@@ -183,7 +182,7 @@ module GameBoyAdvance {
                         if (this.paused) {
                             return;
                         } else {
-                            (<any>window).queueFrame(runFunc);
+                            this.queueFrame(runFunc);
                         }
                         start = Date.now();
                         this.advanceFrame();
@@ -207,7 +206,7 @@ module GameBoyAdvance {
                         if (this.paused) {
                             return;
                         } else {
-                            (<any>window).queueFrame(runFunc);
+                            this.queueFrame(runFunc);
                         }
                         this.advanceFrame();
                     } catch (exception) {
@@ -219,7 +218,7 @@ module GameBoyAdvance {
                     }
                 };
             }
-            (<any>window).queueFrame(runFunc);
+            this.queueFrame(runFunc);
         }
 
         setSavedata(data:any):void {
