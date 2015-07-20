@@ -189,3 +189,7 @@ ul#links li:not(:first-child)::before {
 	content: "•";
 	margin: 0 0.5em;
 }
+
+*:focus {
+    outline: 0;
+}
