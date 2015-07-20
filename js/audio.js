@@ -34,8 +34,14 @@ GameBoyAdvanceAudio.prototype.clear = function() {
 
 	this.enabled = false;
 	if (this.context) {
-		this.jsAudio.disconnect(this.context.destination);
+		try {
+			this.jsAudio.disconnect(this.context.destination);
+		} catch (e) {
+			// Sight	
+		}
 	}
+	
+	
 
 	this.enableChannel3 = false;
 	this.enableChannel4 = false;
@@ -250,7 +256,11 @@ GameBoyAdvanceAudio.prototype.writeEnable = function(value) {
 		if (value) {
 			this.jsAudio.connect(this.context.destination);
 		} else {
-			this.jsAudio.disconnect(this.context.destination);
+			try {
+				this.jsAudio.disconnect(this.context.destination);
+			} catch (e) {
+				// Sight	
+			}
 		}
 	}
 };
