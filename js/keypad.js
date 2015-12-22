@@ -10,10 +10,8 @@ function GameBoyAdvanceKeypad() {
 	this.KEYCODE_L = 65;
 	this.KEYCODE_R = 83;
 
-	this.GAMEPAD_LEFT = 14;
-	this.GAMEPAD_UP = 12;
-	this.GAMEPAD_RIGHT = 15;
-	this.GAMEPAD_DOWN = 13;
+	this.GAMEPAD_X_AXIS = 0;
+	this.GAMEPAD_Y_AXIS = 1;
 	this.GAMEPAD_START = 9;
 	this.GAMEPAD_SELECT = 8;
 	this.GAMEPAD_A = 1;
@@ -90,16 +88,16 @@ GameBoyAdvanceKeypad.prototype.keyboardHandler = function(e) {
 
 GameBoyAdvanceKeypad.prototype.gamepadHandler = function(gamepad) {
 	var value = 0;
-	if (gamepad.buttons[this.GAMEPAD_LEFT] > this.GAMEPAD_THRESHOLD) {
+	if (gamepad.axes[this.GAMEPAD_X_AXIS] < -1 * this.GAMEPAD_THRESHOLD) {
 		value |= 1 << this.LEFT;
 	}
-	if (gamepad.buttons[this.GAMEPAD_UP] > this.GAMEPAD_THRESHOLD) {
-		value |= 1 << this.UP;
-	}
-	if (gamepad.buttons[this.GAMEPAD_RIGHT] > this.GAMEPAD_THRESHOLD) {
+	if (gamepad.axes[this.GAMEPAD_X_AXIS] > this.GAMEPAD_THRESHOLD) {
 		value |= 1 << this.RIGHT;
 	}
-	if (gamepad.buttons[this.GAMEPAD_DOWN] > this.GAMEPAD_THRESHOLD) {
+	if (gamepad.axes[this.GAMEPAD_Y_AXIS] < -1 * this.GAMEPAD_THRESHOLD) {
+		value |= 1 << this.UP;
+	}
+	if (gamepad.axes[this.GAMEPAD_Y_AXIS] > this.GAMEPAD_THRESHOLD) {
 		value |= 1 << this.DOWN;
 	}
 	if (gamepad.buttons[this.GAMEPAD_START] > this.GAMEPAD_THRESHOLD) {
