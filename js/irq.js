@@ -1,5 +1,8 @@
 function GameBoyAdvanceInterruptHandler() {
-	this.inherit();
+	//this.inherit();
+		for (var v in this) {
+		this[v] = this[v];
+	}
 	this.FREQUENCY = 0x1000000;
 
 	this.cpu = null;

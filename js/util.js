@@ -1,8 +1,8 @@
-Object.prototype.inherit = function() {
+/*Object.prototype.inherit = function() {
 	for (var v in this) {
 		this[v] = this[v];
 	}
-};
+};*/
 
 function hex(number, leading, usePrefix) {
 	if (typeof(usePrefix) === 'undefined') {
